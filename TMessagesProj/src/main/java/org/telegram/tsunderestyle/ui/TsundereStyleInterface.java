@@ -1,0 +1,52 @@
+package org.telegram.tsunderestyle.ui;
+
+import android.view.HapticFeedbackConstants;
+import android.view.View;
+
+import org.telegram.tsunderestyle.TsundereStyleConfig;
+
+/**
+ * Interface touches in the iOS 18 spirit: bouncy bottom tabs with a light haptic tick and the glass
+ * "lens" tab selector. Everything can be switched off in Appearance.
+ */
+public class TsundereStyleInterface {
+
+    public static final String KEY_TAB_BOUNCE = "ui_tab_bounce";
+    public static final String KEY_TAB_HAPTICS = "ui_tab_haptics";
+    public static final String KEY_TAB_LENS = "ui_tab_lens";
+
+    /** Bottom tab icons jump with a spring when selected (on by default). */
+    public static boolean tabBounce() {
+        return TsundereStyleConfig.getBoolean(KEY_TAB_BOUNCE, true);
+    }
+
+    /** Light haptic tick when switching bottom tabs (on by default). */
+    public static boolean tabHaptics() {
+        return TsundereStyleConfig.getBoolean(KEY_TAB_HAPTICS, true);
+    }
+
+    /**
+     * Bottom tabs with a glass "lens" that slides between tabs, magnifies the icon under it and settles
+     * into a round highlight, like iOS 26 (off by default). Colors come from the current theme.
+     */
+    public static boolean tabLens() {
+        return TsundereStyleConfig.getBoolean(KEY_TAB_LENS, false);
+    }
+
+    /**
+     * Damped spring from 0 to 1: dips below 1 at the start, overshoots once and settles, like
+     * an iOS tab icon. {@code t} is the fraction of the animation, 0..1.
+     */
+    public static float spring(float t) {
+        return (float) (1 - Math.exp(-5.5 * t) * Math.cos(13 * t));
+    }
+
+    public static void tick(View view) {
+        if (view != null && tabHaptics()) {
+            try {
+                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK, HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING);
+            } catch (Exception ignore) {
+            }
+        }
+    }
+}

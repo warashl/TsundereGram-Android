@@ -1,0 +1,17 @@
+name: Text Morph
+description: Изменение формы и стиля текста. Стакинг стилей, различные функции.
+id: text_morph
+version: 1.2.0
+author: '@mrneoner & @neo_plugin'
+app_version: '>=12.0.0'
+sdk_version: '>=1.4.0'
+elyx_version: '>=0.9.0'
+icon: sekaiware/3
+compiled: false
+elyxbuilder:
+  compiled: false
+  buildNum: 13
+  buildDate: '2026-10-19'
+  pythonVer: '3.11'
+  sourceHash: 37c935ff884c10406cc6f3960f8cad636a5a551bd8f9266453b122497536fc2f
+  elybVer: 0.6.3
