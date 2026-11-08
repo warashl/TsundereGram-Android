@@ -33,12 +33,20 @@ jobs:
       CCACHE_NOHASHDIR: "true"
       CCACHE_MAXSIZE: "2G"
       NATIVE_TARGET: "universal"
+      TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+      TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+      TG_ENABLED: ${{ (github.event_name != 'workflow_dispatch' || inputs.publish) && !contains(github.event.head_commit.message, '[skip publish]') }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
         with:
           fetch-depth: 1
           submodules: recursive
+      - name: "Telegram: старт"
+        env:
+          COMMIT_MSG: ${{ github.event.head_commit.message || 'ручной запуск' }}
+        run: TG_NOTE="$COMMIT_MSG" bash .github/scripts/tg_step.sh step "Старт" "🚀 <b>Сборка началась</b> (1/5)"
       - name: Pin native submodules to exteraless 13.1.1
         run: |
           set -euo pipefail
@@ -59,6 +67,8 @@ jobs:
           pin TMessagesProj/jni/third_party/xiph/opus 22244de5a79bd1d6d623c32e72bf1954b56235be
           pin TMessagesProj/jni/third_party/xiph/opusfile a55c164e9891a9326188b7d4d216ec9a88373739
           pin TMessagesProj/jni/tlottie 31f1b542f88e7b4be9a01e749920d857535fc715
+      - name: "Telegram: инструменты"
+        run: bash .github/scripts/tg_step.sh step "Установка инструментов" "🧰 Библиотеки подогнаны, ставлю JDK, Android SDK и NDK (2/5)"
       - name: Set up JDK
         uses: actions/setup-java@v5
         with:
@@ -108,6 +118,8 @@ jobs:
           else
             echo "RELEASE_KEYSTORE не задан — сборка подпишется отладочным ключом"
           fi
+      - name: "Telegram: компиляция"
+        run: bash .github/scripts/tg_step.sh step "Компиляция" "🔨 <b>Компилирую</b> (3/5) — самый долгий этап"
       - name: Release Build
         id: release_build_step
         env:
@@ -117,7 +129,13 @@ jobs:
           export BUILD_TIMESTAMP=$(date +%s)
           echo "build_timestamp=$BUILD_TIMESTAMP" >> "$GITHUB_OUTPUT"
           chmod +x ./gradlew
-          ./gradlew TMessagesProj:assembleRelease
+          set -o pipefail
+          ./gradlew TMessagesProj:assembleRelease 2>&1 | tee "$RUNNER_TEMP/build.log"
+      - name: "Telegram: APK собран"
+        run: |
+          APK=$(ls -1t TMessagesProj/build/outputs/apk/release/*.apk | head -n 1)
+          SIZE=$(du -m "$APK" | cut -f1)
+          bash .github/scripts/tg_step.sh step "Публикация" "✅ <b>APK собран</b> (${SIZE} МБ), публикую (4/5)"
       - name: Upload arm64-v8a Artifact
         uses: actions/upload-artifact@v7
         with:
@@ -145,6 +163,7 @@ jobs:
               gh release delete "$old" --yes --cleanup-tag
             done
       - name: Send APK to Telegram
+        continue-on-error: true
         if: ${{ (github.event_name != 'workflow_dispatch' || inputs.publish) && !contains(github.event.head_commit.message, '[skip publish]') }}
         env:
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
@@ -162,3 +181,15 @@ jobs:
           fi
           pip install --quiet kurigram tgcrypto
           python3 .github/scripts/send_apk.py
+      - name: "Telegram: готово"
+        env:
+          RELEASES_URL: ${{ github.server_url }}/${{ github.repository }}/releases
+        run: |
+          SHORT=$(echo "$GITHUB_SHA" | cut -c1-7)
+          bash .github/scripts/tg_step.sh final "🎉 <b>Готово!</b> (5/5) APK: <a href=\"$RELEASES_URL/tag/ci-$SHORT\">ci-$SHORT</a>"
+      - name: "Telegram: сборка упала"
+        if: failure()
+        run: bash .github/scripts/tg_step.sh fail "$RUNNER_TEMP/build.log"
+      - name: "Telegram: сборка отменена"
+        if: cancelled()
+        run: bash .github/scripts/tg_step.sh step "Отмена" "⏹ Сборка отменена — запущена более новая"
