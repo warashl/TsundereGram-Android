@@ -26,6 +26,11 @@ add_subdirectory(
         ${CMAKE_CURRENT_BINARY_DIR}/absl
         EXCLUDE_FROM_ALL)
 
+# Compatibility: the bundled WebRTC still uses absl::Nonnull<T> / absl::Nullable<T>,
+# which newer Abseil removed (replaced by absl_nonnull / absl_nullable macros).
+# Force-include no-op aliases for C++ sources compiled after this point (not Abseil itself).
+add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:-include${CMAKE_CURRENT_SOURCE_DIR}/absl_nullability_compat.h>")
+
 add_library(webrtc_absl INTERFACE)
 target_link_libraries(webrtc_absl INTERFACE
         absl::base
