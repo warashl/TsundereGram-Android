@@ -69,6 +69,7 @@ jobs:
           echo "sdk.dir=${ANDROID_HOME}" >> local.properties
       - name: Modify Gradle JVM Args
         run: |
+          sed -i '/^org\.gradle\.java\.home=/d' gradle.properties
           MEMORY_KB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
           MEMORY_GB=$((MEMORY_KB / 1024 / 1024))
           echo "Detected memory size: ${MEMORY_GB}GB"
@@ -95,6 +96,7 @@ jobs:
           export LOCAL_PROPERTIES="${{ secrets.LOCAL_PROPERTIES }}"
           export BUILD_TIMESTAMP=$(date +%s)
           echo "build_timestamp=$BUILD_TIMESTAMP" >> "$GITHUB_OUTPUT"
+          chmod +x ./gradlew
           ./gradlew TMessagesProj:assembleRelease
       - name: Upload arm64-v8a Artifact
         uses: actions/upload-artifact@v7
