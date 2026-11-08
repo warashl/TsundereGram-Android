@@ -5012,6 +5012,12 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         actionBarContainer = new PhotoViewerActionBarContainer(activity);
         actionBar.addView(actionBarContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.FILL));
         containerView.addView(actionBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        // кружок выбора фото и счётчик привязаны к строке экшен-бара: пересчитываем при каждом его лэйауте
+        actionBar.addOnLayoutChangeListener((abView, abL, abT, abR, abB, abOL, abOT, abOR, abOB) -> {
+            if (abT != abOT || abB != abOB) {
+                abView.post(() -> updateSelectionButtonsTopMargin());
+            }
+        });
 
         countView = new PhotoCountView(activity);
         containerView.addView(countView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.FILL_HORIZONTAL | Gravity.TOP));
@@ -20399,6 +20405,44 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         return !inBubbleMode;
     }
 
+    /**
+     * Кружок выбора фото и счётчик ставим по центру строки экшен-бара (по кнопке «назад»).
+     * Раньше отступ считался формулой statusBarHeight + высота бара, и в форке кружок
+     * уезжал вверх, в статус-бар.
+     */
+    private void updateSelectionButtonsTopMargin() {
+        if (checkImageView == null || photosCounterView == null) {
+            return;
+        }
+        float rowCenter = -1;
+        if (actionBar != null && actionBarBackButton != null && actionBar.getHeight() > 0 && actionBarBackButton.getHeight() > 0) {
+            float top = actionBarBackButton.getTop();
+            android.view.ViewParent parent = actionBarBackButton.getParent();
+            while (parent instanceof View && parent != actionBar) {
+                top += ((View) parent).getTop();
+                parent = parent.getParent();
+            }
+            if (parent == actionBar) {
+                rowCenter = actionBar.getTop() + top + actionBarBackButton.getHeight() / 2f;
+            }
+        }
+        if (rowCenter < 0) {
+            rowCenter = (isStatusBarVisible() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight() / 2f;
+        }
+        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) checkImageView.getLayoutParams();
+        int newMargin = Math.max(0, Math.round(rowCenter - dp(34) / 2f));
+        if (layoutParams.topMargin != newMargin) {
+            layoutParams.topMargin = newMargin;
+            checkImageView.setLayoutParams(layoutParams);
+        }
+        layoutParams = (FrameLayout.LayoutParams) photosCounterView.getLayoutParams();
+        newMargin = Math.max(0, Math.round(rowCenter - dp(40) / 2f));
+        if (layoutParams.topMargin != newMargin) {
+            layoutParams.topMargin = newMargin;
+            photosCounterView.setLayoutParams(layoutParams);
+        }
+    }
+
     @SuppressLint({"NewApi", "DrawAllocation"})
     private void onDraw(Canvas canvas) {
         Canvas realCanvas = canvas;
@@ -24680,23 +24724,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 }
 
                 if (checkImageView != null) {
-                    checkImageView.post(() -> {
-                        LayoutParams layoutParams = (LayoutParams) checkImageView.getLayoutParams();
-                        WindowManager manager = (WindowManager) ApplicationLoader.applicationContext.getSystemService(Activity.WINDOW_SERVICE);
-                        int rotation = manager.getDefaultDisplay().getRotation();
-                        int newMargin = (ActionBar.getCurrentActionBarHeight() - dp(34)) / 2 + (isStatusBarVisible() ? AndroidUtilities.statusBarHeight : 0);
-                        if (newMargin != layoutParams.topMargin) {
-                            layoutParams.topMargin = newMargin;
-                            checkImageView.setLayoutParams(layoutParams);
-                        }
-
-                        layoutParams = (LayoutParams) photosCounterView.getLayoutParams();
-                        newMargin = (ActionBar.getCurrentActionBarHeight() - dp(40)) / 2 + (isStatusBarVisible() ? AndroidUtilities.statusBarHeight : 0);
-                        if (layoutParams.topMargin != newMargin) {
-                            layoutParams.topMargin = newMargin;
-                            photosCounterView.setLayoutParams(layoutParams);
-                        }
-                    });
+                    checkImageView.post(() -> updateSelectionButtonsTopMargin());
                 }
             }
             if (dontResetZoomOnFirstLayout) {

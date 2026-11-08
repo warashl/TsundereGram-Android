@@ -6955,6 +6955,25 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         return 0;
     }
 
+    // Рамка аватарки выступает за аватарку — ник и статус под ней спускаем чуть ниже,
+    // чтобы рамка не налазила на ник.
+    private float getAvatarFrameNameOffset() {
+        return hasProfileAvatarFrame() ? dp(9) : 0;
+    }
+
+    private float getAvatarFrameOnlineOffset() {
+        return hasProfileAvatarFrame() ? dp(7) : 0;
+    }
+
+    private boolean hasProfileAvatarFrame() {
+        long uid = getProfileTargetUserId();
+        if (uid == 0) {
+            return false;
+        }
+        app.exteraless.frames.ProfileFrameController.FrameMeta meta = app.exteraless.frames.ProfileFrameController.getInstance().getFrameFor(uid);
+        return meta != null && meta.hasFrame();
+    }
+
     public void getEmojiStatusLocation(Rect rect) {
         if (nameTextView[1] == null) {
             return;
@@ -9256,8 +9275,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     expandAnimator.addListener(resetListener);
                 }
                 final float avatarBottom = (float) Math.floor(endNameY) + (avatarContainer.getHeight() * avatarContainer.getScaleY() + dpf2(8)) * (openAnimationInProgress ? avatarAnimationProgress : diff);
-                nameY = avatarBottom + dp(1.3f) + dp(7) * diff + titleAnimationsYDiff * (1f - avatarAnimationProgress);
-                onlineY = avatarBottom + dp(24) + (float) Math.floor(11 * AndroidUtilities.density) * diff;
+                nameY = avatarBottom + dp(1.3f) + dp(7) * diff + titleAnimationsYDiff * (1f - avatarAnimationProgress) + getAvatarFrameNameOffset() * diff;
+                onlineY = avatarBottom + dp(24) + (float) Math.floor(11 * AndroidUtilities.density) * diff + getAvatarFrameOnlineOffset() * diff;
                 final float minimizedX = openAnimationInProgress ? (prevAvatarTranslation - dp(109) + dp(48)) : -dpf2(42 + 4);
 
                 if (showStatusButton != null) {
@@ -9425,8 +9444,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 + actionBar.getTranslationY();
 
         float avatarBottom = (float) Math.floor(endNameY) + (AndroidUtilities.dp(42) * scale + dpf2(8)) * diff;
-        nameY = avatarBottom + AndroidUtilities.dp(1.3f) + AndroidUtilities.dp(7) * diff;
-        onlineY = avatarBottom + AndroidUtilities.dp(24) + (float) Math.floor(11 * AndroidUtilities.density) * diff;
+        nameY = avatarBottom + AndroidUtilities.dp(1.3f) + AndroidUtilities.dp(7) * diff + getAvatarFrameNameOffset() * diff;
+        onlineY = avatarBottom + AndroidUtilities.dp(24) + (float) Math.floor(11 * AndroidUtilities.density) * diff + getAvatarFrameOnlineOffset() * diff;
     }
 
     public RecyclerListView getListView() {
