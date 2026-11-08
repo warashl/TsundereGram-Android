@@ -66,7 +66,7 @@ public class ProfileColorActivity extends BaseFragment {
         LinearLayout btn = new LinearLayout(context);
         btn.setOrientation(LinearLayout.HORIZONTAL);
         btn.setGravity(Gravity.CENTER);
-        btn.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(8), AndroidUtilities.dp(14), AndroidUtilities.dp(8));
+        btn.setPadding(AndroidUtilities.dp(10), 0, AndroidUtilities.dp(10), 0);
         btn.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(20), 0x26FFFFFF));
         heroPillButtons.add(btn);
 
@@ -82,10 +82,15 @@ public class ProfileColorActivity extends BaseFragment {
         label.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
         label.setTypeface(AndroidUtilities.bold());
         label.setTextColor(Color.WHITE);
+        // одна строка — иначе "Выбрать фото" переносилось и кнопка становилась выше соседней
+        label.setSingleLine(true);
+        label.setMaxLines(1);
+        label.setEllipsize(TextUtils.TruncateAt.END);
         heroPillLabels.add(label);
         btn.addView(label, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL));
 
-        parent.addView(btn, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, 4, 0, 4, 0));
+        // одинаковая ширина (weight 1) и фиксированная высота у всех pill-кнопок
+        parent.addView(btn, LayoutHelper.createLinear(0, 36, 1f, 4, 0, 4, 0));
     }
 
 
@@ -256,7 +261,7 @@ public class ProfileColorActivity extends BaseFragment {
         addHeroPillButton(heroActionButtonsRow, context, R.drawable.msg_camera, "Выбрать фото");
         addHeroPillButton(heroActionButtonsRow, context, R.drawable.msg_edit, "Изменить");
 
-        bannerContent.addView(heroActionButtonsRow, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 14));
+        bannerContent.addView(heroActionButtonsRow, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 16, 0, 16, 14));
 
         bannerBox.addView(bannerContent, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER));
         heroContent.addView(bannerBox, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 260));

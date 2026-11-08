@@ -174,6 +174,13 @@ public class CounterView extends View {
             }
         }
 
+        private int measureCountWidth(CharSequence str) {
+            final String s = str == null ? "" : str.toString();
+            final float w = Math.max(textPaint.measureText(s), Layout.getDesiredWidth(s, textPaint));
+            // +1px запас, чтобы округление не вызывало перенос строки в StaticLayout
+            return Math.max(AndroidUtilities.dp(12), (int) Math.ceil(w) + 1);
+        }
+
         public void setCount(int count, boolean animated) {
             setText(getStringOfCCount(count), animated, count, false);
         }
@@ -205,7 +212,7 @@ public class CounterView extends View {
                     return;
                 }
                 CharSequence newStr = text; // getStringOfCCount(count);
-                countWidth = Math.max(AndroidUtilities.dp(12), (int) Math.ceil(textPaint.measureText(newStr.toString())));
+                countWidth = measureCountWidth(newStr);
                 countLayout = new StaticLayout(newStr, textPaint, countWidth, Layout.Alignment.ALIGN_CENTER, 1.0f, 0.0f, false);
                 countLayoutWidth = countLayout.getLineCount() >= 1 ? countLayout.getLineWidth(0) : 0;
                 if (parent != null) {
@@ -272,10 +279,14 @@ public class CounterView extends View {
                             }
                         }
 
-                        int countOldWidth = Math.max(AndroidUtilities.dp(12), (int) Math.ceil(textPaint.measureText(oldStr.toString())));
-                        countOldLayout = new StaticLayout(oldSpannableStr, textPaint, countOldWidth, Layout.Alignment.ALIGN_CENTER, 1.0f, 0.0f, false);
-                        countAnimationStableLayout = new StaticLayout(stableStr, textPaint, countOldWidth, Layout.Alignment.ALIGN_CENTER, 1.0f, 0.0f, false);
-                        countAnimationInLayout = new StaticLayout(newSpannableStr, textPaint, countOldWidth, Layout.Alignment.ALIGN_CENTER, 1.0f, 0.0f, false);
+                        // С пропорциональным шрифтом новое число может быть шире старого (59 -> 62).
+                        // Раньше все три лейаута строились по ширине старого числа, StaticLayout
+                        // переносил цифры на вторую строку и они вставали друг под другом.
+                        int countOldWidth = measureCountWidth(oldStr);
+                        int animLayoutWidth = Math.max(countOldWidth, measureCountWidth(newStr));
+                        countOldLayout = new StaticLayout(oldSpannableStr, textPaint, animLayoutWidth, Layout.Alignment.ALIGN_CENTER, 1.0f, 0.0f, false);
+                        countAnimationStableLayout = new StaticLayout(stableStr, textPaint, animLayoutWidth, Layout.Alignment.ALIGN_CENTER, 1.0f, 0.0f, false);
+                        countAnimationInLayout = new StaticLayout(newSpannableStr, textPaint, animLayoutWidth, Layout.Alignment.ALIGN_CENTER, 1.0f, 0.0f, false);
                     } else {
                         countOldLayout = countLayout;
                     }
@@ -285,7 +296,7 @@ public class CounterView extends View {
                 countAnimator.start();
             }
             if (count > 0) {
-                countWidth = Math.max(AndroidUtilities.dp(12), (int) Math.ceil(textPaint.measureText(newStr.toString())));
+                countWidth = measureCountWidth(newStr);
                 countLayout = new StaticLayout(newStr, textPaint, countWidth, Layout.Alignment.ALIGN_CENTER, 1.0f, 0.0f, false);
                 countLayoutWidth = countLayout.getLineCount() >= 1 ? countLayout.getLineWidth(0) : 0;
             }

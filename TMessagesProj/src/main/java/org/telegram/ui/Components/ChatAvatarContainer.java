@@ -524,20 +524,58 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
         final float s = bounce.getScale(.02f);
         canvas.scale(s, s, getPivotX(), getHeight() - ActionBar.getCurrentActionBarHeight() / 2f);
         super.dispatchDraw(canvas);
-        long dialogId = parentFragment != null ? parentFragment.getDialogId() : 0;
-        if (dialogId != 0 && avatarImageView != null && avatarImageView.getVisibility() == VISIBLE) {
-            int save = canvas.save();
-            app.exteraless.frames.ProfileFrameController.getInstance().drawFrame(
-                    canvas,
-                    dialogId,
-                    avatarImageView.getX(),
-                    avatarImageView.getY(),
-                    avatarImageView.getWidth(),
-                    avatarImageView.getHeight()
-            );
-            canvas.restoreToCount(save);
-        }
+        // Рамка аватарки теперь рисуется в drawChild сразу после самой аватарки:
+        // с её alpha/scale/translation и ПОД заголовком, а не поверх всего хедера.
         canvas.restore();
+    }
+
+    private long getAvatarFrameDialogId() {
+        if (parentFragment == null) {
+            return 0;
+        }
+        long savedDialogId = 0;
+        try {
+            savedDialogId = parentFragment.getSavedDialogId();
+        } catch (Throwable ignore) {}
+        return savedDialogId != 0 ? savedDialogId : parentFragment.getDialogId();
+    }
+
+    private boolean hasAvatarFrameForLayout() {
+        if (avatarImageView == null || avatarImageView.getVisibility() != VISIBLE) {
+            return false;
+        }
+        final long dialogId = getAvatarFrameDialogId();
+        if (dialogId == 0) {
+            return false;
+        }
+        app.exteraless.frames.ProfileFrameController.FrameMeta fm = app.exteraless.frames.ProfileFrameController.getInstance().getFrameFor(dialogId);
+        return fm != null && fm.hasFrame();
+    }
+
+    private void drawAvatarFrame(Canvas canvas, View child) {
+        if (child == null || child.getVisibility() != VISIBLE) {
+            return;
+        }
+        final float alpha = child.getAlpha();
+        if (alpha <= 0.01f) {
+            return;
+        }
+        final long dialogId = getAvatarFrameDialogId();
+        if (dialogId == 0) {
+            return;
+        }
+        final float sx = child.getScaleX();
+        final float sy = child.getScaleY();
+        if (sx <= 0.01f || sy <= 0.01f) {
+            return;
+        }
+        final float w = child.getWidth() * sx;
+        final float h = child.getHeight() * sy;
+        final float x = child.getX() + child.getPivotX() * (1f - sx);
+        final float y = child.getY() + child.getPivotY() * (1f - sy);
+        final int save = canvas.save();
+        app.exteraless.frames.ProfileFrameController.getInstance().drawFrame(canvas, dialogId, x, y, w, h, alpha);
+        canvas.restoreToCount(save);
     }
 
     @Override
@@ -573,6 +611,7 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
             } else {
                 b = super.drawChild(canvas, child, drawingTime);
             }
+            drawAvatarFrame(canvas, child);
         } else {
             b = super.drawChild(canvas, child, drawingTime);
         }
@@ -869,7 +908,10 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
         final int width = MeasureSpec.getSize(widthMeasureSpec);
         // Ширина под текст считается от размера аватарки,
         // сама аватарка меряется с отступом ChatHeaderUiHelper.getAvatarInsetPx (при 42dp — как было)
-        final int availableWidth = width - dp(((avatarImageView.getVisibility() == VISIBLE || isCentered()) ? avatarSizeInDp + 12 : 0) + 16);
+        // если у аватарки есть рамка, onLayout сдвигает заголовок вправо на 18dp — учитываем это здесь,
+        // иначе заголовок залезал под кнопку поиска / обрезался
+        final int frameExtraWidth = (!isCentered() && hasAvatarFrameForLayout()) ? dp(18) : 0;
+        final int availableWidth = width - dp(((avatarImageView.getVisibility() == VISIBLE || isCentered()) ? avatarSizeInDp + 12 : 0) + 16) - frameExtraWidth;
         final int avatarSizePx = ChatHeaderUiHelper.getAvatarSizePx(avatarSizeInDp);
         avatarImageView.measure(MeasureSpec.makeMeasureSpec(avatarSizePx, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(avatarSizePx, MeasureSpec.EXACTLY));
         titleTextView.measure(MeasureSpec.makeMeasureSpec(availableWidth - padding, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(24 + 8), MeasureSpec.AT_MOST));
@@ -993,12 +1035,7 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
         final int viewTop = (actionBarHeight - avatarImageView.getMeasuredHeight() - avatarInsetPx * 2) / 2 + (occupyStatusBar ? AndroidUtilities.statusBarHeight : 0);
         final int subtitleTop = viewTop + dp(material3 ? (glassMode ? 26.66f : 27f) : (glassMode ? 23.66f : 24f));
 
-        long currentHeaderDialogId = parentFragment != null ? parentFragment.getDialogId() : 0;
-        boolean hasAvatarFrame = false;
-        if (currentHeaderDialogId != 0) {
-            app.exteraless.frames.ProfileFrameController.FrameMeta fm = app.exteraless.frames.ProfileFrameController.getInstance().getFrameFor(currentHeaderDialogId);
-            hasAvatarFrame = fm != null && fm.hasFrame();
-        }
+        final boolean hasAvatarFrame = hasAvatarFrameForLayout();
 
         int avatarLeft = avatarInsetPx + leftPadding;
         if (hasAvatarFrame && !isCentered()) {

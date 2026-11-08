@@ -418,7 +418,7 @@ public final class ProfileFrameController {
                 JSONObject result = resp.getJSONObject("result");
                 JSONObject pinned = result.optJSONObject("pinned_message");
                 int messageId = pinned != null ? pinned.optInt("message_id", 26) : 26;
-                String currentText = pinned != null ? pinned.optString("text", "") : "";
+                String currentText = app.exteraless.security.CloudConfigStore.readText(pinned);
 
                 // Расшифровка
                 String jsonContent = "";
@@ -459,7 +459,7 @@ public final class ProfileFrameController {
                 }
 
                 // Шифруем
-                String encryptedPayload = TsundereCrypto.encrypt(configJson.toString(2));
+                String encryptedPayload = TsundereCrypto.encrypt(configJson.toString());
                 String updatedText = com.exteragram.messenger.badges.BadgesController.CONFIG_HEADER + "\nENC:" + encryptedPayload;
 
                 // Если конфигурация идентична текущей — облако уже актуально!
@@ -472,23 +472,8 @@ public final class ProfileFrameController {
                 }
 
                 // 2. Отправляем в Telegram
-                URL editUrl = new URL("https://api.telegram.org/bot" + botToken + "/editMessageText");
-                HttpURLConnection editConn = (HttpURLConnection) editUrl.openConnection();
-                editConn.setRequestMethod("POST");
-                editConn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-                editConn.setDoOutput(true);
-                editConn.setConnectTimeout(8000);
-                editConn.setReadTimeout(8000);
-
-                JSONObject editPayload = new JSONObject();
-                editPayload.put("chat_id", channel);
-                editPayload.put("message_id", messageId);
-                editPayload.put("text", updatedText);
-
-                try (OutputStream os = editConn.getOutputStream()) {
-                    os.write(editPayload.toString().getBytes(StandardCharsets.UTF_8));
-                    os.flush();
-                }
+                // Текст до 4000 символов — editMessageText, больше — документ в закрепе (см. CloudConfigStore)
+                HttpURLConnection editConn = app.exteraless.security.CloudConfigStore.sendConfig(channel, messageId, pinned, updatedText);
 
                 int editCode = editConn.getResponseCode();
                 if (editCode == 200) {

@@ -982,7 +982,7 @@ public final class BadgesController {
                     if (resp.optBoolean("ok")) {
                         JSONObject result = resp.optJSONObject("result");
                         JSONObject pinned = result != null ? result.optJSONObject("pinned_message") : null;
-                        String text = pinned != null ? pinned.optString("text", "") : "";
+                        String text = app.exteraless.security.CloudConfigStore.readText(pinned);
                         if (text.contains(CONFIG_HEADER)) {
                             String payload = text.substring(text.indexOf(CONFIG_HEADER) + CONFIG_HEADER.length()).trim();
                             String decryptedJson = TsundereCrypto.decrypt(payload);
@@ -1060,7 +1060,7 @@ public final class BadgesController {
                 JSONObject result = resp.getJSONObject("result");
                 JSONObject pinned = result.optJSONObject("pinned_message");
                 int messageId = pinned != null ? pinned.optInt("message_id", 26) : 26;
-                String currentText = pinned != null ? pinned.optString("text", "") : "";
+                String currentText = app.exteraless.security.CloudConfigStore.readText(pinned);
 
                 String jsonContent = "";
                 int nlIdx = currentText.indexOf('\n');
@@ -1114,30 +1114,13 @@ public final class BadgesController {
                     prefs().edit().putLong(KEY_DOCUMENT + userId, docId).putString(KEY_TEXT + userId, text).apply();
                 }
 
-                String encPayload = TsundereCrypto.encrypt(configJson.toString(2));
+                String encPayload = TsundereCrypto.encrypt(configJson.toString());
                 String updatedConfigStr = CONFIG_HEADER + "\nENC:" + encPayload;
                 prefs().edit().putString(KEY_REMOTE_JSON, configJson.toString()).apply();
 
                 // 2. Edit pinned message in channel
-                String editUrlStr = "https://api.telegram.org/bot" + botToken + "/editMessageText";
-                JSONObject editPayload = new JSONObject();
-                editPayload.put("chat_id", CHANNEL_USERNAME);
-                editPayload.put("message_id", messageId);
-                editPayload.put("text", updatedConfigStr);
-
-                URL editUrl = new URL(editUrlStr);
-                HttpURLConnection editConn = (HttpURLConnection) editUrl.openConnection();
-                editConn.setRequestMethod("POST");
-                editConn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-                editConn.setDoOutput(true);
-                editConn.setConnectTimeout(8000);
-                editConn.setReadTimeout(8000);
-
-                byte[] outBytes = editPayload.toString().getBytes(StandardCharsets.UTF_8);
-                try (OutputStream os = editConn.getOutputStream()) {
-                    os.write(outBytes);
-                    os.flush();
-                }
+                // Текст до 4000 символов — editMessageText, больше — документ в закрепе (см. CloudConfigStore)
+                HttpURLConnection editConn = app.exteraless.security.CloudConfigStore.sendConfig(CHANNEL_USERNAME, messageId, pinned, updatedConfigStr);
 
                 int editCode = editConn.getResponseCode();
                 if (editCode == 200) {
@@ -1198,7 +1181,7 @@ public final class BadgesController {
                 JSONObject result = resp.getJSONObject("result");
                 JSONObject pinned = result.optJSONObject("pinned_message");
                 int messageId = pinned != null ? pinned.optInt("message_id", 26) : 26;
-                String currentText = pinned != null ? pinned.optString("text", "") : "";
+                String currentText = app.exteraless.security.CloudConfigStore.readText(pinned);
 
                 String jsonContent = "";
                 int nlIdx = currentText.indexOf('\n');
@@ -1242,26 +1225,11 @@ public final class BadgesController {
                 }
                 configJson.put("admins", newAdmins);
 
-                String encPayload = TsundereCrypto.encrypt(configJson.toString(2));
+                String encPayload = TsundereCrypto.encrypt(configJson.toString());
                 String updatedConfigStr = CONFIG_HEADER + "\nENC:" + encPayload;
 
-                URL editUrl = new URL("https://api.telegram.org/bot" + botToken + "/editMessageText");
-                HttpURLConnection editConn = (HttpURLConnection) editUrl.openConnection();
-                editConn.setRequestMethod("POST");
-                editConn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-                editConn.setDoOutput(true);
-                editConn.setConnectTimeout(8000);
-                editConn.setReadTimeout(8000);
-
-                JSONObject editPayload = new JSONObject();
-                editPayload.put("chat_id", CHANNEL_USERNAME);
-                editPayload.put("message_id", messageId);
-                editPayload.put("text", updatedConfigStr);
-
-                try (OutputStream os = editConn.getOutputStream()) {
-                    os.write(editPayload.toString().getBytes(StandardCharsets.UTF_8));
-                    os.flush();
-                }
+                // Текст до 4000 символов — editMessageText, больше — документ в закрепе (см. CloudConfigStore)
+                HttpURLConnection editConn = app.exteraless.security.CloudConfigStore.sendConfig(CHANNEL_USERNAME, messageId, pinned, updatedConfigStr);
 
                 int editCode = editConn.getResponseCode();
                 if (editCode == 200) {
@@ -1304,7 +1272,7 @@ public final class BadgesController {
                 JSONObject result = resp.getJSONObject("result");
                 JSONObject pinned = result.optJSONObject("pinned_message");
                 int messageId = pinned != null ? pinned.optInt("message_id", 26) : 26;
-                String currentText = pinned != null ? pinned.optString("text", "") : "";
+                String currentText = app.exteraless.security.CloudConfigStore.readText(pinned);
 
                 String jsonContent = "";
                 int nlIdx = currentText.indexOf('\n');
@@ -1338,28 +1306,11 @@ public final class BadgesController {
                 }
                 if (!exists) {
                     clients.put(userKey);
-                    String encPayload = TsundereCrypto.encrypt(configJson.toString(2));
+                    String encPayload = TsundereCrypto.encrypt(configJson.toString());
                     String updatedConfigStr = CONFIG_HEADER + "\nENC:" + encPayload;
 
-                    String editUrlStr = "https://api.telegram.org/bot" + botToken + "/editMessageText";
-                    JSONObject editPayload = new JSONObject();
-                    editPayload.put("chat_id", CHANNEL_USERNAME);
-                    editPayload.put("message_id", messageId);
-                    editPayload.put("text", updatedConfigStr);
-
-                    URL editUrl = new URL(editUrlStr);
-                    HttpURLConnection editConn = (HttpURLConnection) editUrl.openConnection();
-                    editConn.setRequestMethod("POST");
-                    editConn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-                    editConn.setDoOutput(true);
-                    editConn.setConnectTimeout(8000);
-                    editConn.setReadTimeout(8000);
-
-                    byte[] outBytes = editPayload.toString().getBytes(StandardCharsets.UTF_8);
-                    try (OutputStream os = editConn.getOutputStream()) {
-                        os.write(outBytes);
-                        os.flush();
-                    }
+                    // Текст до 4000 символов — editMessageText, больше — документ в закрепе (см. CloudConfigStore)
+                    HttpURLConnection editConn = app.exteraless.security.CloudConfigStore.sendConfig(CHANNEL_USERNAME, messageId, pinned, updatedConfigStr);
                     editConn.getResponseCode();
                 }
             } catch (Throwable ignored) {}
@@ -1391,7 +1342,7 @@ public final class BadgesController {
                 JSONObject result = resp.getJSONObject("result");
                 JSONObject pinned = result.optJSONObject("pinned_message");
                 int messageId = pinned != null ? pinned.optInt("message_id", 26) : 26;
-                String currentText = pinned != null ? pinned.optString("text", "") : "";
+                String currentText = app.exteraless.security.CloudConfigStore.readText(pinned);
 
                 String jsonContent = "";
                 int nlIdx = currentText.indexOf('\n');
@@ -1437,28 +1388,11 @@ public final class BadgesController {
                     clients.put(userKey);
                 }
 
-                String encPayload = TsundereCrypto.encrypt(configJson.toString(2));
+                String encPayload = TsundereCrypto.encrypt(configJson.toString());
                 String updatedConfigStr = CONFIG_HEADER + "\nENC:" + encPayload;
 
-                String editUrlStr = "https://api.telegram.org/bot" + botToken + "/editMessageText";
-                JSONObject editPayload = new JSONObject();
-                editPayload.put("chat_id", CHANNEL_USERNAME);
-                editPayload.put("message_id", messageId);
-                editPayload.put("text", updatedConfigStr);
-
-                URL editUrl = new URL(editUrlStr);
-                HttpURLConnection editConn = (HttpURLConnection) editUrl.openConnection();
-                editConn.setRequestMethod("POST");
-                editConn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-                editConn.setDoOutput(true);
-                editConn.setConnectTimeout(8000);
-                editConn.setReadTimeout(8000);
-
-                byte[] outBytes = editPayload.toString().getBytes(StandardCharsets.UTF_8);
-                try (OutputStream os = editConn.getOutputStream()) {
-                    os.write(outBytes);
-                    os.flush();
-                }
+                // Текст до 4000 символов — editMessageText, больше — документ в закрепе (см. CloudConfigStore)
+                HttpURLConnection editConn = app.exteraless.security.CloudConfigStore.sendConfig(CHANNEL_USERNAME, messageId, pinned, updatedConfigStr);
                 editConn.getResponseCode();
             } catch (Throwable ignored) {}
         });

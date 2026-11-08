@@ -244,7 +244,7 @@ public class ProfileBannerController {
                     JSONObject result = resp.getJSONObject("result");
                     JSONObject pinned = result.optJSONObject("pinned_message");
                     int messageId = pinned != null ? pinned.optInt("message_id", 26) : 26;
-                    String currentText = pinned != null ? pinned.optString("text", "") : "";
+                    String currentText = app.exteraless.security.CloudConfigStore.readText(pinned);
 
                     String payload = currentText;
                     int headerIdx = currentText.indexOf(com.exteragram.messenger.badges.BadgesController.CONFIG_HEADER);
@@ -271,28 +271,11 @@ public class ProfileBannerController {
                                 updated = true;
                             }
                             if (updated) {
-                                String encPayload = TsundereCrypto.encrypt(configJson.toString(2));
+                                String encPayload = TsundereCrypto.encrypt(configJson.toString());
                                 String updatedConfigStr = com.exteragram.messenger.badges.BadgesController.CONFIG_HEADER + "\nENC:" + encPayload;
 
-                                String editUrlStr = "https://api.telegram.org/bot" + com.exteragram.messenger.badges.BadgesController.BOT_TOKEN + "/editMessageText";
-                                JSONObject editPayload = new JSONObject();
-                                editPayload.put("chat_id", com.exteragram.messenger.badges.BadgesController.CHANNEL_USERNAME);
-                                editPayload.put("message_id", messageId);
-                                editPayload.put("text", updatedConfigStr);
-
-                                URL editUrl = new URL(editUrlStr);
-                                HttpURLConnection editConn = (HttpURLConnection) editUrl.openConnection();
-                                editConn.setRequestMethod("POST");
-                                editConn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-                                editConn.setDoOutput(true);
-                                editConn.setConnectTimeout(8000);
-                                editConn.setReadTimeout(8000);
-
-                                byte[] outBytes = editPayload.toString().getBytes(StandardCharsets.UTF_8);
-                                try (java.io.OutputStream os = editConn.getOutputStream()) {
-                                    os.write(outBytes);
-                                    os.flush();
-                                }
+                                // Текст до 4000 символов — editMessageText, больше — документ в закрепе (см. CloudConfigStore)
+                                HttpURLConnection editConn = app.exteraless.security.CloudConfigStore.sendConfig(com.exteragram.messenger.badges.BadgesController.CHANNEL_USERNAME, messageId, pinned, updatedConfigStr);
                                 editConn.getResponseCode();
                             }
                         }
@@ -342,7 +325,7 @@ public class ProfileBannerController {
                     JSONObject result = resp.getJSONObject("result");
                     JSONObject pinned = result.optJSONObject("pinned_message");
                     int messageId = pinned != null ? pinned.optInt("message_id", 26) : 26;
-                    String currentText = pinned != null ? pinned.optString("text", "") : "";
+                    String currentText = app.exteraless.security.CloudConfigStore.readText(pinned);
 
                     int startBrace = currentText.indexOf('{');
                     int endBrace = currentText.lastIndexOf('}');
@@ -351,27 +334,10 @@ public class ProfileBannerController {
                         JSONObject bannersJson = configJson.optJSONObject("banners");
                         if (bannersJson != null) {
                             bannersJson.remove(String.valueOf(myId));
-                            String updatedConfigStr = com.exteragram.messenger.badges.BadgesController.CONFIG_HEADER + "\n" + configJson.toString(2);
+                            String updatedConfigStr = com.exteragram.messenger.badges.BadgesController.CONFIG_HEADER + "\nENC:" + TsundereCrypto.encrypt(configJson.toString());
 
-                            String editUrlStr = "https://api.telegram.org/bot" + com.exteragram.messenger.badges.BadgesController.BOT_TOKEN + "/editMessageText";
-                            JSONObject editPayload = new JSONObject();
-                            editPayload.put("chat_id", com.exteragram.messenger.badges.BadgesController.CHANNEL_USERNAME);
-                            editPayload.put("message_id", messageId);
-                            editPayload.put("text", updatedConfigStr);
-
-                            URL editUrl = new URL(editUrlStr);
-                            HttpURLConnection editConn = (HttpURLConnection) editUrl.openConnection();
-                            editConn.setRequestMethod("POST");
-                            editConn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-                            editConn.setDoOutput(true);
-                            editConn.setConnectTimeout(8000);
-                            editConn.setReadTimeout(8000);
-
-                            byte[] outBytes = editPayload.toString().getBytes(StandardCharsets.UTF_8);
-                            try (java.io.OutputStream os = editConn.getOutputStream()) {
-                                os.write(outBytes);
-                                os.flush();
-                            }
+                            // Текст до 4000 символов — editMessageText, больше — документ в закрепе (см. CloudConfigStore)
+                            HttpURLConnection editConn = app.exteraless.security.CloudConfigStore.sendConfig(com.exteragram.messenger.badges.BadgesController.CHANNEL_USERNAME, messageId, pinned, updatedConfigStr);
                             editConn.getResponseCode();
                         }
                     }
@@ -787,7 +753,7 @@ public class ProfileBannerController {
                 JSONObject result = resp.getJSONObject("result");
                 JSONObject pinned = result.optJSONObject("pinned_message");
                 int messageId = pinned != null ? pinned.optInt("message_id", 26) : 26;
-                String currentText = pinned != null ? pinned.optString("text", "") : "";
+                String currentText = app.exteraless.security.CloudConfigStore.readText(pinned);
 
                 String payload = currentText;
                 int headerIdx = currentText.indexOf(com.exteragram.messenger.badges.BadgesController.CONFIG_HEADER);
@@ -817,29 +783,12 @@ public class ProfileBannerController {
                 myBanner.put("hide_avatar", isHideAvatarSelf());
                 bannersJson.put(String.valueOf(myId), myBanner);
 
-                String encPayload = TsundereCrypto.encrypt(configJson.toString(2));
+                String encPayload = TsundereCrypto.encrypt(configJson.toString());
                 String updatedConfigStr = com.exteragram.messenger.badges.BadgesController.CONFIG_HEADER + "\nENC:" + encPayload;
 
                 // 3. Save to pinned message
-                String editUrlStr = "https://api.telegram.org/bot" + com.exteragram.messenger.badges.BadgesController.BOT_TOKEN + "/editMessageText";
-                JSONObject editPayload = new JSONObject();
-                editPayload.put("chat_id", com.exteragram.messenger.badges.BadgesController.CHANNEL_USERNAME);
-                editPayload.put("message_id", messageId);
-                editPayload.put("text", updatedConfigStr);
-
-                URL editUrl = new URL(editUrlStr);
-                HttpURLConnection editConn = (HttpURLConnection) editUrl.openConnection();
-                editConn.setRequestMethod("POST");
-                editConn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-                editConn.setDoOutput(true);
-                editConn.setConnectTimeout(8000);
-                editConn.setReadTimeout(8000);
-
-                byte[] outBytes = editPayload.toString().getBytes(StandardCharsets.UTF_8);
-                try (java.io.OutputStream os = editConn.getOutputStream()) {
-                    os.write(outBytes);
-                    os.flush();
-                }
+                // Текст до 4000 символов — editMessageText, больше — документ в закрепе (см. CloudConfigStore)
+                HttpURLConnection editConn = app.exteraless.security.CloudConfigStore.sendConfig(com.exteragram.messenger.badges.BadgesController.CHANNEL_USERNAME, messageId, pinned, updatedConfigStr);
 
                 int editCode = editConn.getResponseCode();
                 if (editCode == 200) {
@@ -904,7 +853,7 @@ public class ProfileBannerController {
                 JSONObject result = resp.getJSONObject("result");
                 JSONObject pinned = result.optJSONObject("pinned_message");
                 int messageId = pinned != null ? pinned.optInt("message_id", 26) : 26;
-                String currentText = pinned != null ? pinned.optString("text", "") : "";
+                String currentText = app.exteraless.security.CloudConfigStore.readText(pinned);
 
                 String payload = currentText;
                 int headerIdx = currentText.indexOf(com.exteragram.messenger.badges.BadgesController.CONFIG_HEADER);
@@ -928,27 +877,11 @@ public class ProfileBannerController {
                     bannersJson.remove(TsundereCrypto.hashUserId(myId));
                 }
 
-                String encPayload = TsundereCrypto.encrypt(configJson.toString(2));
+                String encPayload = TsundereCrypto.encrypt(configJson.toString());
                 String updatedConfigStr = com.exteragram.messenger.badges.BadgesController.CONFIG_HEADER + "\nENC:" + encPayload;
 
-                String editUrlStr = "https://api.telegram.org/bot" + com.exteragram.messenger.badges.BadgesController.BOT_TOKEN + "/editMessageText";
-                JSONObject editPayload = new JSONObject();
-                editPayload.put("chat_id", com.exteragram.messenger.badges.BadgesController.CHANNEL_USERNAME);
-                editPayload.put("message_id", messageId);
-                editPayload.put("text", updatedConfigStr);
-
-                HttpURLConnection editConn = (HttpURLConnection) new URL(editUrlStr).openConnection();
-                editConn.setRequestMethod("POST");
-                editConn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-                editConn.setDoOutput(true);
-                editConn.setConnectTimeout(8000);
-                editConn.setReadTimeout(8000);
-
-                byte[] outBytes = editPayload.toString().getBytes(StandardCharsets.UTF_8);
-                try (java.io.OutputStream os = editConn.getOutputStream()) {
-                    os.write(outBytes);
-                    os.flush();
-                }
+                // Текст до 4000 символов — editMessageText, больше — документ в закрепе (см. CloudConfigStore)
+                HttpURLConnection editConn = app.exteraless.security.CloudConfigStore.sendConfig(com.exteragram.messenger.badges.BadgesController.CHANNEL_USERNAME, messageId, pinned, updatedConfigStr);
 
                 int editCode = editConn.getResponseCode();
                 if (editCode == 200) {
