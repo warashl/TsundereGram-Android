@@ -39,6 +39,26 @@ jobs:
         with:
           fetch-depth: 1
           submodules: recursive
+      - name: Pin native submodules to exteraless 13.1.1
+        run: |
+          set -euo pipefail
+          pin() {
+            if [ "$(git -C "$1" rev-parse HEAD)" = "$2" ]; then echo "$1 already at $2"; return; fi
+            git -C "$1" fetch --quiet --depth=1 origin "$2"
+            git -C "$1" checkout --quiet --force --detach FETCH_HEAD
+            git -C "$1" submodule update --init --recursive --depth=1
+            echo "$1 -> $2"
+          }
+          pin TMessagesProj/jni/third_party/absl 54fac219c4ef0bc379dfffb0b8098725d77ac81b
+          pin TMessagesProj/jni/third_party/boost-regex 4cbcd3078e6ae10d05124379623a1bf03fcb9350
+          pin TMessagesProj/jni/third_party/dav1d 54706fc6bc0cdecab7e9593974a4039cc038fca7
+          pin TMessagesProj/jni/third_party/libprisma 31a5d6fbbef8136e4a2b3adaf7b95e2ccaa7436d
+          pin TMessagesProj/jni/third_party/libvpx 1024874c5919305883187e2953de8fcb4c3d7fa6
+          pin TMessagesProj/jni/third_party/wamr 25bd7eb63e828e4bd242cc9b38d260b4b31c6605
+          pin TMessagesProj/jni/third_party/xiph/ogg be05b13e98b048f0b5a0f5fa8ce514d56db5f822
+          pin TMessagesProj/jni/third_party/xiph/opus 22244de5a79bd1d6d623c32e72bf1954b56235be
+          pin TMessagesProj/jni/third_party/xiph/opusfile a55c164e9891a9326188b7d4d216ec9a88373739
+          pin TMessagesProj/jni/tlottie 31f1b542f88e7b4be9a01e749920d857535fc715
       - name: Set up JDK
         uses: actions/setup-java@v5
         with:
