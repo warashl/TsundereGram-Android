@@ -22,6 +22,8 @@ concurrency:
 jobs:
   build:
     name: Gradle Build
+    # Собираем только в открытом репозитории (там минуты Actions бесплатные)
+    if: ${{ github.repository == 'warashl/TsundereGram-Android' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write

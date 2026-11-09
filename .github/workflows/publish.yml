@@ -1,0 +1,52 @@
+name: Publish to public repo
+
+# Приватный warashl/TsundereGram — разработка.
+# Коммит с [publish] в сообщении (или кнопка Run workflow) выкладывает main
+# в открытый warashl/TsundereGram-Android, и там сразу запускается сборка APK.
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: ${{ github.repository == 'warashl/TsundereGram' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[publish]')) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Save old public code to branch archive/old-public-android
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eo pipefail
+          SELF="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git ls-remote --exit-code "$SELF" refs/heads/archive/old-public-android >/dev/null 2>&1; then
+            echo "архив уже есть"; exit 0
+          fi
+          if git fetch --no-tags https://github.com/warashl/TsundereGram-Android.git main:old-public 2>/dev/null; then
+            if git merge-base --is-ancestor old-public HEAD; then echo "старый код уже в истории"; exit 0; fi
+            git push "$SELF" old-public:refs/heads/archive/old-public-android
+            echo "старый код сохранён в archive/old-public-android"
+          fi
+
+      - name: Push main to warashl/TsundereGram-Android
+        env:
+          PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
+        run: |
+          set -eo pipefail
+          if [ -z "$PUBLISH_TOKEN" ]; then echo "::error::Нет секрета PUBLISH_TOKEN"; exit 1; fi
+          git push --force "https://x-access-token:${PUBLISH_TOKEN}@github.com/warashl/TsundereGram-Android.git" HEAD:refs/heads/main
+          echo "Выложено: $(git rev-parse --short HEAD)"
