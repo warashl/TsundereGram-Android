@@ -22,8 +22,9 @@ concurrency:
 jobs:
   build:
     name: Gradle Build
-    # Собираем только в открытом репозитории (там минуты Actions бесплатные)
-    if: ${{ github.repository == 'warashl/TsundereGram-Android' }}
+    # Открытый репозиторий собирает каждый push (минуты бесплатные).
+    # Приватный — только по кнопке Run workflow или коммиту с [build] в сообщении.
+    if: ${{ github.repository == 'warashl/TsundereGram-Android' || github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[build]') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write

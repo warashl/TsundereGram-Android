@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   report:
-    if: ${{ github.repository == 'warashl/TsundereGram-Android' && github.event.workflow_run.conclusion == 'failure' }}
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
     runs-on: ubuntu-latest
     steps:
       - name: Post failed log as issue
