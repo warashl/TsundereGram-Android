@@ -45,7 +45,9 @@ jobs:
         uses: actions/checkout@v7
         with:
           path: _ci
-          sparse-checkout: .github
+          sparse-checkout: |
+            .github
+            final-patches
           persist-credentials: false
       - name: "Telegram: старт"
         run: |
@@ -73,6 +75,8 @@ jobs:
           else
             echo "TSUNDERE_API_URL not set - server address can be entered in the app"
           fi
+      - name: "Фиксы багов поверх 13.1.1 (final-patches)"
+        run: python3 "$RUNNER_TEMP/ci/final-patches/apply_edits.py" . "$RUNNER_TEMP/ci/final-patches/edits.json"
       - name: Pin native submodules to exteraless 13.1.1 versions
         run: |
           pin() {
@@ -190,6 +194,7 @@ jobs:
           SHORT=$(echo "$GITHUB_SHA" | cut -c1-7)
           NOTES=$(echo "$COMMITS_JSON" | jq -r 'if type == "array" then map("• " + (.message | split("\n")[0])) | join("\n") else "" end')
           [ -n "$NOTES" ] || NOTES="TsundereGram 13.1.1 build $SHORT"
+          [ -z "$FINAL_PATCH_SUMMARY" ] || NOTES=$(printf '%s\n\n%s' "$NOTES" "$FINAL_PATCH_SUMMARY")
           gh release create "ci-$SHORT" TMessagesProj/build/outputs/apk/release/*.apk --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" --prerelease --latest=false \
             --title "TsundereGram 13.1.1 · $SHORT" --notes "$NOTES"
