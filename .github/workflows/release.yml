@@ -114,15 +114,29 @@ jobs:
           fi
           cat gradle.properties
       - name: Restore signing key
+        # Подписываем тем же ключом, что и старые сборки TsundereGram (секреты DEBUG_KEYSTORE_*),
+        # чтобы новая версия ставилась поверх уже установленной без удаления.
         env:
+          OLD_KS: ${{ secrets.DEBUG_KEYSTORE_B64 }}
+          OLD_PASS: ${{ secrets.DEBUG_KEYSTORE_PASS }}
           RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE }}
+          RELEASE_PASS: ${{ secrets.KEYSTORE_PASS }}
         run: |
-          if [ -n "$RELEASE_KEYSTORE" ]; then
-            echo "$RELEASE_KEYSTORE" | base64 -d > TMessagesProj/release.keystore
-            echo "signing key restored"
+          KS=TMessagesProj/release.keystore
+          if [ -n "$OLD_KS" ] && [ -n "$OLD_PASS" ]; then
+            echo "$OLD_KS" | base64 -d > "$KS"; PASS="$OLD_PASS"; DEF_ALIAS=tsundere
+          elif [ -n "$RELEASE_KEYSTORE" ] && [ -n "$RELEASE_PASS" ]; then
+            echo "$RELEASE_KEYSTORE" | base64 -d > "$KS"; PASS="$RELEASE_PASS"; DEF_ALIAS=tsunderegram
+          fi
+          if [ -f "$KS" ]; then
+            ALIAS=$(keytool -list -v -keystore "$KS" -storepass "$PASS" 2>/dev/null | sed -n 's/^Alias name: //p' | head -n 1)
+            ALIAS=${ALIAS:-$DEF_ALIAS}
+            keytool -list -v -keystore "$KS" -storepass "$PASS" 2>/dev/null | grep -E "Alias name|Owner|SHA256" || true
+            { echo "KEYSTORE_PASS=$PASS"; echo "ALIAS_NAME=$ALIAS"; echo "ALIAS_PASS=$PASS"; } >> "$GITHUB_ENV"
+            echo "signing key restored, alias: $ALIAS"
             echo "TG_SIGNING=release" >> "$GITHUB_ENV"
           else
-            echo "RELEASE_KEYSTORE не задан — сборка подпишется отладочным ключом"
+            echo "ключ подписи не задан — сборка подпишется отладочным ключом"
             echo "TG_SIGNING=debug" >> "$GITHUB_ENV"
           fi
       - name: "Telegram: компиляция"
@@ -131,9 +145,6 @@ jobs:
         id: release_build_step
         env:
           COMMIT_ID: ${{ github.event.head_commit.id || github.sha }}
-          KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
-          ALIAS_NAME: tsunderegram
-          ALIAS_PASS: ${{ secrets.KEYSTORE_PASS }}
         run: |
           export LOCAL_PROPERTIES="${{ secrets.LOCAL_PROPERTIES }}"
           export BUILD_TIMESTAMP=$(date +%s)
@@ -145,6 +156,8 @@ jobs:
         run: |
           APK=$(ls -1t TMessagesProj/build/outputs/apk/release/*.apk | head -n 1)
           SIZE=$(du -m "$APK" | cut -f1)
+          AS="$(ls -d "$ANDROID_HOME"/build-tools/*/ 2>/dev/null | sort -V | tail -n 1)apksigner"
+          [ -x "$AS" ] && "$AS" verify --print-certs "$APK" | grep -iE "DN|SHA-256" || true
           NOTE=""
           [ "${TG_SIGNING:-debug}" = "release" ] || NOTE="⚠️ подписан временным ключом — поверх установленной версии не встанет"
           TG_NOTE="$NOTE" bash .github/scripts/tg_step.sh step "Публикация" "✅ <b>APK собран</b> (${SIZE} МБ), публикую (4/5)"
