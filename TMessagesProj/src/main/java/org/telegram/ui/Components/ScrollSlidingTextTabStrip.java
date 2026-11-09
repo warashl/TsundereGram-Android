@@ -446,8 +446,19 @@ public class ScrollSlidingTextTabStrip extends HorizontalScrollView implements T
 
     BlurredBackgroundDrawable backgroundDrawable;
     public void setBlurredBackground(BlurredBackgroundDrawable background) {
+        // SharedMediaLayout передаёт сюда null, чтобы убрать подложку: раньше это
+        // роняло открытие любого профиля (NPE на setCallback).
+        if (backgroundDrawable == background) {
+            return;
+        }
+        if (backgroundDrawable != null) {
+            backgroundDrawable.setCallback(null);
+        }
         backgroundDrawable = background;
-        backgroundDrawable.setCallback(this);
+        if (backgroundDrawable != null) {
+            backgroundDrawable.setCallback(this);
+        }
+        invalidate();
     }
 
     public final Path clipPath = new Path();

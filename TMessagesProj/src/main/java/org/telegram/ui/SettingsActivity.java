@@ -785,7 +785,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         }
         // Как в exteraGram 12.9.0 (SettingsActivity.java:899): знак приложения вместо
         // шестерёнки, акцент фирменного цвета на обе точки градиента.
-        items.add(SettingCell.Factory.of(-1, 0xFF993C38, 0xFF993C38, R.drawable.exteraless_icon_tile, getString(R.string.OpenExteraPreferences), getString(R.string.OpenExteraInfo)));
+        items.add(SettingCell.Factory.of(-1, 0, 0, R.drawable.exteraless_icon, getString(R.string.OpenExteraPreferences), getString(R.string.OpenExteraInfo)));
         items.add(UItem.asShadow(null));
         final boolean walletAbove = getConnectionsManager().getCurrentTime() - 1791538462 < 4 * 7 * 24 * 60 * 60;
         if (walletAbove && getMessagesController().config.walletAvailable.get()) {
@@ -1358,8 +1358,30 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             titleView.setTranslationX(icon == 0 ? dp(2) : 0);
             subtitleView.setTranslationX(icon == 0 ? dp(2) : 0);
 
-            iconView.setImageResource(icon);
-            applyIconColors(iconView, iconBackground, iconColorTop, iconColorBottom, resourcesProvider);
+            // Строка «Настройки TsundereGram» показывает аву приложения целиком, без
+            // плашки и без перекраски иконки (M3/Monet красят её в один цвет).
+            final boolean avatarIcon = icon == R.drawable.exteraless_icon;
+            if (avatarIcon) {
+                hasBackground = false;
+                iconLayout.setBackground(null);
+                iconView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                iconView.setImageDrawable(createTsundereAvatarDrawable(getContext()));
+                iconView.clearColorFilter();
+            } else {
+                if (iconLayout.getBackground() != iconBackground) {
+                    iconLayout.setBackground(iconBackground);
+                }
+                iconView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                iconView.setImageResource(icon);
+                applyIconColors(iconView, iconBackground, iconColorTop, iconColorBottom, resourcesProvider);
+            }
+            final ViewGroup.LayoutParams iconViewParams = iconView.getLayoutParams();
+            final int iconViewSize = avatarIcon ? ViewGroup.LayoutParams.MATCH_PARENT : dp(24);
+            if (iconViewParams != null && iconViewParams.width != iconViewSize) {
+                iconViewParams.width = iconViewSize;
+                iconViewParams.height = iconViewSize;
+                iconView.setLayoutParams(iconViewParams);
+            }
             final int iconSize = dp(iconBackground.isCircle() && !mini ? 36 : 28);
             final ViewGroup.LayoutParams iconParams = iconLayout.getLayoutParams();
             if (iconParams != null && iconParams.width != iconSize) {
@@ -1372,6 +1394,29 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             subtitleView.setText(subtitle);
             setValue(value);
             updateColors();
+        }
+
+        private static android.graphics.Bitmap tsundereAvatarBitmap;
+
+        private static android.graphics.drawable.Drawable createTsundereAvatarDrawable(Context context) {
+            try {
+                if (tsundereAvatarBitmap == null) {
+                    final android.graphics.Bitmap src = android.graphics.BitmapFactory.decodeResource(context.getResources(), R.drawable.exteraless_icon);
+                    if (src != null) {
+                        final int size = dp(36);
+                        tsundereAvatarBitmap = android.graphics.Bitmap.createScaledBitmap(src, size, size, true);
+                    }
+                }
+                if (tsundereAvatarBitmap != null) {
+                    final androidx.core.graphics.drawable.RoundedBitmapDrawable rounded =
+                            androidx.core.graphics.drawable.RoundedBitmapDrawableFactory.create(context.getResources(), tsundereAvatarBitmap);
+                    rounded.setCircular(true);
+                    return rounded;
+                }
+            } catch (Throwable t) {
+                FileLog.e(t);
+            }
+            return null;
         }
 
         public static void applyIconColors(

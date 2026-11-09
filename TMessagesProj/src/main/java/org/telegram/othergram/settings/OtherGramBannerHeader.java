@@ -13,6 +13,7 @@ import android.graphics.RectF;
 import android.view.View;
 
 import org.telegram.messenger.R;
+import org.telegram.ui.ActionBar.ActionBar;
 
 public class OtherGramBannerHeader extends View {
 
@@ -43,15 +44,21 @@ public class OtherGramBannerHeader extends View {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         final int width = MeasureSpec.getSize(widthMeasureSpec);
         final int bannerHeight = Math.round((width - dp(SIDE_PADDING_DP) * 2) * ASPECT);
-        setMeasuredDimension(width, bannerHeight + dp(8) + dp(4));
+        // ActionBar на этом экране прозрачный и лежит поверх списка, поэтому баннер
+        // сдвигаем под него — иначе стрелка «назад» и облако налезают на картинку.
+        setMeasuredDimension(width, getTopOffset() + bannerHeight + dp(8) + dp(4));
     }
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        rect.set(dp(SIDE_PADDING_DP), dp(8), w - dp(SIDE_PADDING_DP), h - dp(4));
+        rect.set(dp(SIDE_PADDING_DP), getTopOffset() + dp(8), w - dp(SIDE_PADDING_DP), h - dp(4));
         clip.reset();
         clip.addRoundRect(rect, dp(RADIUS_DP), dp(RADIUS_DP), Path.Direction.CW);
+    }
+
+    private static int getTopOffset() {
+        return ActionBar.getCurrentActionBarHeight();
     }
 
     @Override

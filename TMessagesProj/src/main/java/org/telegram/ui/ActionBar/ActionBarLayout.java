@@ -1158,8 +1158,10 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                 predictiveBackAnimation.getEnteringRect(predictiveBackRect);
                 m3Scale = predictiveBackAnimation.getEnteringScale();
             }
-            canvas.translate(predictiveBackRect.left, 0.0f);
-            canvas.scale(m3Scale, 1.0f);
+            // Масштаб одинаковый по обеим осям: раньше карточка ужималась только по
+            // ширине, и при жесте «назад» чат сплющивало.
+            canvas.translate(predictiveBackRect.left, predictiveBackRect.top);
+            canvas.scale(m3Scale, m3Scale);
             AndroidUtilities.rectTmp.set(0, -AndroidUtilities.dp(1), child.getWidth(), child.getHeight() + AndroidUtilities.dp(1));
             final float m3Radius = predictiveBackAnimation.getCornerRadius() / Math.max(0.01f, m3Scale);
             clipPath.rewind();
@@ -1191,7 +1193,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                             clipRight += dx;
                             AndroidUtilities.rectTmp.set(translationX, 0, translationX + getWidth(), getHeight());
                         }
-                        canvas.scale(scale, 1.0f, predictiveBackLeft ? AndroidUtilities.rectTmp.right - dp(82) : AndroidUtilities.rectTmp.left + dp(82), predictiveBackInProgress ? predictiveBackY : AndroidUtilities.rectTmp.centerY());
+                        canvas.scale(scale, scale, predictiveBackLeft ? AndroidUtilities.rectTmp.right - dp(82) : AndroidUtilities.rectTmp.left + dp(82), predictiveBackInProgress ? predictiveBackY : AndroidUtilities.rectTmp.centerY());
                     }
 
                     final RoundedCorner topLeft = insets.getRoundedCorner(android.view.RoundedCorner.POSITION_TOP_LEFT);

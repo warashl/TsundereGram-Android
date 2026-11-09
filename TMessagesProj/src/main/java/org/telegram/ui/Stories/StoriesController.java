@@ -2521,11 +2521,12 @@ public class StoriesController {
                             retrySend.flags &= ~TLObject.FLAG_9;
                             retrySend.music = null;
                             retrySend.albums = null;
-                            retrySend.privacy_rules.clear();
-                            retrySend.privacy_rules.add(new TLRPC.TL_inputPrivacyValueAllowAll());
-                            try {
-                                MessagesController.getMainSettings(currentAccount).edit().remove("story_privacy2").apply();
-                            } catch (Throwable ignore) {}
+                            // Ссылки/погода/реакции на истории (media_areas) часть сервера
+                            // тоже считает премиальными — при повторе отправляем без них.
+                            retrySend.flags &= ~32;
+                            retrySend.media_areas.clear();
+                            // Приватность не трогаем: она не премиальная, а сброс на «Все»
+                            // молча публиковал историю шире, чем выбрал пользователь.
                             currentRequest = ConnectionsManager.getInstance(currentAccount).sendRequest(retrySend, requestDelegate[0], ConnectionsManager.RequestFlagInvokeAfter);
                             return;
                         }

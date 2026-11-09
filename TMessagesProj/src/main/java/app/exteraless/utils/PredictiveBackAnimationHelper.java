@@ -212,8 +212,6 @@ public final class PredictiveBackAnimationHelper {
         startClosingRect.set(0.0f, 0.0f, Math.max(1, width), Math.max(1, height));
         targetClosingRect.set(startClosingRect);
         scaleCentered(targetClosingRect, 0.85f);
-        targetClosingRect.top = 0.0f;
-        targetClosingRect.bottom = Math.max(1, height);
         if (toRight) {
             targetClosingRect.offset(startClosingRect.right - targetClosingRect.right - AndroidUtilities.dp(8.0f), 0.0f);
         }
@@ -222,13 +220,9 @@ public final class PredictiveBackAnimationHelper {
         startEnteringRect.set(startClosingRect);
         scaleCentered(startEnteringRect, Utilities.clamp(
                 (startClosingRect.height() - cornerRadius * 2.0f) / startClosingRect.height(), 0.95f, 0.85f));
-        startEnteringRect.top = 0.0f;
-        startEnteringRect.bottom = Math.max(1, height);
         startEnteringRect.offset(-Math.max(startEnteringRect.width() * 0.14999998f, AndroidUtilities.dp(96.0f)), 0.0f);
         targetEnteringRect.set(startEnteringRect);
         scaleCentered(targetEnteringRect, 0.85f);
-        targetEnteringRect.top = 0.0f;
-        targetEnteringRect.bottom = Math.max(1, height);
         currentEnteringRect.set(startEnteringRect);
     }
 
@@ -237,12 +231,9 @@ public final class PredictiveBackAnimationHelper {
         interpolatedProgress = gestureInterpolator.getInterpolation(progress);
         closingAlpha = 1.0f;
         scrimAlphaMultiplier = 1.0f;
+        // Карточка уменьшается пропорционально (scaleCentered), без растягивания по высоте.
         interpolate(currentClosingRect, startClosingRect, targetClosingRect, interpolatedProgress);
-        currentClosingRect.top = 0.0f;
-        currentClosingRect.bottom = startClosingRect.height();
         interpolate(currentEnteringRect, startEnteringRect, targetEnteringRect, interpolatedProgress);
-        currentEnteringRect.top = 0.0f;
-        currentEnteringRect.bottom = startClosingRect.height();
         currentCornerRadius = AndroidUtilities.lerp(startCornerRadius, targetCornerRadius, interpolatedProgress);
     }
 

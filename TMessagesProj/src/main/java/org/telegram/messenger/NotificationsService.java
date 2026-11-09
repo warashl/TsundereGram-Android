@@ -63,7 +63,7 @@ public class NotificationsService extends Service {
                 .setContentTitle("TsundereGram")
                 .setPriority(visible ? NotificationCompat.PRIORITY_DEFAULT : NotificationCompat.PRIORITY_MIN)
                 .setSmallIcon(R.drawable.exteraless_notification)
-                .setContentText(LocaleController.getString("TsundereNotificationActive", R.string.TsundereNotificationActive))
+                .setContentText("Б-бака!(✿^‿^) Ц-цундере следит за сообщениями... ✨")
                 .build();
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {

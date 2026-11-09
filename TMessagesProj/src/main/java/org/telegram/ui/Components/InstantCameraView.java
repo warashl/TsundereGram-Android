@@ -423,7 +423,9 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
                             textureOverlayView.setImageDrawable(null);
                             textureOverlayView.setAlpha(1.0f);
                             textureOverlayView.invalidate();
-                        } else {
+                        } else if (cameraReady) {
+                            // Пока новая камера не дала кадр, держим размытую заглушку —
+                            // иначе на секунду застывает последний кадр старой камеры.
                             textureOverlayView.setAlpha(0.0f);
                         }
                     }
@@ -443,7 +445,7 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
                     }
                     cameraContainer.setRotationY(0f);
                     textureOverlayView.setRotationY(0f);
-                    if (!legacyCameraSwitchAwaitingFrame) {
+                    if (!legacyCameraSwitchAwaitingFrame && cameraReady) {
                         textureOverlayView.setAlpha(0.0f);
                         textureOverlayView.setImageDrawable(null);
                         needDrawFlickerStub = false;
