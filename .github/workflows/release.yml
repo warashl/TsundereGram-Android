@@ -33,6 +33,8 @@ jobs:
       CCACHE_NOHASHDIR: "true"
       CCACHE_MAXSIZE: "2G"
       NATIVE_TARGET: "universal"
+      # CMake 4 больше не принимает cmake_minimum_required < 3.5 (рантайм Chaquopy)
+      CMAKE_POLICY_VERSION_MINIMUM: "3.5"
       TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
       TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
       TG_ENABLED: ${{ (github.event_name != 'workflow_dispatch' || inputs.publish) && !contains(github.event.head_commit.message, '[skip publish]') }}
