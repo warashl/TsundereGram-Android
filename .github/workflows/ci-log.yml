@@ -2,7 +2,7 @@ name: CI Failure Log
 
 on:
   workflow_run:
-    workflows: ["Release Build"]
+    workflows: ["Release Build", "TsundereGram Build"]
     types: [completed]
 
 permissions:

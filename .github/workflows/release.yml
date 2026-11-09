@@ -24,7 +24,8 @@ jobs:
     name: Gradle Build
     # Открытый репозиторий собирает каждый push (минуты бесплатные).
     # Приватный — только по кнопке Run workflow или коммиту с [build] в сообщении.
-    if: ${{ github.repository == 'warashl/TsundereGram-Android' || github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[build]') }}
+    # Старая база 13.0.2 — собирается только вручную. Основная сборка: build.yml (13.1.1).
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
