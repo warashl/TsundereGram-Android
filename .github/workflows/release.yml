@@ -117,8 +117,10 @@ jobs:
           if [ -n "$RELEASE_KEYSTORE" ]; then
             echo "$RELEASE_KEYSTORE" | base64 -d > TMessagesProj/release.keystore
             echo "signing key restored"
+            echo "TG_SIGNING=release" >> "$GITHUB_ENV"
           else
             echo "RELEASE_KEYSTORE не задан — сборка подпишется отладочным ключом"
+            echo "TG_SIGNING=debug" >> "$GITHUB_ENV"
           fi
       - name: "Telegram: компиляция"
         run: bash .github/scripts/tg_step.sh step "Компиляция" "🔨 <b>Компилирую</b> (3/5) — самый долгий этап"
@@ -126,6 +128,9 @@ jobs:
         id: release_build_step
         env:
           COMMIT_ID: ${{ github.event.head_commit.id || github.sha }}
+          KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
+          ALIAS_NAME: tsunderegram
+          ALIAS_PASS: ${{ secrets.KEYSTORE_PASS }}
         run: |
           export LOCAL_PROPERTIES="${{ secrets.LOCAL_PROPERTIES }}"
           export BUILD_TIMESTAMP=$(date +%s)
@@ -137,7 +142,9 @@ jobs:
         run: |
           APK=$(ls -1t TMessagesProj/build/outputs/apk/release/*.apk | head -n 1)
           SIZE=$(du -m "$APK" | cut -f1)
-          bash .github/scripts/tg_step.sh step "Публикация" "✅ <b>APK собран</b> (${SIZE} МБ), публикую (4/5)"
+          NOTE=""
+          [ "${TG_SIGNING:-debug}" = "release" ] || NOTE="⚠️ подписан временным ключом — поверх установленной версии не встанет"
+          TG_NOTE="$NOTE" bash .github/scripts/tg_step.sh step "Публикация" "✅ <b>APK собран</b> (${SIZE} МБ), публикую (4/5)"
       - name: Upload arm64-v8a Artifact
         uses: actions/upload-artifact@v7
         with:

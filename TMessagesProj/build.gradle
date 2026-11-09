@@ -26,7 +26,9 @@ def buildTimestamp = System.getenv('BUILD_TIMESTAMP') ?: '0'
 def commitId = System.getenv('COMMIT_ID')
 def shortCommit = commitId?.take(7) ?: ''
 def verName = "${APP_VERSION_NAME}.1${shortCommit ? "-${shortCommit}" : ''}"
-def verCode = 1262
+// TsundereGram: код версии растёт с каждой сборкой CI и всегда выше старых сборок (1300+),
+// поэтому новый APK ставится поверх установленного.
+def verCode = 1400 + ((System.getenv("GITHUB_RUN_NUMBER") ?: "0") as Integer)
 
 def officialVer = APP_VERSION_NAME
 def officialCode = APP_VERSION_CODE
