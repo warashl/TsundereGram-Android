@@ -15,8 +15,13 @@ def commits():
         payload = json.loads(os.environ.get("COMMITS_JSON") or "[]")
     except Exception:
         payload = []
+    # при ручном запуске (workflow_dispatch) github.event.commits нет — приходит "null"
+    if not isinstance(payload, list):
+        payload = []
     out = []
     for commit in payload:
+        if not isinstance(commit, dict):
+            continue
         subject = (commit.get("message") or "").strip().splitlines()
         if subject:
             out.append(subject[0])

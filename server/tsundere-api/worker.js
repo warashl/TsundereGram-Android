@@ -11,7 +11,8 @@
  *
  * Переменные окружения:
  *   BOT_TOKEN   (secret, обязательно) — токен бота, админа канала с конфигом
- *   CHANNEL     (необязательно) — канал с закреплённым конфигом, по умолчанию @TsundereGram_Banners
+ *   CHANNEL     (необязательно) — канал с закреплённым конфигом: @username публичного канала
+ *               или ID приватного (-100…); по умолчанию @TsundereGram_Banners
  *   CREATOR_IDS (необязательно) — id создателей через запятую, по умолчанию 5133421262
  *   AI          (привязка Workers AI) — распознавание голосовых «из коробки» (POST /transcribe)
  */
@@ -44,8 +45,7 @@ export default {
         return new Response(APP_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });
       }
       if (path === "/info") {
-        const me = await getMe(env);
-        return json({ ok: true, bot: me && me.username, channel: channel(env) });
+        return info(env);
       }
       if (path === "/setup") {
         return setup(env, url);
@@ -88,7 +88,47 @@ function json(obj, status = 200, extra = {}) {
 }
 
 function channel(env) {
-  return env.CHANNEL || DEFAULT_CHANNEL;
+  return resolvedChannel || env.CHANNEL || DEFAULT_CHANNEL;
+}
+
+/**
+ * Канал сделали приватным, а в CHANNEL ещё старый @username: сервер сам находит ID канала по
+ * обновлению «права бота изменены» (my_chat_member), которое сделал создатель (CREATOR_IDS) —
+ * чужой канал так подсунуть нельзя. Найденный ID живёт в памяти, постоянно его задают в CHANNEL.
+ */
+let resolvedChannel = null;
+let lastResolveTry = 0;
+
+async function autoResolveChannel(env) {
+  if (Date.now() - lastResolveTry < 30000) return null;
+  lastResolveTry = Date.now();
+  const { data } = await tg(env, "getUpdates", { timeout: 0, limit: 100 });
+  if (!data || !data.ok) return null;
+  const owners = creators(env);
+  let found = null;
+  for (const u of data.result || []) {
+    const m = u.my_chat_member;
+    if (!m || !m.chat || m.chat.type !== "channel" || !m.from) continue;
+    if (!owners.includes(String(m.from.id))) continue;
+    if (m.new_chat_member && m.new_chat_member.status === "administrator") found = m.chat.id;
+  }
+  return found;
+}
+
+async function getChannelChat(env) {
+  let r = await tg(env, "getChat", { chat_id: channel(env) });
+  const failed = !(r.data && r.data.ok);
+  if (failed && !resolvedChannel && /chat not found/i.test((r.data && r.data.description) || "")) {
+    const id = await autoResolveChannel(env);
+    if (id) {
+      const r2 = await tg(env, "getChat", { chat_id: id });
+      if (r2.data && r2.data.ok) {
+        resolvedChannel = id;
+        r = r2;
+      }
+    }
+  }
+  return r;
 }
 
 function creators(env) {
@@ -178,6 +218,49 @@ async function getMe(env) {
   return botInfoCache;
 }
 
+/**
+ * /info: имя бота + проверка канала конфига. Если канал не найден (например, его сделали
+ * приватным, а в CHANNEL всё ещё @username), показывает подсказку и каналы, которые бот видел
+ * в последних обновлениях (пост в канале или смена прав бота) — оттуда берётся ID вида -100….
+ */
+async function info(env) {
+  const me = await getMe(env);
+  const out = { ok: true, bot: me && me.username, channel: channel(env) };
+  const ch = await getChannelChat(env);
+  if (ch.data && ch.data.ok) {
+    const c = ch.data.result;
+    out.channel = channel(env);
+    out.channel_ok = true;
+    if (resolvedChannel) {
+      out.channel_auto = true;
+      out.hint = "ID канала найден автоматически. Задайте его в переменной Worker CHANNEL, чтобы не зависеть от обновлений бота.";
+    }
+    out.channel_id = c.id;
+    out.channel_title = c.title;
+    out.channel_private = !c.username;
+    out.config_pinned = !!(c.pinned_message && (c.pinned_message.text || c.pinned_message.document));
+  } else {
+    out.channel_ok = false;
+    out.channel_error = (ch.data && ch.data.description) || "unknown";
+    out.hint = "Канал не найден. Если он стал приватным — задайте переменную Worker CHANNEL = ID канала (-100…). "
+      + "Создателю достаточно поменять права бота в канале — сервер найдёт ID сам (или он появится ниже).";
+    out.candidates = await seenChannels(env);
+  }
+  return json(out);
+}
+
+async function seenChannels(env) {
+  const { data } = await tg(env, "getUpdates", { timeout: 0, limit: 100 });
+  if (!data || !data.ok) return { error: (data && data.description) || "getUpdates failed" };
+  const seen = {};
+  for (const u of data.result || []) {
+    const m = u.channel_post || u.edited_channel_post || u.my_chat_member || u.chat_member;
+    const c = m && m.chat;
+    if (c && c.type === "channel") seen[c.id] = { id: c.id, title: c.title, username: c.username || null };
+  }
+  return Object.values(seen);
+}
+
 async function setup(env, url) {
   if (env.SETUP_KEY && url.searchParams.get("key") !== env.SETUP_KEY) {
     return json({ ok: false, description: "нужен ?key=SETUP_KEY" }, 403);
@@ -201,7 +284,7 @@ async function getChatCached(env, url, ctx) {
   const key = chatCacheKey(url);
   const hit = await cache.match(key);
   if (hit) return hit;
-  const { status, data } = await tg(env, "getChat", { chat_id: channel(env) });
+  const { status, data } = await getChannelChat(env);
   if (status === 200 && data.ok && data.result && data.result.pinned_message) {
     // конфиг больше 4096 символов лежит документом — клиентам отдаём его как обычный text
     data.result.pinned_message = await withConfigText(env, data.result.pinned_message);
@@ -430,7 +513,7 @@ async function editConfig(env, request, url, ctx) {
   const body = await request.json().catch(() => null);
   if (!body || typeof body.text !== "string") return json({ ok: false, error_code: 400, description: "bad body" }, 400);
 
-  const chat = await tg(env, "getChat", { chat_id: channel(env) });
+  const chat = await getChannelChat(env);
   if (!chat.data.ok) return json(chat.data, chat.status);
   const pinned = chat.data.result.pinned_message;
   if (!pinned) return json({ ok: false, error_code: 409, description: "нет закреплённого сообщения с конфигом" }, 409);
