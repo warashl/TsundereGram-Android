@@ -7,6 +7,7 @@
 """
 import json
 import os
+import shutil
 import sys
 
 
@@ -34,8 +35,26 @@ def apply_one(src, old, new):
     return None
 
 
+def copy_new_files(root, files_dir):
+    """Целые новые файлы: final-patches/files/<путь в дереве> копируются в дерево до точечных правок."""
+    copied = []
+    if not os.path.isdir(files_dir):
+        return copied
+    for dirpath, _dirs, names in os.walk(files_dir):
+        for name in sorted(names):
+            src_path = os.path.join(dirpath, name)
+            rel = os.path.relpath(src_path, files_dir)
+            dst = os.path.join(root, rel)
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            shutil.copyfile(src_path, dst)
+            copied.append(rel)
+            print("NEW  %s" % rel)
+    return copied
+
+
 def main():
     root, edits_path = sys.argv[1], sys.argv[2]
+    new_files = copy_new_files(root, os.path.join(os.path.dirname(os.path.abspath(edits_path)), "files"))
     edits = json.load(open(edits_path, encoding="utf-8"))["edits"]
     by_file = {}
     for e in edits:
@@ -66,6 +85,8 @@ def main():
         ok += len(items)
         print("OK   %s: %d" % (name, len(items)))
     summary = "Фиксы: применено %d из %d" % (ok, len(edits))
+    if new_files:
+        summary += "; новых файлов: %d" % len(new_files)
     if skipped:
         summary += "; пропущено: " + ", ".join(skipped)
     for s in skipped:

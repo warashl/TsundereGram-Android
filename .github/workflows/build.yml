@@ -5,11 +5,20 @@ name: TsundereGram Build
 # Подпись — старым ключом (DEBUG_KEYSTORE_*), versionCode = 2000 + номер запуска,
 # поэтому ставится поверх любой прошлой версии без удаления.
 # Запуск: коммит в main с [build] в сообщении или кнопка Run workflow.
+# PR в main собираются тем же конвейером как проверка (с правками final-patches из PR),
+# но без публикации релизов и без сообщений в Telegram.
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "final-patches/**"
+      - ".github/workflows/build.yml"
+      - ".github/scripts/**"
   workflow_dispatch:
 
 concurrency:
@@ -19,7 +28,7 @@ concurrency:
 jobs:
   build:
     name: Gradle Build (13.1.1)
-    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[build]') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' || contains(github.event.head_commit.message, '[build]') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -33,6 +42,8 @@ jobs:
       SRC_REF: fix/crash-ui-stories
       TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
       TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+      # проверочные сборки PR не пишут в Telegram (tg_step.sh смотрит на TG_ENABLED)
+      TG_ENABLED: ${{ github.event_name != 'pull_request' }}
       RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     steps:
       - name: Checkout source (TsundereGram 13.1.1 pipeline)
@@ -181,12 +192,17 @@ jobs:
           NOTE=""
           [ -n "${TG_KS_FILE:-}" ] || NOTE="⚠️ подписан временным ключом — поверх установленной версии не встанет"
           TG_NOTE="$NOTE" bash "$TGS" step "Публикация" "✅ <b>APK собран</b> (${SIZE} МБ), публикую (4/5)"
+      # APK всё равно публикуется релизом ниже — переполненная квота артефактов не должна ронять сборку
       - name: Upload artifact
+        if: github.event_name != 'pull_request'
+        continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
           name: TsundereGram
           path: TMessagesProj/build/outputs/apk/release/*.apk
+          retention-days: 3
       - name: Publish GitHub pre-release
+        if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
           COMMITS_JSON: ${{ toJSON(github.event.commits) }}
@@ -198,7 +214,30 @@ jobs:
           gh release create "ci-$SHORT" TMessagesProj/build/outputs/apk/release/*.apk --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" --prerelease --latest=false \
             --title "TsundereGram 13.1.1 · $SHORT" --notes "$NOTES"
+      # Этот репозиторий приватный, поэтому «Проверить обновления» в приложении читает релизы
+      # публичного warashl/TsundereGram-Android (GitHubUpdater). Нужен секрет PUBLISH_TOKEN
+      # (fine-grained токен с Contents: Read and write на TsundereGram-Android).
+      - name: Publish APK for in-app updates (TsundereGram-Android)
+        if: github.event_name != 'pull_request'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
+          PUBLIC_REPO: warashl/TsundereGram-Android
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::Нет секрета PUBLISH_TOKEN — сборка не опубликована в $PUBLIC_REPO, проверка обновлений в приложении её не увидит."
+            exit 0
+          fi
+          SHORT=$(echo "$GITHUB_SHA" | cut -c1-7)
+          gh release create "ci-$SHORT" TMessagesProj/build/outputs/apk/release/TsundereGram.apk --repo "$PUBLIC_REPO" \
+            --prerelease --title "TsundereGram 13.1.1 · $SHORT" --notes "TsundereGram 13.1.1 build $SHORT"
+          # храним 20 последних сборок
+          gh release list --repo "$PUBLIC_REPO" --limit 100 --json tagName,createdAt \
+            --jq 'sort_by(.createdAt) | reverse | .[20:] | .[].tagName' | while read -r t; do
+            gh release delete "$t" --repo "$PUBLIC_REPO" --yes --cleanup-tag || true
+          done
       - name: Send APK to Telegram
+        if: github.event_name != 'pull_request'
         continue-on-error: true
         env:
           TG_API_ID: ${{ secrets.TG_API_ID }}
@@ -213,6 +252,7 @@ jobs:
           pip install --quiet kurigram tgcrypto
           python3 "$RUNNER_TEMP/ci/.github/scripts/send_apk.py"
       - name: "Telegram: готово"
+        if: github.event_name != 'pull_request'
         env:
           RELEASES_URL: ${{ github.server_url }}/${{ github.repository }}/releases
         run: |

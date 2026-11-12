@@ -3,6 +3,10 @@ name: Pull request
 on:
   pull_request:
     types: [opened, reopened, synchronize]
+    # Дерево main — не исходник APK (его собирает build.yml из fix/crash-ui-stories + final-patches);
+    # PR в main проверяет build.yml, здесь — PR в остальные ветки.
+    branches-ignore:
+      - main
     paths-ignore:
       - '**.md'
       - '**.xml'
@@ -66,6 +70,8 @@ jobs:
           export LOCAL_PROPERTIES="${{ secrets.LOCAL_PROPERTIES }}"
           export DEBUG_BUILD=true
           sed -i 's/signingConfig = signingConfigs.release//g' TMessagesProj/build.gradle
+          # в git gradlew хранится без бита исполнения
+          chmod +x gradlew
           ./gradlew TMessagesProj:assembleDebug
 
           APK=$(find TMessagesProj/build/outputs/apk -name '*.apk' | head -1)
