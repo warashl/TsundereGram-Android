@@ -600,7 +600,7 @@ public class GroupCreateUserCell extends FrameLayout {
             float cx = avatarImageView.getLeft() + avatarImageView.getMeasuredWidth() / 2;
             float cy = avatarImageView.getTop() + avatarImageView.getMeasuredHeight() / 2;
             final float checkRadius = AndroidUtilities.dp(18) + AndroidUtilities.dp(4) * checkProgress;
-            final float checkCorners = app.tsunderegram.appearance.AppearanceConfig.getAvatarCorners(checkRadius * 2f);
+            final float checkCorners = app.exteraless.appearance.AppearanceConfig.getAvatarCorners(checkRadius * 2f);
             canvas.drawRoundRect(cx - checkRadius, cy - checkRadius, cx + checkRadius, cy + checkRadius,
                     checkCorners, checkCorners, paint);
         }

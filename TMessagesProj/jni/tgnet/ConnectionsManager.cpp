@@ -241,11 +241,10 @@ void ConnectionsManager::select() {
 
     if (lastPauseTime != 0 && llabs(now - lastPauseTime) >= nextSleepTimeout) {
         bool dontSleep = !requestingSaltsForDc.empty();
-        bool keepForGeneric = backgroundPauseTime != 0 && llabs(now - backgroundPauseTime) < CONNECTION_BACKGROUND_PENDING_KEEP_TIME;
         if (!dontSleep) {
             for (auto & runningRequest : runningRequests) {
                 Request *request = runningRequest.get();
-                if (request->connectionType & ConnectionTypeDownload || request->connectionType & ConnectionTypeUpload || (keepForGeneric && request->connectionType & ConnectionTypeGeneric && !request->cancelled)) {
+                if (request->connectionType & ConnectionTypeDownload || request->connectionType & ConnectionTypeUpload) {
                     dontSleep = true;
                     break;
                 }
@@ -254,7 +253,7 @@ void ConnectionsManager::select() {
         if (!dontSleep) {
             for (auto & iter : requestsQueue) {
                 Request *request = iter.get();
-                if (request->connectionType & ConnectionTypeDownload || request->connectionType & ConnectionTypeUpload || (keepForGeneric && request->connectionType & ConnectionTypeGeneric && !request->cancelled)) {
+                if (request->connectionType & ConnectionTypeDownload || request->connectionType & ConnectionTypeUpload) {
                     dontSleep = true;
                     break;
                 }
@@ -271,7 +270,7 @@ void ConnectionsManager::select() {
             return;
         } else {
             lastPauseTime = now;
-            if (LOGS_ENABLED) DEBUG_D("don't sleep because of salt, upload, download or pending generic request");
+            if (LOGS_ENABLED) DEBUG_D("don't sleep because of salt, upload or download request");
         }
     }
     if (networkPaused) {
@@ -970,13 +969,6 @@ void ConnectionsManager::onConnectionDataReceived(Connection *connection, Native
             if (processedStatus == 2) {
                 if (object == nullptr) {
                     connection->recreateSession();
-                    for (auto & runningRequest : runningRequests) {
-                        Request *request = runningRequest.get();
-                        Datacenter *requestDatacenter = getDatacenterWithId(request->datacenterId);
-                        if (request->connectionType & connection->getConnectionType() && requestDatacenter != nullptr && requestDatacenter->getDatacenterId() == datacenter->getDatacenterId()) {
-                            request->clear(true);
-                        }
-                    }
                     connection->reconnect();
                     return;
                 } else {
@@ -1153,13 +1145,6 @@ void ConnectionsManager::processServerResponse(TLObject *message, int64_t messag
             if (processedStatus == 2) {
                 if (innerMessage->unparsedBody != nullptr) {
                     connection->recreateSession();
-                    for (auto & runningRequest : runningRequests) {
-                        Request *request = runningRequest.get();
-                        Datacenter *requestDatacenter = getDatacenterWithId(request->datacenterId);
-                        if (request->connectionType & connection->getConnectionType() && requestDatacenter != nullptr && requestDatacenter->getDatacenterId() == datacenter->getDatacenterId()) {
-                            request->clear(true);
-                        }
-                    }
                     connection->reconnect();
                     return;
                 }
@@ -1597,7 +1582,7 @@ void ConnectionsManager::processServerResponse(TLObject *message, int64_t messag
                 }
 
                 if (realId != 0) {
-                    auto time = (int64_t) (realId / 4294967296.0 * 1000);
+                    auto time = (int64_t) (messageId / 4294967296.0 * 1000);
                     int64_t currentTime = getCurrentTimeMillis();
                     timeDifference = (int32_t) ((time - currentTime) / 1000 - currentPingTime / 2);
                 }
@@ -3856,7 +3841,6 @@ void ConnectionsManager::resumeNetwork(bool partial) {
         } else {
             lastPauseTime = 0;
             lastMonotonicPauseTime = 0;
-            backgroundPauseTime = 0;
             lastSystemPauseTime = 0;
             networkPaused = false;
             if (LOGS_ENABLED) DEBUG_D("wakeup network account%u", instanceNum);
@@ -3877,7 +3861,7 @@ void ConnectionsManager::pauseNetwork() {
     if (lastPauseTime != 0) {
         return;
     }
-    backgroundPauseTime = lastMonotonicPauseTime = lastPauseTime = getCurrentTimeMonotonicMillis();
+    lastMonotonicPauseTime = lastPauseTime = getCurrentTimeMonotonicMillis();
     lastSystemPauseTime = getCurrentTime();
     saveConfig();
 }

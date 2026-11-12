@@ -13,8 +13,8 @@ import android.widget.LinearLayout;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.tsunderegram.privacy.messages.AyuSavePreferences;
-import com.tsunderegram.privacy.utils.AyuGhostPreferences;
+import com.radolyn.ayugram.messages.AyuSavePreferences;
+import com.radolyn.ayugram.utils.AyuGhostPreferences;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -133,12 +133,6 @@ public final class SettingsBackupHelper {
         if (includeApiKeys) {
             spToJSON("aiConfig", configJson, key -> !"history".equals(key));
         }
-        if (!isCloud) {
-            JSONObject faveStickers = app.tsunderegram.utils.FaveStickersBackup.export();
-            if (faveStickers != null) {
-                configJson.put(app.tsunderegram.utils.FaveStickersBackup.KEY, faveStickers);
-            }
-        }
 
         return configJson.toString(indentSpaces);
     }
@@ -204,14 +198,14 @@ public final class SettingsBackupHelper {
         } catch (Throwable ignore) {
         }
         try {
-            configTypes.putAll(app.tsunderegram.OpenExteraConfig.getConfigTypes());
-            configTypes.putAll(app.tsunderegram.chats.ChatsConfig.getConfigTypes());
-            configTypes.putAll(app.tsunderegram.icons.IconPacksConfig.getConfigTypes());
-            configTypes.putAll(app.tsunderegram.glyph.GlyphConfig.getConfigTypes());
-            configTypes.putAll(app.tsunderegram.pillstack.PillStackConfig.getConfigTypes());
-            configTypes.putAll(app.tsunderegram.utils.UtilsConfig.getConfigTypes());
-            configTypes.putAll(app.tsunderegram.appearance.AppearanceConfig.getConfigTypes());
-            configTypes.putAll(app.tsunderegram.general.GeneralConfig.getConfigTypes());
+            configTypes.putAll(app.exteraless.OpenExteraConfig.getConfigTypes());
+            configTypes.putAll(app.exteraless.chats.ChatsConfig.getConfigTypes());
+            configTypes.putAll(app.exteraless.icons.IconPacksConfig.getConfigTypes());
+            configTypes.putAll(app.exteraless.glyph.GlyphConfig.getConfigTypes());
+            configTypes.putAll(app.exteraless.pillstack.PillStackConfig.getConfigTypes());
+            configTypes.putAll(app.exteraless.utils.UtilsConfig.getConfigTypes());
+            configTypes.putAll(app.exteraless.appearance.AppearanceConfig.getConfigTypes());
+            configTypes.putAll(app.exteraless.general.GeneralConfig.getConfigTypes());
         } catch (Throwable ignore) {
         }
         String[] preservePrefixes = {
@@ -228,9 +222,6 @@ public final class SettingsBackupHelper {
 
         for (Map.Entry<String, JsonElement> element : configJson.entrySet()) {
             String spName = element.getKey();
-            if (app.tsunderegram.utils.FaveStickersBackup.KEY.equals(spName) || !element.getValue().isJsonObject()) {
-                continue;
-            }
             SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences(spName, Activity.MODE_PRIVATE);
             SharedPreferences.Editor editor = preferences.edit();
             for (Map.Entry<String, JsonElement> config : ((JsonObject) element.getValue()).entrySet()) {
@@ -289,7 +280,6 @@ public final class SettingsBackupHelper {
             }
             editor.commit();
         }
-        app.tsunderegram.utils.FaveStickersBackup.restore(configJson.get(app.tsunderegram.utils.FaveStickersBackup.KEY));
         PushListenerController.reconcilePushRegistration();
     }
 

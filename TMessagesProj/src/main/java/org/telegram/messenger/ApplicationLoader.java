@@ -8,7 +8,7 @@
 
 package org.telegram.messenger;
 
-import app.tsunderegram.OpenExteraConfig;
+import app.exteraless.OpenExteraConfig;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -289,14 +289,14 @@ public class ApplicationLoader extends Application implements CameraXConfig.Prov
         NekoConfig.init();
         NaConfig.init();
         OpenExteraConfig.init();
-        app.tsunderegram.icons.IconPacksConfig.init();
-        app.tsunderegram.pillstack.PillStackConfig.init();
-        app.tsunderegram.appearance.AppearanceConfig.init();
-        app.tsunderegram.chats.ChatsConfig.init();
-        app.tsunderegram.general.GeneralConfig.init();
-        app.tsunderegram.utils.UtilsConfig.init();
-        app.tsunderegram.glyph.GlyphConfig.init();
-        app.tsunderegram.glyph.GlyphController.getInstance().init();
+        app.exteraless.icons.IconPacksConfig.init();
+        app.exteraless.pillstack.PillStackConfig.init();
+        app.exteraless.appearance.AppearanceConfig.init();
+        app.exteraless.chats.ChatsConfig.init();
+        app.exteraless.general.GeneralConfig.init();
+        app.exteraless.utils.UtilsConfig.init();
+        app.exteraless.glyph.GlyphConfig.init();
+        app.exteraless.glyph.GlyphController.getInstance().init();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             // Суффикс набора Monet запекается в ThemeInfo.assetName при первой загрузке
             // класса Theme. Если она случилась до загрузки конфигов (процесс поднялся
@@ -304,9 +304,9 @@ public class ApplicationLoader extends Application implements CameraXConfig.Prov
             // умолчанию — патчим assetName после инициализации конфигов.
             org.telegram.ui.ActionBar.Theme.reloadMonetThemes();
         }
-        app.tsunderegram.plugins.PluginsController.getInstance().init(applicationContext);
+        app.exteraless.plugins.PluginsController.getInstance().init(applicationContext);
         if (BuildConfig.DEBUG_TOOLS) {
-            app.tsunderegram.debug.EnergyProfiler.resumeIfEnabled(applicationContext);
+            app.exteraless.debug.EnergyProfiler.resumeIfEnabled(applicationContext);
         }
         SharedPrefsHelper.init(applicationContext);
         FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(AndroidUtil.shouldEnableCrashlytics());
@@ -346,8 +346,7 @@ public class ApplicationLoader extends Application implements CameraXConfig.Prov
             DownloadController.getInstance(a);
         }
         BillingController.getInstance().startConnection();
-        com.tsunderegram.messenger.badges.BadgesController.INSTANCE.loadRemoteBadges();
-        com.tsunderegram.messenger.badges.BadgesController.INSTANCE.startAutoRefresh();
+        com.exteragram.messenger.badges.BadgesController.INSTANCE.loadRemoteBadges();
     }
 
     public ApplicationLoader() {
@@ -415,10 +414,6 @@ public class ApplicationLoader extends Application implements CameraXConfig.Prov
         }
 
         NativeLoader.initNativeLibs(ApplicationLoader.applicationContext);
-        try {
-            org.telegram.tsunderestyle.theme.TsundereStyleFonts.applyGlobalTypeface(); // TsundereStyle: interface font everywhere
-        } catch (Throwable ignore) {
-        }
 
         try {
             ConnectionsManager.native_setJava(false);
@@ -445,16 +440,16 @@ public class ApplicationLoader extends Application implements CameraXConfig.Prov
 
         applicationHandler = new Handler(applicationContext.getMainLooper());
 
-        org.osmdroid.config.Configuration.getInstance().setUserAgentValue("TsundereGram/" + BuildConfig.VERSION_NAME + " (+https://warashl.github.io/)");
+        org.osmdroid.config.Configuration.getInstance().setUserAgentValue("exteraless/" + BuildConfig.VERSION_NAME + " (+https://github.com/exteraless/exteraless)");
         final File osmdroidBasePath = new File(ApplicationLoader.applicationContext.getCacheDir(), "osmdroid");
         org.osmdroid.config.Configuration.getInstance().setOsmdroidBasePath(osmdroidBasePath);
         org.osmdroid.config.Configuration.getInstance().setOsmdroidTileCache(new File(osmdroidBasePath, "tiles"));
 
         LauncherIconController.tryFixLauncherIconIfNeeded();
         ProxyRotationController.init();
-        app.tsunderegram.proxy.ProxyPingController.init();
-        app.tsunderegram.links.LinkCleaner.preloadIfEnabled();
-        app.tsunderegram.appearance.M3CircularProgress.prewarm();
+        app.exteraless.proxy.ProxyPingController.init();
+        app.exteraless.links.LinkCleaner.preloadIfEnabled();
+        app.exteraless.appearance.M3CircularProgress.prewarm();
 
         //if (BuildConfig.DEBUG_PRIVATE_VERSION) {
         //    Choreographer60FpsContent.getInstance().addFrameCallback(debugEverySecondChecks, 1);
@@ -926,8 +921,7 @@ public class ApplicationLoader extends Application implements CameraXConfig.Prov
     private void installCrashReportFilter() {
         Thread.UncaughtExceptionHandler crashlyticsHandler = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler((thread, error) -> {
-            app.tsunderegram.plugins.PluginsWatchdog.onUncaughtException(error);
-            app.tsunderegram.crash.CrashLog.record(thread, error);
+            app.exteraless.crash.CrashLog.record(thread, error);
             if (AndroidUtil.shouldReportCrashToCrashlytics(error)) {
                 if (crashlyticsHandler != null) {
                     crashlyticsHandler.uncaughtException(thread, error);

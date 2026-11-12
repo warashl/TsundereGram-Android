@@ -14,7 +14,7 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import app.tsunderegram.appearance.AppearanceConfig;
+import app.exteraless.appearance.AppearanceConfig;
 
 import org.telegram.messenger.ImageReceiver;
 import org.telegram.messenger.MessagesController;
@@ -54,7 +54,7 @@ public class AvatarSpan extends ReplacementSpan {
 
     public void setSize(float sz) {
         // openExtera: сток просил радиус во всю сторону, из-за чего глобальное масштабирование
-        // в ImageReceiver держало спан круглым до середины слайдера. TsundereGram считает радиус от
+        // в ImageReceiver держало спан круглым до середины слайдера. exteraGram считает радиус от
         // стороны: org/telegram/ui/AvatarSpan.java:143 — setRoundRadius(getAvatarCorners(f)).
         imageReceiver.setRoundRadiusForAvatar(dp(sz));
         this.sz = sz;

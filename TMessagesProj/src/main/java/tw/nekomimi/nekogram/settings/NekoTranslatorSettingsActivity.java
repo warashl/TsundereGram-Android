@@ -145,7 +145,7 @@ public class NekoTranslatorSettingsActivity extends BaseNekoXSettingsActivity {
     );
     private final AbstractConfigCell googleCloudTranslateKeyRow = cellGroup.appendCell(new ConfigCellTextDetail(NekoConfig.googleCloudTranslateKey, (view, position) -> showConfigDialog(position, NekoConfig.googleCloudTranslateKey, getString(R.string.GoogleCloudTransKeyNotice), getString(R.string.LlmApiKey)), getString(R.string.None), true));
     private final AbstractConfigCell deepLTranslateKeyRow = cellGroup.appendCell(new ConfigCellTextDetail(NaConfig.INSTANCE.getDeepLTranslateKey(), (view, position) -> showConfigDialog(position, NaConfig.INSTANCE.getDeepLTranslateKey(), getString(R.string.DeepLTranslateKeyNotice), getString(R.string.LlmApiKey)), getString(R.string.None), true));
-    // Тон перевода DeepL — единственная часть переводчиков TsundereGram, которой
+    // Тон перевода DeepL — единственная часть переводчиков exteraGram, которой
     // у NagramX не было (12.9.0: TranslationFormality). Действует только по
     // своему ключу API, о чём сказано в подписи строки.
     private final AbstractConfigCell deepLFormalityRow = cellGroup.appendCell(new ConfigCellSelectBox(null, NaConfig.INSTANCE.getDeepLFormality(), new String[]{

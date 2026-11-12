@@ -9,12 +9,9 @@ import org.telegram.messenger.R;
 
 public class LauncherIconController {
     public static void tryFixLauncherIconIfNeeded() {
-        // Выбранная пользователем иконка (TsundereGram или Стрелка) остаётся как есть;
-        // чиним только состояние, когда не включена ни одна из наших.
-        if (isEnabled(LauncherIcon.TSUNDEREGRAM) || isEnabled(LauncherIcon.ARROW)) {
-            return;
+        if (!isEnabled(LauncherIcon.EXTERALESS)) {
+            setIcon(LauncherIcon.EXTERALESS);
         }
-        setIcon(LauncherIcon.TSUNDEREGRAM);
     }
 
     public static boolean isEnabled(LauncherIcon icon) {
@@ -24,7 +21,7 @@ public class LauncherIconController {
         // именно она стоит у <application> в манифесте, и переключатель должен
         // показывать выбранным то, что человек видит на рабочем столе.
         return i == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-                || i == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT && icon == LauncherIcon.TSUNDEREGRAM;
+                || i == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT && icon == LauncherIcon.EXTERALESS;
     }
 
     public static void setIcon(LauncherIcon icon) {
@@ -37,10 +34,8 @@ public class LauncherIconController {
     }
 
     public enum LauncherIcon {
-        TSUNDEREGRAM("TsundereGramIcon", R.drawable.tsunderegram_icon_background,
-                R.drawable.tsunderegram_icon_foreground, R.string.AppIconTsundereGram),
-        ARROW("ArrowIcon", R.drawable.arrow_icon_background,
-                R.drawable.arrow_icon_foreground, R.string.AppIconArrow),
+        EXTERALESS("ExteralessIcon", R.drawable.exteraless_icon_background,
+                R.drawable.exteraless_icon_foreground, R.string.AppIconExteraless),
         BLUEPRINT("BlueprintIcon", R.drawable.blueprint_icon_background,
                 R.drawable.blueprint_icon_foreground, R.string.AppIconBlueprint),
         RED("RedIcon", R.drawable.red_icon_background,

@@ -50,7 +50,7 @@ import org.telegram.ui.Components.blur3.drawable.BlurredBackgroundDrawable;
 import org.telegram.ui.Components.blur3.drawable.color.BlurredBackgroundColorProvider;
 import org.telegram.ui.Components.voip.CellFlickerDrawable;
 import org.telegram.ui.Stories.recorder.FlashViews;
-import org.telegram.utils.recorder.round.RoundVideoSession;
+import org.telegram.utils.camera.roundvideo.RoundVideoSession;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -385,7 +385,7 @@ public final class InstantCameraView2 extends InstantCameraViewBase {
                 .setOutputResolution(activeOutputResolution)
                 .setVideoBitrate(SharedSettings.roundVideoVideoBitrate.get())
                 .setCameraResolution(SharedSettings.roundVideoCameraResolution.get())
-                .setFrameRate(app.tsunderegram.chats.ChatsConfig.extendedFramesPerSecond.Bool() ? RoundVideoSession.FrameRate.FPS_60 : RoundVideoSession.FrameRate.FPS_30)
+                .setFrameRate(app.exteraless.chats.ChatsConfig.extendedFramesPerSecond.Bool() ? RoundVideoSession.FrameRate.FPS_60 : RoundVideoSession.FrameRate.FPS_30)
                 .setCompositionEnabled(SharedSettings.roundVideoComposition.get())
                 .setListener(sessionListener)
                 .setOutputListener(upload)

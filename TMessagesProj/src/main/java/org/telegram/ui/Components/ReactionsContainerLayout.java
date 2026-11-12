@@ -68,7 +68,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.tgnet.tl.TL_stories;
-import app.tsunderegram.appearance.GlassMenuHelper;
+import app.exteraless.appearance.GlassMenuHelper;
 
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;

@@ -128,7 +128,7 @@ public class AvatarDrawable extends Drawable {
         super();
         this.resourcesProvider = resourcesProvider;
         namePaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        // TsundereGram 12.9.0, AvatarDrawable.java:96-107 — инициалы рисуются Nunito ExtraBold,
+        // exteraGram 12.9.0, AvatarDrawable.java:96-107 — инициалы рисуются Nunito ExtraBold,
         // а не системным жирным. Единственное место, где этот шрифт используется.
         namePaint.setTypeface(AndroidUtilities.getTypeface(AndroidUtilities.TYPEFACE_NUNITO_EXTRABOLD));
         namePaint.setTextSize(dp(18));
@@ -779,8 +779,8 @@ public class AvatarDrawable extends Drawable {
     private void drawBackgroundShape(Canvas canvas, int size, float scale, Paint paint) {
         final float half = size / 2.0f;
         int radius = roundRadius;
-        if (radius <= 0 && !app.tsunderegram.appearance.AppearanceConfig.avatarCornersDefault()) {
-            radius = app.tsunderegram.appearance.AppearanceConfig.getAvatarCorners(size);
+        if (radius <= 0 && !app.exteraless.appearance.AppearanceConfig.avatarCornersDefault()) {
+            radius = app.exteraless.appearance.AppearanceConfig.getAvatarCorners(size);
         }
         if (radius <= 0) {
             canvas.drawCircle(half, half, half * scale, paint);

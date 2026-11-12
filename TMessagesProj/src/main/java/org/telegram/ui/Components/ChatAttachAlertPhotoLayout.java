@@ -144,7 +144,7 @@ public class ChatAttachAlertPhotoLayout extends ChatAttachAlert.AttachAlertLayou
     private final boolean needCamera;
 
     /**
-     * Показывать ли плитку камеры в сетке. TsundereGram 12.9.0 добавляет это условие
+     * Показывать ли плитку камеры в сетке. exteraGram 12.9.0 добавляет это условие
      * к каждому месту, где плитка участвует в раскладке или в арифметике позиций
      * (ChatAttachAlertPhotoLayout.java: 22 точки, паттерн
      * `needCamera && ... && (!hideCameraTile || noCameraPermissions)`).
@@ -156,7 +156,7 @@ public class ChatAttachAlertPhotoLayout extends ChatAttachAlert.AttachAlertLayou
      * внутри плитки, сама плитка остаётся в сетке.
      */
     private boolean showCameraTile() {
-        return !app.tsunderegram.chats.ChatsConfig.hideCameraTile.Bool() || noCameraPermissions;
+        return !app.exteraless.chats.ChatsConfig.hideCameraTile.Bool() || noCameraPermissions;
     }
 
     private RecyclerListView cameraPhotoRecyclerView;
@@ -852,7 +852,7 @@ public class ChatAttachAlertPhotoLayout extends ChatAttachAlert.AttachAlertLayou
         gridView.getFastScroll().usePadding = false;
         gridView.getFastScroll().topOffset = ActionBar.getCurrentActionBarHeight(); // + AndroidUtilities.statusBarHeight;
         gridView.setAdapter(adapter = new PhotoAttachAdapter(context, needCamera));
-        // TsundereGram зовёт openCamera(boolean) прямо из клик-листенера кнопки
+        // exteraGram зовёт openCamera(boolean) прямо из клик-листенера кнопки
         // (ChatAttachAlertPhotoLayout.java:4593); у нас точка входа с проверкой разрешения.
         parentAlert.openInAppCameraAction = this::openCameraWithPermissionCheck;
         gridView.addItemDecoration(cameraViewItemDecoration = new CameraViewItemDecoration(gridView));

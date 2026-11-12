@@ -57,14 +57,11 @@
     <string name="OEChatsTapToSwitchRecord">Нажатие переключает голос и видео</string>
     <string name="OEChatsKeepAttachButton">Сохранять кнопку вложения при наборе</string>
     <string name="OEChatsRemoveMessageTail">Убрать «хвостик» пузыря</string>
-    <string name="OEChatsUnreadCapsule">Компактная плашка «Непрочитанные»</string>
     <string name="OEChatsReplaceEditedWithIcon">Заменять «изменено» иконкой</string>
     <string name="OEChatsShowOnlineStatus">Показывать индикатор онлайна</string>
     <string name="OEChatsHideShareButton">Скрыть боковую кнопку «Поделиться»</string>
     <string name="OEChatsHideGiftButton">Скрыть кнопку подарков в каналах</string>
     <string name="OEChatsHideSearchButton">Скрыть кнопку поиска в каналах</string>
-    <string name="OEChatsHideCallButton">Скрыть кнопку звонка</string>
-    <string name="OEChatsHideMoneyButton">Скрыть «%1$s» в меню вложений</string>
     <string name="OEChatsShowResultsBeforeVoting">Показывать результаты до голосования</string>
     <string name="OEChatsHideReactions">Скрывать реакции</string>
     <string name="OEChatsHideReactionsChannels">Каналы</string>
@@ -156,7 +153,7 @@
     <string name="OEChatsInlineMathCurrencyInfo">Выражения с валютами, например «10 usd to rub =», отправляются боту @calcmulabot за курсом.</string>
     <string name="OEChatsInlineMathAnnouncement">Результат: %1$s</string>
     <string name="OELocalPremiumInfo">Премиум-эмодзи уходят ссылками, которые TsundereGram и поддерживающие это клиенты показывают как настоящие эмодзи. Остальные функции Premium работают только на этом устройстве.</string>
-    <string name="OELocalPremiumEmojiHint">Без **Telegram Premium** эмодзи отправится ссылкой: в **TsundereGram** собеседник увидит его анимированным, в других клиентах — обычным эмодзи-ссылкой.</string>
+    <string name="OELocalPremiumEmojiHint">У вас нет **Telegram Premium**, поэтому эмодзи уйдёт ссылкой: увидят его только пользователи **TsundereGram** и клиентов, поддерживающих это.</string>
     <string name="OEChatsSections">Разделы</string>
     <string name="OEChatsMenus">Меню и кнопки</string>
     <string name="OEChatsMenusInfo">Меню чата, сообщений и просмотра медиа</string>
@@ -167,6 +164,4 @@
     <string name="OEChatsMenusHeader">Меню</string>
     <string name="OEChatsPlaybackHeader">Воспроизведение</string>
     <string name="OEChatsVoiceHeader">Голосовые сообщения</string>
-    <string name="OEDoubleTapSaveToDevice">Сохранить на устройство</string>
-    <string name="OESendAfterSlowMode">Отправить после слоумода</string>
 </resources>

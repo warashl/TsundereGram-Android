@@ -8,13 +8,13 @@
 
 package org.telegram.ui;
 
-import app.tsunderegram.appearance.AppearanceConfig;
-import app.tsunderegram.components.TranslateBeforeSendWrapper;
-import app.tsunderegram.drawer.DrawerContainer;
-import app.tsunderegram.drawer.MainMenuHelper;
-import app.tsunderegram.drawer.MainMenuItem;
-import app.tsunderegram.drawer.MainMenuLayout;
-import app.tsunderegram.utils.AppUtils;
+import app.exteraless.appearance.AppearanceConfig;
+import app.exteraless.components.TranslateBeforeSendWrapper;
+import app.exteraless.drawer.DrawerContainer;
+import app.exteraless.drawer.MainMenuHelper;
+import app.exteraless.drawer.MainMenuItem;
+import app.exteraless.drawer.MainMenuLayout;
+import app.exteraless.utils.AppUtils;
 
 import static org.telegram.messenger.AndroidUtilities.dp;
 import static org.telegram.messenger.AndroidUtilities.dpf2;
@@ -105,7 +105,7 @@ import org.telegram.ui.recyclerview.LinearSmoothScrollerCustom;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
 
-import com.tsunderegram.privacy.utils.LastSeenHelper;
+import com.radolyn.ayugram.utils.LastSeenHelper;
 
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
@@ -724,7 +724,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     public boolean notify = true;
     public int scheduleDate;
     public int scheduleRepeatPeriod;
-    public boolean forceDocument;
 
     private int canReadCount;
     private int canPinCount;
@@ -2145,7 +2144,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
             t -= dp(5 * Math.max(filterTabsVisibility, topPanelsVisibility));
             additionalPadding -= dp(5 * Math.max(filterTabsVisibility, topPanelsVisibility));
-            t += miniPlayerTopPadding;
 
             final int b = calculateListViewPaddingBottom();
             if (t != topPadding || b != getPaddingBottom()) {
@@ -3059,8 +3057,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
 
         BirthdayController.getInstance(currentAccount).check();
-        additionNavigationBarHeight = hasMainTabs && MainTabsLayout.isBottomNavigationVisible() && !MainTabsLayout.isBottomNavigationFloating() ? dp(app.tsunderegram.appearance.MainTabsUiHelper.getTabsViewHeightDp()) : 0;
-        additionFloatingButtonOffset = hasMainTabs && MainTabsLayout.isBottomNavigationVisible() ? dp(app.tsunderegram.appearance.MainTabsUiHelper.getTabsFabOffsetDp()) : 0;
+        additionNavigationBarHeight = hasMainTabs && MainTabsLayout.isBottomNavigationVisible() && !MainTabsLayout.isBottomNavigationFloating() ? dp(app.exteraless.appearance.MainTabsUiHelper.getTabsViewHeightDp()) : 0;
+        additionFloatingButtonOffset = hasMainTabs && MainTabsLayout.isBottomNavigationVisible() ? dp(app.exteraless.appearance.MainTabsUiHelper.getTabsFabOffsetDp()) : 0;
 
         LastSeenHelper.preload();
 
@@ -3322,9 +3320,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     @Override
     public void setTitleOverlayText(String title, int titleId, Runnable action) {
-        if (rightSlidingDialogContainer != null && rightSlidingDialogContainer.hasFragment()) {
-            return;
-        }
         super.setTitleOverlayText(title, titleId, action);
         if (actionBar != null && selectAnimatedEmojiDialog != null && selectAnimatedEmojiDialog.getContentView() instanceof SelectAnimatedEmojiDialog) {
             SimpleTextView textView = actionBar.getTitleTextView();
@@ -3346,8 +3341,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         filterTabsView = null;
         selectedDialogs.clear();
 
-        additionNavigationBarHeight = hasMainTabs && MainTabsLayout.isBottomNavigationVisible() && !MainTabsLayout.isBottomNavigationFloating() ? dp(app.tsunderegram.appearance.MainTabsUiHelper.getTabsViewHeightDp()) : 0;
-        additionFloatingButtonOffset = hasMainTabs && MainTabsLayout.isBottomNavigationVisible() ? dp(app.tsunderegram.appearance.MainTabsUiHelper.getTabsFabOffsetDp()) : 0;
+        additionNavigationBarHeight = hasMainTabs && MainTabsLayout.isBottomNavigationVisible() && !MainTabsLayout.isBottomNavigationFloating() ? dp(app.exteraless.appearance.MainTabsUiHelper.getTabsViewHeightDp()) : 0;
+        additionFloatingButtonOffset = hasMainTabs && MainTabsLayout.isBottomNavigationVisible() ? dp(app.exteraless.appearance.MainTabsUiHelper.getTabsFabOffsetDp()) : 0;
 
         maximumVelocity = ViewConfiguration.get(context).getScaledMaximumFlingVelocity();
 
@@ -3430,7 +3425,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
         };
         // openExtera: полоса пилюль в строке поиска, вся логика — в PillStackController
-        app.tsunderegram.pillstack.PillStackController.attach(fragmentSearchField, fragmentSearchField.editText);
+        app.exteraless.pillstack.PillStackController.attach(fragmentSearchField, fragmentSearchField.editText);
         fragmentSearchField.setPadding(dp(4), dp(4), dp(4), dp(4));
         fragmentSearchField.setPivotX(0);
         fragmentSearchField.setPivotY(0);
@@ -4179,13 +4174,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     });
                     showDialog(sheet);
                 } else if (id == remove_from_folder) {
-                    final ArrayList<MessagesController.DialogFilter> dialogFilters = getMessagesController().getDialogFilters();
-                    final int selectedType = viewPages[0].selectedType;
-                    MessagesController.DialogFilter filter = selectedType >= 0 && selectedType < dialogFilters.size() ? dialogFilters.get(selectedType) : getMessagesController().selectedDialogFilter[viewPages[0].dialogsType == 8 ? 1 : 0];
-                    if (filter == null) {
-                        hideActionMode(true);
-                        return;
-                    }
+                    MessagesController.DialogFilter filter = getMessagesController().getDialogFilters().get(viewPages[0].selectedType);
                     ArrayList<Long> neverShow = FiltersListBottomSheet.getDialogsCount(DialogsActivity.this, filter, selectedDialogs, false, false);
 
                     int currentCount;
@@ -5372,7 +5361,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 if (delegate == null || selectedDialogs.isEmpty()) {
                     return;
                 }
-                forceDocument = false;
                 ArrayList<MessagesStorage.TopicKey> topicKeys = new ArrayList<>();
                 for (int i = 0; i < selectedDialogs.size(); i++) {
                     topicKeys.add(MessagesStorage.TopicKey.of(selectedDialogs.get(i), 0));
@@ -5787,9 +5775,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 updateFilterTabs(false, true);
                 checkUi_searchFieldHint();
                 updateDialogsHint();
-                if (!hasFragment() && getParentLayout() != null) {
-                    getParentLayout().updateTitleOverlay();
-                }
             }
 
             @Override
@@ -7437,23 +7422,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
         showFiltersHint();
         if (viewPages != null) {
-            boolean filtersReselected = false;
-            ArrayList<MessagesController.DialogFilter> filters = getMessagesController().getDialogFilters();
-            for (int a = viewPages.length - 1; a >= 0; a--) {
-                ViewPage page = viewPages[a];
-                if (page.dialogsType != DIALOGS_TYPE_FOLDER1 && page.dialogsType != DIALOGS_TYPE_FOLDER2 || page.selectedType < 0 || page.selectedType >= filters.size()) {
-                    continue;
-                }
-                MessagesController.DialogFilter filter = filters.get(page.selectedType);
-                int slot = page.dialogsType - DIALOGS_TYPE_FOLDER1;
-                if (!filter.isDefault() && getMessagesController().selectedDialogFilter[slot] != filter) {
-                    getMessagesController().selectDialogFilter(filter, slot);
-                    filtersReselected = true;
-                }
-            }
-            if (filtersReselected) {
-                reloadViewPageDialogs(viewPages[0], false);
-            }
             for (int a = 0; a < viewPages.length; a++) {
                 if (viewPages[a].dialogsType == 0 && viewPages[a].archivePullViewState == ARCHIVE_ITEM_STATE_HIDDEN && viewPages[a].layoutManager.findFirstVisibleItemPosition() == 0 && hasHiddenArchive()) {
                     viewPages[a].layoutManager.scrollToPositionWithOffset(1, (int) scrollYOffset);
@@ -9198,42 +9166,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     private float miniPlayerInset;
     private int miniPlayerPadding;
-    private int miniPlayerTopPadding;
-
-    @Override
-    public void setMiniPlayerTopPadding(int padding) {
-        if (miniPlayerTopPadding == padding) {
-            return;
-        }
-        miniPlayerTopPadding = padding;
-        if (viewPages != null) {
-            for (int i = 0; i < viewPages.length; i++) {
-                if (viewPages[i] != null) {
-                    viewPages[i].listView.requestLayout();
-                }
-            }
-        }
-    }
-
-    @Override
-    public float getMiniPlayerTopAnchor() {
-        if (viewPages == null || viewPages[0] == null) {
-            return -1;
-        }
-        return viewPages[0].listView.topPadding - miniPlayerTopPadding + scrollYOffset + storiesOverscroll + viewPages[0].getTranslationY();
-    }
-
-    @Override
-    public float getMiniPlayerTopVisibility() {
-        float visibility = 1f - Utilities.clamp01(searchAnimationProgress);
-        if (rightSlidingDialogContainer != null && rightSlidingDialogContainer.hasFragment()) {
-            visibility *= 1f - Utilities.clamp01(rightSlidingDialogContainer.openedProgress);
-        }
-        if (blurredView != null && blurredView.getVisibility() == View.VISIBLE && blurredView.getBackground() != null) {
-            visibility *= 1f - Utilities.clamp01(blurredView.getAlpha());
-        }
-        return visibility;
-    }
 
     public void setMiniPlayerInset(float inset, int padding) {
         if (miniPlayerInset != inset) {
@@ -11773,7 +11705,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
         sharedMediaEntries = entries;
         sharedLink = null;
-        forceDocument = false;
         if (commentView != null) {
             attachShareTopView(initialCaption);
         } else {
@@ -11929,16 +11860,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
 
             @Override
-            public int getSelectedCount() {
-                return sharedMediaEntries != null ? sharedMediaEntries.size() : 0;
-            }
-
-            @Override
-            public boolean canSendAsFile() {
-                return canSendDocumentsToSelectedDialogs();
-            }
-
-            @Override
             public long getDialogId() {
                 return selectedDialogs.isEmpty() ? 0 : selectedDialogs.get(0);
             }
@@ -11995,11 +11916,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 if (shareTopView != null) {
                     shareTopView.setSharedMedia(currentAccount, sharedMediaEntries);
                 }
-                final boolean useExternalOptions = !notify || scheduleDate != 0 || forceDocument;
+                final boolean useExternalOptions = !notify || scheduleDate != 0;
                 if (useExternalOptions && delegate != null && !selectedDialogs.isEmpty()) {
                     DialogsActivity.this.notify = notify;
                     DialogsActivity.this.scheduleDate = scheduleDate;
-                    DialogsActivity.this.forceDocument = forceDocument;
                     final ArrayList<MessagesStorage.TopicKey> topicKeys = new ArrayList<>();
                     for (int i = 0; i < selectedDialogs.size(); i++) {
                         topicKeys.add(MessagesStorage.TopicKey.of(selectedDialogs.get(i), 0));
@@ -12362,20 +12282,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         );
     }
 
-    private boolean canSendDocumentsToSelectedDialogs() {
-        for (int i = 0; i < selectedDialogs.size(); ++i) {
-            final TLRPC.Chat chat = getMessagesController().getChat(-selectedDialogs.get(i));
-            if (chat != null && !ChatObject.canSendDocument(chat)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     private boolean onSendLongClick(View view) {
         if (getParentActivity() == null) return false;
 
-        boolean onlyMyself = !selectedDialogs.isEmpty();
+        boolean onlyMyself = false;
         boolean canSchedule = true;
         for (int i = 0; i < selectedDialogs.size(); ++i) {
             final long did = selectedDialogs.get(i);
@@ -12391,18 +12301,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
         final boolean onlyMyselfFinal = onlyMyself;
         boolean sendWithoutSoundNax = NaConfig.INSTANCE.getSilentMessageByDefault().Bool();
-
-        boolean canSendDocs = hasSharedMediaEntries() && canSendDocumentsToSelectedDialogs();
-        if (canSendDocs) {
-            for (MediaController.PhotoEntry entry : sharedMediaEntries) {
-                if (entry.hasVideoEditsLostAsDocument()) {
-                    canSendDocs = false;
-                    break;
-                }
-            }
-        }
-        final boolean multipleMedia = sharedMediaEntries != null && sharedMediaEntries.size() > 1;
-
         final ItemOptions options = ItemOptions.makeOptions(this, view);
         if (commentView != null && !TextUtils.isEmpty(commentView.getFieldText())) {
             options.addView(new TranslateBeforeSendWrapper(getContext(), true, false, getResourceProvider()) {
@@ -12440,19 +12338,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             });
         hideSendersNameItem[0] = options.getLast();
         options
-            .addIf(canSendDocs, R.drawable.msg_sendfile, LocaleController.getString(multipleMedia ? R.string.SendAsFiles : R.string.SendAsFile), () -> {
-                this.forceDocument = true;
-                if (delegate == null || selectedDialogs.isEmpty()) {
-                    return;
-                }
-                final ArrayList<MessagesStorage.TopicKey> topicKeys = new ArrayList<>();
-                for (int i = 0; i < selectedDialogs.size(); i++)
-                    topicKeys.add(MessagesStorage.TopicKey.of(selectedDialogs.get(i), 0));
-                delegate.didSelectDialogs(DialogsActivity.this, topicKeys, commentView.getFieldText(), false, notify, scheduleDate, scheduleRepeatPeriod, null);
-            })
             .add(sendWithoutSoundNax ? R.drawable.input_notify_on : R.drawable.input_notify_off, getString(sendWithoutSoundNax ? R.string.SendWithSound : R.string.SendWithoutSound), () -> {
                 this.notify = sendWithoutSoundNax;
-                this.forceDocument = false;
                 if (delegate == null || selectedDialogs.isEmpty()) {
                     return;
                 }
@@ -12461,13 +12348,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     topicKeys.add(MessagesStorage.TopicKey.of(selectedDialogs.get(i), 0));
                 delegate.didSelectDialogs(DialogsActivity.this, topicKeys, commentView.getFieldText(), false, notify, scheduleDate, scheduleRepeatPeriod, null);
             })
-            .addIf(canSchedule, R.drawable.msg_calendar2, LocaleController.getString(onlyMyselfFinal ? R.string.SetReminder : R.string.ScheduleMessage), () -> {
+            .addIf(canSchedule, R.drawable.msg_calendar2, LocaleController.getString(R.string.ScheduleMessage), () -> {
                 AlertsCreator.createScheduleDatePickerDialog(getParentActivity(), onlyMyselfFinal ? getUserConfig().getClientUserId() : -1, new AlertsCreator.ScheduleDatePickerDelegate() {
                     @Override
                     public void didSelectDate(boolean notify, int scheduleDate, int scheduleRepeatPeriod) {
                         DialogsActivity.this.scheduleDate = scheduleDate;
                         DialogsActivity.this.scheduleRepeatPeriod = scheduleRepeatPeriod;
-                        DialogsActivity.this.forceDocument = false;
                         if (delegate == null || selectedDialogs.isEmpty()) {
                             return;
                         }
@@ -14403,8 +14289,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
         }
 
-        // tsunderegram plugins: пункты плагинов (MAIN_MENU) в конце меню «⋮».
-        app.tsunderegram.plugins.menus.MenuInjector.appendMainMenuItems(io, currentAccount, this);
+        // exteraless plugins: пункты плагинов (MAIN_MENU) в конце меню «⋮».
+        app.exteraless.plugins.menus.MenuInjector.appendMainMenuItems(io, currentAccount, this);
 
         io.show();
         io.setTranslationY(-dp(64));
@@ -14703,7 +14589,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     private boolean shouldUseDrawerActionBarLayout() {
-        // communityId в TsundereGram нет: у сообщества свой заголовок со стрелкой «назад», бургер там нельзя.
+        // communityId в exteraGram нет: у сообщества свой заголовок со стрелкой «назад», бургер там нельзя.
         return AppearanceConfig.navigationDrawer() && !onlySelect && initialDialogsType == DIALOGS_TYPE_DEFAULT
                 && folderId == 0 && communityId == 0 && searchString == null;
     }
@@ -14739,7 +14625,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (fragmentView.getGlobalVisibleRect(bounds)) {
                 final int y = ((int) ev.getRawY()) - bounds.top;
                 final int bottom = fragmentView.getMeasuredHeight() - navigationBarHeight;
-                if (y >= bottom - dp(app.tsunderegram.appearance.MainTabsUiHelper.getTabsViewHeightDp()) && y <= bottom) {
+                if (y >= bottom - dp(app.exteraless.appearance.MainTabsUiHelper.getTabsViewHeightDp()) && y <= bottom) {
                     return false;
                 }
             }
@@ -14890,7 +14776,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         boolean hasBottomBlur = false;
         if (hasMainTabs && MainTabsLayout.isBottomNavigationVisible()) {
-            app.tsunderegram.appearance.MainTabsUiHelper.setBlurBounds(iBlur3PositionMainTabs, fragmentView, navigationBarHeight);
+            app.exteraless.appearance.MainTabsUiHelper.setBlurBounds(iBlur3PositionMainTabs, fragmentView, navigationBarHeight);
             iBlur3PositionMainTabs.inset(0, LiteMode.isEnabled(LiteMode.FLAG_LIQUID_GLASS) ? 0 : -dp(48));
 
             hasBottomBlur = true;
@@ -14930,7 +14816,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (commentView != null || !hasMainTabs || !MainTabsLayout.isBottomNavigationFloating()) {
             return 0;
         }
-        return dp(app.tsunderegram.appearance.MainTabsUiHelper.getTabsViewHeightDp());
+        return dp(app.exteraless.appearance.MainTabsUiHelper.getTabsViewHeightDp());
     }
 
     @Override
@@ -14943,7 +14829,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         // Как в Telegram для iOS: тап по вкладке «Чаты» сначала возвращает в первую папку,
         // и только потом крутит список наверх. switchToCurrentSelectedMode уже ставит
         // список нужной папки в начало, поэтому отдельный scrollToTop тут не нужен.
-        if (app.tsunderegram.appearance.MainTabsUiHelper.isIosNavigationBar()
+        if (app.exteraless.appearance.MainTabsUiHelper.isIosNavigationBar()
                 && filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE
                 && !tabsAnimationInProgress && !filterTabsView.isAnimatingIndicator() && !startedTracking
                 && !filterTabsView.isFirstTabSelected()

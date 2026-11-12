@@ -2,7 +2,7 @@ package tw.nekomimi.nekogram.menu.ghostmode;
 
 import static org.telegram.messenger.LocaleController.getString;
 
-import com.tsunderegram.privacy.utils.AyuGhostPreferences;
+import com.radolyn.ayugram.utils.AyuGhostPreferences;
 
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;

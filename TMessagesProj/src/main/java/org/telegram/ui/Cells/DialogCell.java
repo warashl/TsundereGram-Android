@@ -758,10 +758,10 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
 
     /**
      * openExtera: подставляет перед именем отправителя его мини-аватарку.
-     * Перенесено из TsundereGram 12.9.0 (DialogCell.addSenderAvatar).
+     * Перенесено из exteraGram 12.9.0 (DialogCell.addSenderAvatar).
      */
     private CharSequence addSenderAvatar(CharSequence name, MessageObject messageObject) {
-        if (!app.tsunderegram.appearance.AppearanceConfig.senderMiniAvatars() || messageObject == null || TextUtils.isEmpty(name)) {
+        if (!app.exteraless.appearance.AppearanceConfig.senderMiniAvatars() || messageObject == null || TextUtils.isEmpty(name)) {
             return name;
         }
         long fromId = messageObject.getFromChatId();
@@ -1559,12 +1559,12 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                             drawScam = 2;
                             Theme.dialogs_fakeDrawable.checkText();
                         } else {
-                            com.tsunderegram.messenger.api.dto.BadgeDTO chatBadge = com.tsunderegram.messenger.badges.BadgesController.INSTANCE.getBadge(chat);
+                            com.exteragram.messenger.api.dto.BadgeDTO chatBadge = com.exteragram.messenger.badges.BadgesController.INSTANCE.getBadge(chat);
                             if (chatBadge != null && chatBadge.isCustomBadge()) {
                                 drawPremium = true;
                                 nameLayoutEllipsizeByGradient = true;
                                 emojiStatus.center = LocaleController.isRTL;
-                                emojiStatus.set(com.tsunderegram.messenger.badges.BadgesController.INSTANCE.getCustomBadgeDrawable(chatBadge, 18), false);
+                                emojiStatus.set(com.exteragram.messenger.badges.BadgesController.INSTANCE.getCustomBadgeDrawable(chatBadge, 18), false);
                                 emojiStatus.setParticles(false, false);
                             } else if (chatBadge != null && chatBadge.getDocumentId() != 0) {
                                 drawPremium = true;
@@ -1595,12 +1595,12 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                             drawVerified = !forbidVerified && user.verified;
                             drawBotVerified = !forbidVerified && !UserObject.isUserSelf(user) && user.bot_verification_icon != 0;
                         }
-                        com.tsunderegram.messenger.api.dto.BadgeDTO userBadge = com.tsunderegram.messenger.badges.BadgesController.INSTANCE.getBadge(user);
+                        com.exteragram.messenger.api.dto.BadgeDTO userBadge = com.exteragram.messenger.badges.BadgesController.INSTANCE.getBadge(user);
                         if (userBadge != null && userBadge.isCustomBadge()) {
                             drawPremium = true;
                             nameLayoutEllipsizeByGradient = true;
                             emojiStatus.center = LocaleController.isRTL;
-                            emojiStatus.set(com.tsunderegram.messenger.badges.BadgesController.INSTANCE.getCustomBadgeDrawable(userBadge, 18), false);
+                            emojiStatus.set(com.exteragram.messenger.badges.BadgesController.INSTANCE.getCustomBadgeDrawable(userBadge, 18), false);
                             emojiStatus.setParticles(false, false);
                         } else if (userBadge != null && userBadge.getDocumentId() != 0) {
                             drawPremium = true;
@@ -1728,7 +1728,7 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                     } else {
                         CharSequence mess;
                         if (draftMessage != null && draftMessage.rich_message != null) {
-                            mess = AnimatedEmojiSpan.cloneSpans(MessageObject.formatRichMessage(draftMessage.rich_message, false, false, 150), -1, Theme.dialogs_messagePaint[paintIndex].getFontMetricsInt());
+                            mess = MessageObject.formatRichMessage(draftMessage.rich_message, false, false, 150);
                         } else if (draftVoice) {
                             mess = getString(R.string.AttachAudio);
                         } else if (draftMessage != null) {
@@ -1743,7 +1743,7 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                         if (draftMessage != null) {
                             MediaDataController.addTextStyleRuns(draftMessage, messSpan, TextStyleSpan.FLAG_STYLE_SPOILER | TextStyleSpan.FLAG_STYLE_STRIKE);
                             if (draftMessage != null && draftMessage.entities != null) {
-                                app.tsunderegram.chats.LinkedCustomEmoji.parse(draftMessage.message, draftMessage.entities);
+                                app.exteraless.chats.LinkedCustomEmoji.parse(draftMessage.message, draftMessage.entities);
                                 MediaDataController.addAnimatedEmojiSpans(draftMessage.entities, messSpan, currentMessagePaint == null ? null : currentMessagePaint.getFontMetricsInt());
                             }
                         } else if (draftVoice) {
@@ -3411,13 +3411,13 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                             boolean blocked = false;
                             boolean replyBlocked = false;
                             boolean needsReplyTargetCheck = false;
-                            if (AyuFilter.shouldHideSenders() && ChatObject.isMegagroup(MessagesController.getInstance(currentAccount).getChat(-dialog.id))) {
-                                blocked = NekoConfig.ignoreBlocked.Bool() && MessagesController.getInstance(currentAccount).blockePeers.indexOfKey(message.getFromChatId()) >= 0;
+                            if (NekoConfig.ignoreBlocked.Bool() && ChatObject.isMegagroup(MessagesController.getInstance(currentAccount).getChat(-dialog.id))) {
+                                blocked = MessagesController.getInstance(currentAccount).blockePeers.indexOfKey(message.getFromChatId()) >= 0;
                                 blocked = blocked || AyuFilter.isCustomFilteredPeer(message.getFromChatId());
                                 blocked = blocked || AyuFilter.isBlockedChannel(message.getFromChatId());
                                 if (message.replyMessageObject != null) {
                                     long fromId = message.replyMessageObject.getFromChatId();
-                                    replyBlocked = NekoConfig.ignoreBlocked.Bool() && MessagesController.getInstance(currentAccount).blockePeers.indexOfKey(fromId) >= 0;
+                                    replyBlocked = MessagesController.getInstance(currentAccount).blockePeers.indexOfKey(fromId) >= 0;
                                     replyBlocked = replyBlocked || AyuFilter.isCustomFilteredPeer(fromId);
                                     replyBlocked = replyBlocked || AyuFilter.isBlockedChannel(fromId);
                                 } else if (message.getReplyMsgId() != 0) {
@@ -3567,18 +3567,18 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                     long dialogBotVerificationIcon = 0;
                     if (user != null) {
                         user = MessagesController.getInstance(currentAccount).getUser(user.id);
-                        com.tsunderegram.messenger.api.dto.BadgeDTO userBadge = user != null ? com.tsunderegram.messenger.badges.BadgesController.INSTANCE.getBadge(user) : null;
+                        com.exteragram.messenger.api.dto.BadgeDTO userBadge = user != null ? com.exteragram.messenger.badges.BadgesController.INSTANCE.getBadge(user) : null;
                         if (userBadge != null && userBadge.isCustomBadge()) {
                             nameLayoutEllipsizeByGradient = true;
-                            emojiStatus.set(com.tsunderegram.messenger.badges.BadgesController.INSTANCE.getCustomBadgeDrawable(userBadge, 18), animated);
+                            emojiStatus.set(com.exteragram.messenger.badges.BadgesController.INSTANCE.getCustomBadgeDrawable(userBadge, 18), animated);
                             emojiStatus.setParticles(false, animated);
                         } else if (userBadge != null && userBadge.getDocumentId() != 0) {
                             nameLayoutEllipsizeByGradient = true;
                             emojiStatus.set(userBadge.getDocumentId(), animated);
                             emojiStatus.setParticles(false, animated);
-                        } else if (user != null && DialogObject.getEmojiStatusDocumentId(user) != 0) {
+                        } else if (user != null && DialogObject.getEmojiStatusDocumentId(user.emoji_status) != 0) {
                             nameLayoutEllipsizeByGradient = true;
-                            emojiStatus.set(DialogObject.getEmojiStatusDocumentId(user), animated);
+                            emojiStatus.set(DialogObject.getEmojiStatusDocumentId(user.emoji_status), animated);
                             emojiStatus.setParticles(DialogObject.isEmojiStatusCollectible(user.emoji_status), animated);
                         } else {
                             nameLayoutEllipsizeByGradient = true;
@@ -3590,10 +3590,10 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                     }
                     if (chat != null) {
                         chat = MessagesController.getInstance(currentAccount).getChat(chat.id);
-                        com.tsunderegram.messenger.api.dto.BadgeDTO chatBadge = chat != null ? com.tsunderegram.messenger.badges.BadgesController.INSTANCE.getBadge(chat) : null;
+                        com.exteragram.messenger.api.dto.BadgeDTO chatBadge = chat != null ? com.exteragram.messenger.badges.BadgesController.INSTANCE.getBadge(chat) : null;
                         if (chatBadge != null && chatBadge.isCustomBadge()) {
                             nameLayoutEllipsizeByGradient = true;
-                            emojiStatus.set(com.tsunderegram.messenger.badges.BadgesController.INSTANCE.getCustomBadgeDrawable(chatBadge, 18), animated);
+                            emojiStatus.set(com.exteragram.messenger.badges.BadgesController.INSTANCE.getCustomBadgeDrawable(chatBadge, 18), animated);
                             emojiStatus.setParticles(false, animated);
                         } else if (chatBadge != null && chatBadge.getDocumentId() != 0) {
                             nameLayoutEllipsizeByGradient = true;
@@ -3877,7 +3877,7 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                             }
                         }
 
-                        int countOldWidth = Math.max(dp(BADGE_TEXT_MIN_WIDTH), (int) Math.ceil(Math.max(Theme.dialogs_countTextPaint2.measureText(oldStr), Theme.dialogs_countTextPaint2.measureText(newStr))));
+                        int countOldWidth = Math.max(dp(BADGE_TEXT_MIN_WIDTH), (int) Math.ceil(Theme.dialogs_countTextPaint2.measureText(oldStr)));
                         countOldLayout = new StaticLayout(oldSpannableStr, Theme.dialogs_countTextPaint2, countOldWidth, Layout.Alignment.ALIGN_CENTER, 1.0f, 0.0f, false);
                         countAnimationStableLayout = new StaticLayout(stableStr, Theme.dialogs_countTextPaint2, countOldWidth, Layout.Alignment.ALIGN_CENTER, 1.0f, 0.0f, false);
                         countAnimationInLayout = new StaticLayout(newSpannableStr, Theme.dialogs_countTextPaint2, countOldWidth, Layout.Alignment.ALIGN_CENTER, 1.0f, 0.0f, false);
@@ -3926,12 +3926,12 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
             if (drawMonoforumAvatar) {
                 avatarRadius = 1;
             } else if (drawCommunityAvatar) {
-                avatarRadius = app.tsunderegram.appearance.AppearanceConfig.getAvatarCorners(avatarSize, app.tsunderegram.appearance.AppearanceConfig.CORNER_TYPE_COMMUNITY);
+                avatarRadius = app.exteraless.appearance.AppearanceConfig.getAvatarCorners(avatarSize, app.exteraless.appearance.AppearanceConfig.CORNER_TYPE_COMMUNITY);
             } else if ((chat != null && chat.forum && currentDialogFolderId == 0 && !useFromUserAsAvatar)
                     || !isSavedDialog && user != null && user.self && MessagesController.getInstance(currentAccount).savedViewAsChats) {
-                avatarRadius = app.tsunderegram.appearance.AppearanceConfig.getAvatarCorners(avatarSize, app.tsunderegram.appearance.AppearanceConfig.CORNER_TYPE_FORUM);
+                avatarRadius = app.exteraless.appearance.AppearanceConfig.getAvatarCorners(avatarSize, app.exteraless.appearance.AppearanceConfig.CORNER_TYPE_FORUM);
             } else {
-                avatarRadius = app.tsunderegram.appearance.AppearanceConfig.getAvatarCorners(avatarSize);
+                avatarRadius = app.exteraless.appearance.AppearanceConfig.getAvatarCorners(avatarSize);
             }
 
             avatarImage.setAvatarCornersApplied(!drawMonoforumAvatar);
@@ -4014,57 +4014,6 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
 
     public boolean isDrawArchive() {
         return drawArchive && (currentDialogFolderId != 0 || isTopic && forumTopic != null && forumTopic.id == 1) && translationX == 0 && archivedChatsDrawable != null;
-    }
-
-    private android.graphics.Shader tsundereNameShader;
-    private long tsundereNameShaderDialogId;
-    private float tsundereNameShaderLeft, tsundereNameShaderRight;
-    private int tsundereNameShaderC1, tsundereNameShaderC2;
-    private boolean tsundereNameShaderAnimated;
-
-    /**
-     * Градиент ника по реальной ширине текста. Раньше шейдер растягивался на всю ширину
-     * nameLayout (вся доступная строка), и короткий ник успевал получить только первый цвет.
-     */
-    private android.graphics.Shader getTsundereNameShader() {
-        int[] colors = app.tsunderegram.appearance.TsundereChatCustomizer.getInstance().getGradientColorsForUser(currentDialogId);
-        if (colors == null || nameLayout == null) {
-            return null;
-        }
-        float left = 0, right = 0;
-        try {
-            if (nameLayout.getLineCount() > 0) {
-                left = nameLayout.getLineLeft(0);
-                right = nameLayout.getLineRight(0);
-            }
-        } catch (Exception ignore) {
-        }
-        if (right - left < dp(8)) {
-            left = 0;
-            right = Math.max(dp(40), nameLayout.getWidth());
-        }
-        boolean animated = app.tsunderegram.appearance.TsundereChatCustomizer.getInstance().isGradientAnimatedForUser(currentDialogId);
-        if (tsundereNameShader == null || tsundereNameShaderDialogId != currentDialogId
-                || tsundereNameShaderLeft != left || tsundereNameShaderRight != right
-                || tsundereNameShaderC1 != colors[0] || tsundereNameShaderC2 != colors[1]
-                || tsundereNameShaderAnimated != animated) {
-            if (animated) {
-                // переливающийся градиент: шейдер повторяется и сдвигается по времени
-                tsundereNameShader = app.tsunderegram.appearance.TsundereChatCustomizer.createShimmerShader(colors[0], colors[1], right - left);
-            } else {
-                tsundereNameShader = new LinearGradient(left, 0, right, 0, colors[0], colors[1], Shader.TileMode.CLAMP);
-            }
-            tsundereNameShaderDialogId = currentDialogId;
-            tsundereNameShaderLeft = left;
-            tsundereNameShaderRight = right;
-            tsundereNameShaderC1 = colors[0];
-            tsundereNameShaderC2 = colors[1];
-            tsundereNameShaderAnimated = animated;
-        }
-        if (animated) {
-            app.tsunderegram.appearance.TsundereChatCustomizer.updateShimmer(tsundereNameShader, right - left, left);
-        }
-        return tsundereNameShader;
     }
 
     private GradientDrawable archiveFadeGradientDrawable;
@@ -4416,16 +4365,13 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                 canvas.save();
                 canvas.translate(nameLeft + nameLayoutTranslateX, nameTop);
                 android.graphics.Shader oldNameShader = Theme.dialogs_namePaint[paintIndex].getShader();
-                android.graphics.Shader customShader = getTsundereNameShader();
+                android.graphics.Shader customShader = app.exteraless.appearance.TsundereChatCustomizer.getInstance().getShaderForUser(currentDialogId, nameLayout != null ? nameLayout.getWidth() : dp(120));
                 if (customShader != null) {
                     Theme.dialogs_namePaint[paintIndex].setShader(customShader);
                 }
                 SpoilerEffect.layoutDrawMaybe(nameLayout, canvas);
                 if (customShader != null) {
                     Theme.dialogs_namePaint[paintIndex].setShader(oldNameShader);
-                    if (tsundereNameShaderAnimated) {
-                        postInvalidateDelayed(32);
-                    }
                 }
                 AnimatedEmojiSpan.drawAnimatedEmojis(canvas, nameLayout, animatedEmojiStackName, -.075f, null, 0, 0, 0, 1f, getAdaptiveEmojiColorFilter(0, nameLayout.getPaint().getColor()));
                 canvas.restore();
@@ -4818,7 +4764,7 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                     } else {
                         emojiStatusVisible = true;
                     }
-                    if (drawVerified || !com.tsunderegram.messenger.badges.BadgesController.isCustomBadge(currentDialogId)) {
+                    if (drawVerified || !com.exteragram.messenger.badges.BadgesController.isCustomBadge(currentDialogId)) {
                         emojiStatus.setColor(Theme.getColor(Theme.key_chats_verifiedBackground, resourcesProvider));
                     } else {
                         emojiStatus.setColor((Integer) null);
@@ -5068,7 +5014,7 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
             }
 
             if (currentDialogId != 0 && storyParams != null && storyParams.originalAvatarRect != null) {
-                app.tsunderegram.frames.ProfileFrameController.getInstance().drawFrame(
+                app.exteraless.frames.ProfileFrameController.getInstance().drawFrame(
                         canvas,
                         currentDialogId,
                         storyParams.originalAvatarRect.left,
@@ -6322,7 +6268,7 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                 final TL_iv.PageBlock block = message.messageOwner.rich_message.blocks.get(0);
                 accentColor = MessageObject.isBlueBlock(block);
             }
-            stringBuilder = formatInternal(messageFormatType, AnimatedEmojiSpan.cloneSpans(message.messageText, -1, Theme.dialogs_messagePaint[paintIndex].getFontMetricsInt()), messageNameString);
+            stringBuilder = formatInternal(messageFormatType, message.messageText, messageNameString);
             if (accentColor && !isForumCell()) {
                 try {
                     stringBuilder.setSpan(new ForegroundColorSpanThemable(Theme.key_chats_actionMessage, resourcesProvider), hasNameInMessage ? messageNameString.length() + 2 : 0, stringBuilder.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);

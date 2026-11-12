@@ -690,17 +690,17 @@ public class UserCell extends FrameLayout implements NotificationCenter.Notifica
             botVerification.setColor(Theme.getColor(Theme.key_chats_verifiedBackground, resourcesProvider));
             nameTextView.setLeftDrawable(botVerification);
         }
-        com.tsunderegram.messenger.api.dto.BadgeDTO userBadge = currentUser != null ? com.tsunderegram.messenger.badges.BadgesController.INSTANCE.getBadge(currentUser) : null;
+        com.exteragram.messenger.api.dto.BadgeDTO userBadge = currentUser != null ? com.exteragram.messenger.badges.BadgesController.INSTANCE.getBadge(currentUser) : null;
         if (userBadge != null && userBadge.isCustomBadge()) {
-            nameTextView.setRightDrawable(com.tsunderegram.messenger.badges.BadgesController.INSTANCE.getCustomBadgeDrawable(userBadge, 18));
+            nameTextView.setRightDrawable(com.exteragram.messenger.badges.BadgesController.INSTANCE.getCustomBadgeDrawable(userBadge, 18));
             nameTextView.setRightDrawableTopPadding(-dp(0.5f));
         } else if (userBadge != null && userBadge.getDocumentId() != 0) {
             emojiStatus.set(userBadge.getDocumentId(), false);
             emojiStatus.setColor(Theme.getColor(Theme.key_chats_verifiedBackground, resourcesProvider));
             nameTextView.setRightDrawable(emojiStatus);
         } else if (currentUser != null && MessagesController.getInstance(currentAccount).isPremiumUser(currentUser) && !MessagesController.getInstance(currentAccount).premiumFeaturesBlocked()) {
-            if (DialogObject.getEmojiStatusDocumentId(currentUser) != 0) {
-                emojiStatus.set(DialogObject.getEmojiStatusDocumentId(currentUser), false);
+            if (DialogObject.getEmojiStatusDocumentId(currentUser.emoji_status) != 0) {
+                emojiStatus.set(DialogObject.getEmojiStatusDocumentId(currentUser.emoji_status), false);
                 emojiStatus.setColor(Theme.getColor(Theme.key_chats_verifiedBackground, resourcesProvider));
                 nameTextView.setRightDrawable(emojiStatus);
             } else {

@@ -185,10 +185,10 @@ import tw.nekomimi.nekogram.helpers.ScheduleTimeHelper;
 import tw.nekomimi.nekogram.NekoConfig;
 import xyz.nextalone.nagram.NaConfig;
 
-import com.tsunderegram.privacy.AyuConstants;
-import com.tsunderegram.privacy.messages.AyuMessagesController;
-import com.tsunderegram.privacy.messages.AyuSavePreferences;
-import com.tsunderegram.privacy.utils.AyuState;
+import com.radolyn.ayugram.AyuConstants;
+import com.radolyn.ayugram.messages.AyuMessagesController;
+import com.radolyn.ayugram.messages.AyuSavePreferences;
+import com.radolyn.ayugram.utils.AyuState;
 
 public class AlertsCreator {
     public final static int PERMISSIONS_REQUEST_TOP_ICON_SIZE = 72;
@@ -7794,7 +7794,7 @@ public class AlertsCreator {
             count = selectedMessages[0].size() + selectedMessages[1].size();
         }
 
-        // --- TsundereGram hook
+        // --- AyuGram hook
         FrameLayout ayuFrameLayout = null;
         boolean hasAyuDeletedMessages = false;
         if (selectedMessage != null) {
@@ -7809,7 +7809,7 @@ public class AlertsCreator {
                 }
             }
         }
-        // --- TsundereGram hook
+        // --- AyuGram hook
 
         long dialogId;
         if (encryptedChat != null) {
@@ -8179,7 +8179,7 @@ public class AlertsCreator {
             }
         }
 
-        // --- TsundereGram hook
+        // --- AyuGram hook
         final boolean[] keepLocally = {false};
         if (NaConfig.INSTANCE.getEnableSaveDeletedMessages().Bool() && (selectedMessage == null || !selectedMessage.isEphemeral())) {
             if (ayuFrameLayout == null) {
@@ -8203,7 +8203,7 @@ public class AlertsCreator {
                 cell1.setChecked(keepLocally[0], true);
             });
         }
-        // --- TsundereGram hook
+        // --- AyuGram hook
 
         AlertDialog.OnButtonClickListener deleteAction = (dialogInterface, i) -> {
             if (keepLocally[0]) {
@@ -8228,7 +8228,7 @@ public class AlertsCreator {
                         }
 
                         ids.add(messageObject.getId());
-                        // --- TsundereGram hook
+                        // --- AyuGram hook
                         if (!keepLocally[0]) {
                             AyuState.permitDeleteMessage(dialogId, messageObject.getId());
                         } else {
@@ -8236,7 +8236,7 @@ public class AlertsCreator {
                             prefs.setDialogId(dialogId);
                             AyuMessagesController.getInstance().onMessageDeleted(prefs);
                         }
-                        // --- TsundereGram hook
+                        // --- AyuGram hook
                         if (encryptedChat != null && messageObject.messageOwner.random_id != 0 && messageObject.type != 10) {
                             if (random_ids == null) {
                                 random_ids = new ArrayList<>();
@@ -8249,7 +8249,7 @@ public class AlertsCreator {
                         ephemeralMessages.add(selectedMessage);
                     } else {
                         ids.add(selectedMessage.getId());
-                        // --- TsundereGram hook
+                        // --- AyuGram hook
                     if (!keepLocally[0]) {
                         AyuState.permitDeleteMessage(dialogId, selectedMessage.getId());
                     } else {
@@ -8266,7 +8266,7 @@ public class AlertsCreator {
                 if (mergeDialogId != 0 && selectedMessage.messageOwner.peer_id != null && selectedMessage.messageOwner.peer_id.chat_id == -mergeDialogId) {
                     thisDialogId = mergeDialogId;
                 }
-                // --- TsundereGram hook
+                // --- AyuGram hook
                 if (NaConfig.INSTANCE.getEnableSaveDeletedMessages().Bool()) {
                     ArrayList<Integer> finalIds = ids;
                     AndroidUtilities.runOnUIThread(() -> {
@@ -8274,13 +8274,9 @@ public class AlertsCreator {
                         NotificationCenter.getInstance(currentAccount).postNotificationName(AyuConstants.MESSAGES_DELETED_NOTIFICATION, dialogId, finalIds);
                     });
                 }
-                // --- TsundereGram hook
+                // --- AyuGram hook
                 if (!ids.isEmpty()) {
-                    if (keepLocally[0]) {
-                        AyuState.keepDeletedMessages(thisDialogId, ids);
-                    }
                     MessagesController.getInstance(currentAccount).deleteMessages(ids, random_ids, encryptedChat, thisDialogId, topicId, deleteForAll[0], mode);
-                    AyuState.releaseKeptMessages(thisDialogId);
                 }
                 for (MessageObject msg: ephemeralMessages) {
                     MessagesController.getInstance(currentAccount).deleteEphemeralMessage(thisDialogId, topicId, msg);
@@ -8290,7 +8286,7 @@ public class AlertsCreator {
                     ids = new ArrayList<>();
                     for (int b = 0; b < selectedMessages[a].size(); b++) {
                         ids.add(selectedMessages[a].keyAt(b));
-                        // --- TsundereGram hook
+                        // --- AyuGram hook
                         if (!keepLocally[0]) {
                             AyuState.permitDeleteMessage(dialogId, selectedMessages[a].keyAt(b));
                         } else {
@@ -8298,7 +8294,7 @@ public class AlertsCreator {
                             prefs.setDialogId(dialogId);
                             AyuMessagesController.getInstance().onMessageDeleted(prefs);
                         }
-                        // --- TsundereGram hook
+                        // --- AyuGram hook
                     }
                     ArrayList<Long> random_ids = null;
                     if (encryptedChat != null) {
@@ -8310,7 +8306,7 @@ public class AlertsCreator {
                             }
                         }
                     }
-                    // --- TsundereGram hook
+                    // --- AyuGram hook
                     if (NaConfig.INSTANCE.getEnableSaveDeletedMessages().Bool()) {
                         ArrayList<Integer> finalIds = ids;
                         AndroidUtilities.runOnUIThread(() -> {
@@ -8318,13 +8314,8 @@ public class AlertsCreator {
                             NotificationCenter.getInstance(currentAccount).postNotificationName(AyuConstants.MESSAGES_DELETED_NOTIFICATION, dialogId, finalIds);
                         });
                     }
-                    // --- TsundereGram hook
-                    long targetDialogId = (a == 1 && mergeDialogId != 0) ? mergeDialogId : thisDialogId;
-                    if (keepLocally[0]) {
-                        AyuState.keepDeletedMessages(targetDialogId, ids);
-                    }
-                    MessagesController.getInstance(currentAccount).deleteMessages(ids, random_ids, encryptedChat, targetDialogId, topicId, deleteForAll[0], mode);
-                    AyuState.releaseKeptMessages(targetDialogId);
+                    // --- AyuGram hook
+                    MessagesController.getInstance(currentAccount).deleteMessages(ids, random_ids, encryptedChat, (a == 1 && mergeDialogId != 0) ? mergeDialogId : thisDialogId, topicId, deleteForAll[0], mode);
                     selectedMessages[a].clear();
                 }
             }

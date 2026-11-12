@@ -18,7 +18,7 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 
-import app.tsunderegram.components.ReceiveContentEditText;
+import app.exteraless.components.ReceiveContentEditText;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.BuildVars;

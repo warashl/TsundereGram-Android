@@ -180,34 +180,6 @@ public class VoIPFragment implements
     private ImageWithWavesView callingUserPhotoViewMini;
 
     private TextView callingUserTitle;
-    private boolean tsundereTitleGradientOff;
-
-    /** Градиентный ник собеседника на экране звонка — как в чате и профиле. */
-    private void applyTsundereTitleGradient() {
-        if (callingUserTitle == null) {
-            return;
-        }
-        int[] colors = callingUser != null && !tsundereTitleGradientOff
-                ? app.tsunderegram.appearance.TsundereChatCustomizer.getInstance().getGradientColorsForUser(callingUser.id) : null;
-        android.text.Layout layout = callingUserTitle.getLayout();
-        if (colors == null || layout == null || layout.getLineCount() == 0) {
-            if (callingUserTitle.getPaint().getShader() != null) {
-                callingUserTitle.getPaint().setShader(null);
-                callingUserTitle.invalidate();
-            }
-            return;
-        }
-        float left = Float.MAX_VALUE, right = 0;
-        for (int i = 0; i < layout.getLineCount(); i++) {
-            left = Math.min(left, layout.getLineLeft(i));
-            right = Math.max(right, layout.getLineRight(i));
-        }
-        if (right - left < AndroidUtilities.dp(8)) {
-            return;
-        }
-        callingUserTitle.getPaint().setShader(new android.graphics.LinearGradient(left, 0, right, 0, colors[0], colors[1], android.graphics.Shader.TileMode.CLAMP));
-        callingUserTitle.invalidate();
-    }
 
     private VoIPStatusTextView statusTextView;
     private ConferenceParticipantsView participantsView;
@@ -1062,7 +1034,6 @@ public class VoIPFragment implements
         CharSequence name = ContactsController.formatName(callingUser.first_name, callingUser.last_name);
         name = Emoji.replaceEmoji(name, callingUserTitle.getPaint().getFontMetricsInt(), false);
         callingUserTitle.setText(name);
-        callingUserTitle.addOnLayoutChangeListener((tsV, tsL, tsT, tsR, tsB, tsOl, tsOt, tsOr, tsOb) -> applyTsundereTitleGradient());
         callingUserTitle.setMaxLines(2);
         callingUserTitle.setEllipsize(TextUtils.TruncateAt.END);
         callingUserTitle.setTextColor(Color.WHITE);
@@ -1936,8 +1907,6 @@ public class VoIPFragment implements
                     callingUserTitle.animate().alpha(0f).setDuration(70).setListener(new AnimatorListenerAdapter() {
                         @Override
                         public void onAnimationEnd(Animator animation) {
-                            tsundereTitleGradientOff = true;
-                            callingUserTitle.getPaint().setShader(null);
                             callingUserTitle.setText(LocaleController.getString(R.string.VoipCallEnded));
                             callingUserTitle.animate().alpha(1f).setDuration(70).setListener(null).start();
                         }

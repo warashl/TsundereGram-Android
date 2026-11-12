@@ -29,8 +29,6 @@ import org.telegram.ui.MultiLayoutTypingAnimator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class BotForumHelper extends BaseController {
@@ -401,12 +399,8 @@ public class BotForumHelper extends BaseController {
         return beforeSendingFinalRequest(req, Collections.singletonList(msg), send);
     }
 
-    // requests resent without a topic after topic creation failed; they must not be intercepted again
-    private final Set<TLObject> sendWithoutTopic = Collections.synchronizedSet(Collections.newSetFromMap(new WeakHashMap<>()));
-
     public boolean beforeSendingFinalRequest(TLObject req, List<MessageObject> messages, Runnable send) {
         if (messages == null || messages.isEmpty()) return true;
-        if (sendWithoutTopic.remove(req)) return true;
 
         final TLRPC.InputPeer inputPeer = TlUtils.getInputPeerFromSendMessageRequest(req);
         final long dialogId = DialogObject.getPeerDialogId(inputPeer);
@@ -453,12 +447,6 @@ public class BotForumHelper extends BaseController {
         }
 
         performSendBotTopicCreate(inputPeer, topicName, randomId, topicId -> {
-            if (topicId <= 0) {
-                // topic creation failed: send as is instead of binding to an invalid topic
-                sendWithoutTopic.add(req);
-                AndroidUtilities.runOnUIThread(send);
-                return;
-            }
             if (req instanceof TLRPC.TL_messages_forwardMessages) {
                 TLRPC.TL_messages_forwardMessages request = (TLRPC.TL_messages_forwardMessages) req;
                 request.top_msg_id = topicId;
@@ -515,27 +503,17 @@ public class BotForumHelper extends BaseController {
                 return;
             }
 
-            // must be read before processUpdates, which removes TL_updateMessageID from updates.updates
-            int matchedId = 0, topicCreateId = 0;
-            for (TLRPC.Update update: updates.updates) {
-                if (update instanceof TL_update.TL_updateMessageID) {
-                    final TL_update.TL_updateMessageID updateMessageID = (TL_update.TL_updateMessageID) update;
-                    if (updateMessageID.random_id == randomId) {
-                        matchedId = updateMessageID.id;
-                    }
-                } else if (update instanceof TL_update.TL_updateNewMessage) {
-                    final TLRPC.Message newMessage = ((TL_update.TL_updateNewMessage) update).message;
-                    if (topicCreateId == 0 && newMessage != null && newMessage.action instanceof TLRPC.TL_messageActionTopicCreate
-                            && MessageObject.getDialogId(newMessage) == dialogId) {
-                        topicCreateId = newMessage.id;
-                    }
-                }
-            }
-            final int topicId = matchedId != 0 ? matchedId : topicCreateId;
-
             getMessagesController().processUpdates(updates, false);
 
-            if (topicId == 0) {
+            TL_update.TL_updateMessageID updateMessageID = null;
+            for (TLRPC.Update update: updates.updates) {
+                if (update instanceof TL_update.TL_updateMessageID) {
+                    updateMessageID = (TL_update.TL_updateMessageID) update;
+                    break;
+                }
+            }
+
+            if (updateMessageID == null) {
                 performSendBotTopicCreateComplete(dialogId, -1);
                 return;
             }
@@ -549,15 +527,15 @@ public class BotForumHelper extends BaseController {
             message.action = actionMessage;
             message.peer_id = getMessagesController().getPeer(dialogId);
             message.dialog_id = dialogId;
-            message.id = topicId;
+            message.id = updateMessageID.id;
             message.date = (int) (System.currentTimeMillis() / 1000);
 
-            forumTopic.id = topicId;
+            forumTopic.id = updateMessageID.id;
             forumTopic.my = true;
             forumTopic.flags |= 2;
             forumTopic.topicStartMessage = message;
             forumTopic.title = title;
-            forumTopic.top_message = topicId;
+            forumTopic.top_message = updateMessageID.id;
             forumTopic.topMessage = message;
             forumTopic.from_id = getMessagesController().getPeer(getUserConfig().clientUserId);
             forumTopic.notify_settings = new TLRPC.TL_peerNotifySettings();
@@ -566,10 +544,10 @@ public class BotForumHelper extends BaseController {
 
             getMessagesController().getTopicsController().onTopicCreated(dialogId, forumTopic, true);
 
-            performSendBotTopicCreateComplete(dialogId, topicId);
+            performSendBotTopicCreateComplete(dialogId, updateMessageID.id);
             getNotificationCenter().postNotificationName(
                 NotificationCenter.botForumTopicDidCreate,
-                new BotForumTopicCreateNotification(dialogId, topicId)
+                new BotForumTopicCreateNotification(dialogId, updateMessageID.id)
             );
         });
     }

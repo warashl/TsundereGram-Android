@@ -46,9 +46,9 @@
     <string name="OEGeneralExportEtgSettings">Exportar ajustes</string>
     <string name="OEGeneralImportEtgSettings">Importar ajustes</string>
     <string name="OEGeneralExportFormatFull">Todos los ajustes (.json)</string>
-    <string name="OEGeneralExportFormatExtera">Formato de TsundereGram (.extera)</string>
+    <string name="OEGeneralExportFormatExtera">Formato de exteraGram (.extera)</string>
     <string name="OEGeneralImportEtgConfirm">%1$d ajustes de este archivo reemplazarán los actuales.</string>
-    <string name="OEGeneralImportEtgEmpty">No se encontraron ajustes de TsundereGram en este archivo.</string>
+    <string name="OEGeneralImportEtgEmpty">No se encontraron ajustes de exteraGram en este archivo.</string>
     <string name="OEGeneralImportEtgDone">Ajustes importados: %1$d</string>
     <string name="OEGeneralResetSettings">Restablecer ajustes</string>
     <string name="OEGeneralResetSettingsInfo">Todos los ajustes volverán a sus valores predeterminados y la app se reiniciará.</string>
@@ -64,6 +64,15 @@
     <string name="OEGeneralAyuMomentsDisableAll">Desactivar todas las funciones de AyuMoments</string>
     <string name="OELastActivityFormatted">última actividad %1$s</string>
     <string name="OELastActivityDateFormatted">última actividad %1$s</string>
+    <string name="OEGeneralLastFm">Last.fm</string>
+    <string name="OEGeneralLastFmHint">nombre de usuario</string>
+    <string name="OEGeneralLastFmNotSet">Sin establecer</string>
+    <string name="OEGeneralLastFmApplied">Música del perfil actualizada</string>
+    <string name="OEGeneralLastFmNoMusic">Primero establece la música del perfil</string>
+    <string name="OEGeneralLastFmFailed">No se pudo actualizar la música del perfil</string>
+    <string name="OEGeneralLastFmNoFile">No se pudo descargar la pista</string>
+    <string name="OEGeneralLastFmNoUpload">Se agotó el tiempo de subida</string>
+    <string name="OEGeneralLastFmAbout">Esta función se apoya en la música del perfil: escribe bytes ocultos con tu nombre de usuario de Last.fm en tu última pista del perfil. En cuanto estableces un nombre de usuario, esa pista se vuelve a subir con el cambio.\n\nCuando desactivas la función, la pista se restaura a su estado original.</string>
     <string name="OEGeneralNotificationsHeader">Notificaciones</string>
     <string name="OEGeneralPushStatus">Estado de push</string>
     <string name="OEGeneralPushStatusBlocked">bloqueadas por el sistema</string>
@@ -120,7 +129,7 @@
     <string name="OEAyuSaveInArchivedInfo">También se guardan los mensajes eliminados y editados de los chats archivados.</string>
     <string name="OEAyuDatabaseExport">Exportar base de datos</string>
     <string name="OEAyuDatabaseImport">Importar base de datos</string>
-    <string name="OEAyuDatabaseImportInfo">Los mensajes eliminados y editados de este archivo se añadirán a los ya guardados. Se admiten exportaciones de TsundereGram. Es posible que los archivos multimedia de otra app no estén disponibles.</string>
+    <string name="OEAyuDatabaseImportInfo">Los mensajes eliminados y editados de este archivo se añadirán a los ya guardados. Se admiten exportaciones de TsundereGram y AyuGram. Es posible que los archivos multimedia de otra app no estén disponibles.</string>
     <string name="OEAyuDatabaseImportDone">Mensajes añadidos: %1$d</string>
     <string name="OEAyuDatabaseImportFailed">No se pudo importar este archivo</string>
     <string name="OEAyuRegexReversed">Inverso</string>
@@ -140,6 +149,4 @@
     <string name="OEUpdaterChannelStableInfo">Las nuevas versiones en GitHub se comprueban cada 6 horas.</string>
     <string name="OEUpdaterChannelBetaInfo">También ofrece las versiones preliminares de GitHub antes de que sean versiones.</string>
     <string name="OEUpdaterAllReleases">Todas las versiones en GitHub</string>
-    <string name="OELiteFollowSystemSaver">Seguir el ahorro de batería del sistema</string>
-    <string name="OELiteFollowSystemSaverInfo">El ahorro de energía se activa junto con el ahorro de batería del sistema.</string>
 </resources>

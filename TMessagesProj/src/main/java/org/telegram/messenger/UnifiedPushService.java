@@ -28,8 +28,7 @@ import xyz.nextalone.nagram.NaConfig;
 @SuppressWarnings("NullableProblems")
 public class UnifiedPushService extends PushService {
 
-    // TsundereGram: свой шлюз (server/tsundere-push, порт шлюза Mercurygram) вместо p2p.belloworld.it
-    public static final String UP_GATEWAY_DEFAULT = TsundereFcmDistributor.GATEWAY;
+    public static final String UP_GATEWAY_DEFAULT = "https://p2p.belloworld.it/"; // https://github.com/Mercurygram/Mercurygram?tab=readme-ov-file#unifiedpush-put-to-post-gateway
 
     private static final String DISTRIBUTOR_NTFY = "io.heckel.ntfy";
     static final String UP_FAILED = "__UNIFIEDPUSH_FAILED__";
@@ -69,11 +68,7 @@ public class UnifiedPushService extends PushService {
                 if (!gateway.endsWith("/")) gateway += "/";
 
                 try {
-                    // встроенный FCM уже указывает на /fcm/ нашего шлюза: он сам вкладывает заголовки
-                    // и подписывает пуш VAPID — оборачивать в /aesgcm нельзя
-                    boolean fcm = TsundereFcmDistributor.isFcmEndpoint(endpoint.getUrl());
-                    String gatewayUrl = fcm ? endpoint.getUrl()
-                            : gateway + "aesgcm?e=" + URLEncoder.encode(endpoint.getUrl(), StandardCharsets.UTF_8);
+                    String gatewayUrl = gateway + "aesgcm?e=" + URLEncoder.encode(endpoint.getUrl(), StandardCharsets.UTF_8);
                     String p256dh = Base64.encodeToString(webPushPublicKey, Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
                     String auth = Base64.encodeToString(webPushAuthSecret, Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
 
@@ -84,7 +79,7 @@ public class UnifiedPushService extends PushService {
                     keys.put("auth", auth);
                     tokenObj.put("keys", keys);
 
-                    String simplePushUrl = fcm || DISTRIBUTOR_NTFY.equals(UnifiedPush.getSavedDistributor(this))
+                    String simplePushUrl = DISTRIBUTOR_NTFY.equals(UnifiedPush.getSavedDistributor(this))
                             ? endpoint.getUrl()
                             : gateway + URLEncoder.encode(endpoint.getUrl(), StandardCharsets.UTF_8);
                     PushListenerController.sendWebPushRegistrationToServer(tokenObj.toString(), simplePushUrl);
@@ -159,42 +154,9 @@ public class UnifiedPushService extends PushService {
         });
     }
 
-    /** TsundereGram: момент последней смены дистрибьютора (его «UNREGISTERED» не должен снести новую регистрацию). */
-    private static volatile long lastDistributorSwitch;
-
-    /**
-     * Переносит подписку на другой дистрибьютор: снимает старые токены у Telegram, отписывается
-     * от старого дистрибьютора и регистрируется у нового (встроенный «Google FCM» или приложение).
-     */
-    public static void switchDistributor(String distributor) {
-        Utilities.globalQueue.postRunnable(() -> {
-            try {
-                android.content.Context ctx = ApplicationLoader.applicationContext;
-                lastDistributorSwitch = SystemClock.elapsedRealtime();
-                PushListenerController.unregisterWebPush();
-                PushListenerController.unregisterSimplePush();
-                try {
-                    UnifiedPush.unregister(ctx, "default");
-                } catch (Throwable e) {
-                    FileLog.e(e);
-                }
-                UnifiedPush.saveDistributor(ctx, distributor);
-                TsundereFcmDistributor.syncComponents(ctx, distributor);
-                SharedConfig.pushStringGetTimeStart = SystemClock.elapsedRealtime();
-                UnifiedPush.register(ctx, "default", "Telegram Simple Push", null);
-            } catch (Throwable e) {
-                FileLog.e(e);
-            }
-        });
-    }
-
     @Override
     public void onUnregistered(String instance) {
         if (isUnifiedPushDisabled()) return;
-        if (SystemClock.elapsedRealtime() - lastDistributorSwitch < 60_000L) {
-            FileLog.d("UnifiedPush: unregistered by the previous distributor after switch, ignored");
-            return;
-        }
         AndroidUtilities.runOnUIThread(() -> {
             ApplicationLoader.postInitApplication();
             SharedConfig.pushStringStatus = UP_FAILED;

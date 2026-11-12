@@ -947,7 +947,6 @@ public class BotWebViewAttachedSheet implements NotificationCenter.NotificationC
     Drawable verifiedDrawable;
 
     public void requestWebView(BaseFragment fragment, WebViewRequestProps props) {
-        if (app.tsunderegram.privacy.BotAccountRouter.interceptWebView(fragment, props, () -> !dismissed, target -> { if (!dismissed) requestWebView(target, props); })) return;
         this.requestProps = props;
         this.currentAccount = props.currentAccount;
         this.peerId = props.peerId;

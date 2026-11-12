@@ -50,9 +50,9 @@ import me.vkryl.android.animator.FactorAnimator;
 
 @SuppressLint("ViewConstructor")
 public class FragmentSearchField extends FrameLayout implements FactorAnimator.Target, Theme.Colorable {
-    private app.tsunderegram.pillstack.PillStackController pillStackController;
+    private app.exteraless.pillstack.PillStackController pillStackController;
 
-    public void setPillStackController(app.tsunderegram.pillstack.PillStackController controller) {
+    public void setPillStackController(app.exteraless.pillstack.PillStackController controller) {
         pillStackController = controller;
     }
 

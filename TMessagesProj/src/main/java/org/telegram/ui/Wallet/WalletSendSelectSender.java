@@ -23,8 +23,6 @@ import android.text.TextWatcher;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
-
-import androidx.annotation.Nullable;
 import android.view.inputmethod.EditorInfo;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -50,7 +48,7 @@ import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Adapters.DialogsSearchAdapter;
 import org.telegram.ui.Adapters.SearchAdapterHelper;
-import org.telegram.ui.QrShare.QrScanOverlay;
+import org.telegram.ui.CameraScanActivity;
 import org.telegram.ui.Cells.ProfileSearchCell;
 import org.telegram.ui.Components.ChatAttachAlertAudioLayout;
 import org.telegram.ui.Gifts.ResaleGiftsFragment;
@@ -90,7 +88,6 @@ public class WalletSendSelectSender extends UniversalFragment {
     @Override
     public void onFragmentDestroy() {
         destroyed = true;
-        destroyScanOverlay();
         if (clipboardManager != null) clipboardManager.removePrimaryClipChangedListener(clipboardListener);
         if (pasteButton != null) pasteButton.animate().cancel();
         if (scanButton != null) scanButton.animate().cancel();
@@ -415,7 +412,6 @@ public class WalletSendSelectSender extends UniversalFragment {
     @Override
     public void onPause() {
         if (clipboardManager != null) clipboardManager.removePrimaryClipChangedListener(clipboardListener);
-        destroyScanOverlay();
         super.onPause();
     }
 
@@ -467,10 +463,8 @@ public class WalletSendSelectSender extends UniversalFragment {
                 .withEndAction(() -> button.setVisibility(visible ? View.VISIBLE : View.GONE)).start();
     }
 
-    private @Nullable QrScanOverlay scanOverlay;
-
     private void openWalletQrScanner() {
-        if (getParentActivity() == null || scanOverlay != null || scanButton == null) {
+        if (getParentActivity() == null) {
             return;
         }
         AndroidUtilities.hideKeyboard(recipientEdit);
@@ -482,67 +476,37 @@ public class WalletSendSelectSender extends UniversalFragment {
             );
             return;
         }
-        scanOverlay = QrScanOverlay.open(this, scanButton, text -> scannedRecipient(text) != null, text -> {
-            final String recipient = scannedRecipient(text);
-            if (isFinished || recipientEdit == null || recipient == null) {
-                return;
-            }
-            if (recipient.startsWith("@")) {
-                WalletActivity.resolveWalletQrUser(currentAccount, recipient.substring(1), user -> {
-                    if (isFinished || recipientEdit == null) return;
-                    if (user == null) {
+        CameraScanActivity.showAsSheet(this, true, CameraScanActivity.TYPE_QR, new CameraScanActivity.CameraScanActivityDelegate() {
+            @Override
+            public void didFindQr(String text) {
+                if (isFinished || recipientEdit == null) {
+                    return;
+                }
+                final String address;
+                try {
+                    final Uri uri = Uri.parse(text == null ? "" : text.trim());
+                    if (!"ton".equalsIgnoreCase(uri.getScheme())
+                            || !"transfer".equalsIgnoreCase(uri.getAuthority())
+                            || uri.getPathSegments().size() != 1) {
                         showInvalidWalletQr();
                         return;
                     }
-                    AndroidUtilities.hideKeyboard(recipientEdit);
-                    selectRecipient(user, null);
-                });
-                return;
+                    address = uri.getPathSegments().get(0);
+                    if (!isValidAddress(address)) {
+                        showInvalidWalletQr();
+                        return;
+                    }
+                } catch (Throwable e) {
+                    showInvalidWalletQr();
+                    return;
+                }
+
+                recipientEdit.setText(address);
+                recipientEdit.setSelection(recipientEdit.length());
+                AndroidUtilities.hideKeyboard(recipientEdit);
+                selectRecipient(null, address);
             }
-            recipientEdit.setText(recipient);
-            recipientEdit.setSelection(recipientEdit.length());
-            AndroidUtilities.hideKeyboard(recipientEdit);
-            selectRecipient(null, recipient);
-        }, () -> scanOverlay = null);
-    }
-
-    /** The recipient of a scanned wallet link: an address, or "@username"; null when there is none. */
-    @Nullable
-    private static String scannedRecipient(String text) {
-        final Uri uri = WalletActivity.walletQrUri(text);
-        if ("ton".equalsIgnoreCase(uri.getScheme())) {
-            if (!"transfer".equalsIgnoreCase(uri.getAuthority()) || uri.getPathSegments().size() != 1) return null;
-            final String address = uri.getPathSegments().get(0);
-            return WalletEngine2.isValidRecipientAddress(address) ? address : null;
-        }
-        if (!WalletActivity.isWalletQrLink(uri)) return null;
-        final String username = WalletActivity.walletQrUsername(uri);
-        if (username != null) return "@" + username;
-        // t.me/sendgrams?to=<address or username>
-        final String to = uri.getQueryParameter("to");
-        if (TextUtils.isEmpty(to)) return null;
-        if (to.startsWith("@") || to.matches("[a-zA-Z0-9_]{1,32}")) {
-            final String name = to.startsWith("@") ? to.substring(1) : to;
-            return TextUtils.isEmpty(name) ? null : "@" + name;
-        }
-        return WalletEngine2.isValidRecipientAddress(to) ? to : null;
-    }
-
-    private void destroyScanOverlay() {
-        if (scanOverlay != null) {
-            scanOverlay.destroy();
-            AndroidUtilities.removeFromParent(scanOverlay);
-            scanOverlay = null;
-        }
-    }
-
-    @Override
-    public boolean onBackPressed(boolean invoked) {
-        if (scanOverlay != null) {
-            if (invoked) scanOverlay.close();
-            return false;
-        }
-        return super.onBackPressed(invoked);
+        });
     }
 
     @Override

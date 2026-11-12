@@ -185,7 +185,7 @@ public class TextCell extends FrameLayout {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         int width = MeasureSpec.getSize(widthMeasureSpec);
-        int height = dp(app.tsunderegram.appearance.M3ListItems.rowHeight(heightDp));
+        int height = dp(app.exteraless.appearance.M3ListItems.rowHeight(heightDp));
 
         if (lastWidth != 0 && lastWidth != width && valueText != null) {
             valueTextView.setText(TextUtils.ellipsize(valueText, valueTextView.getPaint(), AndroidUtilities.displaySize.x / 2.5f, TextUtils.TruncateAt.END), false);
@@ -193,22 +193,17 @@ public class TextCell extends FrameLayout {
         lastWidth = width;
 
         int valueWidth;
-        // Тумблер справа (37dp + отступ 22dp): текст не должен заезжать под него.
-        final int checkSpace = checkBox != null && checkBox.getVisibility() == VISIBLE ? Math.max(0, dp(67 - leftPadding)) : 0;
-        // Пользовательские шрифты бывают выше стандартных 20dp — иначе срезаются хвосты букв.
-        final int valueTextH = Math.max(valueTextView.getTextHeight(), valueSpoilersTextView.getTextHeight());
-        final int valueHeight = valueTextH > dp(20) ? valueTextH + dp(2) : dp(20);
         if (prioritizeTitleOverValue) {
-            textView.measure(MeasureSpec.makeMeasureSpec(Math.max(0, width - dp(71 + leftPadding) - checkSpace), MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.EXACTLY));
-            subtitleView.measure(MeasureSpec.makeMeasureSpec(Math.max(0, width - dp(71 + leftPadding) - checkSpace), MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.EXACTLY));
-            valueTextView.measure(MeasureSpec.makeMeasureSpec(width - dp(103 + leftPadding) - textView.getTextWidth(), LocaleController.isRTL ? MeasureSpec.AT_MOST : MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(valueHeight, MeasureSpec.EXACTLY));
-            valueSpoilersTextView.measure(MeasureSpec.makeMeasureSpec(width - dp(103 + leftPadding) - textView.getTextWidth(), LocaleController.isRTL ? MeasureSpec.AT_MOST : MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(valueHeight, MeasureSpec.EXACTLY));
+            textView.measure(MeasureSpec.makeMeasureSpec(width - dp(71 + leftPadding), MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.EXACTLY));
+            subtitleView.measure(MeasureSpec.makeMeasureSpec(width - dp(71 + leftPadding), MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.EXACTLY));
+            valueTextView.measure(MeasureSpec.makeMeasureSpec(width - dp(103 + leftPadding) - textView.getTextWidth(), LocaleController.isRTL ? MeasureSpec.AT_MOST : MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.EXACTLY));
+            valueSpoilersTextView.measure(MeasureSpec.makeMeasureSpec(width - dp(103 + leftPadding) - textView.getTextWidth(), LocaleController.isRTL ? MeasureSpec.AT_MOST : MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.EXACTLY));
         } else {
-            valueTextView.measure(MeasureSpec.makeMeasureSpec(width - dp(leftPadding), LocaleController.isRTL ? MeasureSpec.AT_MOST : MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(valueHeight, MeasureSpec.EXACTLY));
-            valueSpoilersTextView.measure(MeasureSpec.makeMeasureSpec(width - dp(leftPadding), LocaleController.isRTL ? MeasureSpec.AT_MOST : MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(valueHeight, MeasureSpec.EXACTLY));
+            valueTextView.measure(MeasureSpec.makeMeasureSpec(width - dp(leftPadding), LocaleController.isRTL ? MeasureSpec.AT_MOST : MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.EXACTLY));
+            valueSpoilersTextView.measure(MeasureSpec.makeMeasureSpec(width - dp(leftPadding), LocaleController.isRTL ? MeasureSpec.AT_MOST : MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.EXACTLY));
             valueWidth = Math.max(valueTextView.width(), valueSpoilersTextView.getTextWidth());
-            textView.measure(MeasureSpec.makeMeasureSpec(Math.max(0, width - dp(71 + leftPadding) - valueWidth - checkSpace), MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.EXACTLY));
-            subtitleView.measure(MeasureSpec.makeMeasureSpec(Math.max(0, width - dp(71 + leftPadding) - valueWidth - checkSpace), MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.EXACTLY));
+            textView.measure(MeasureSpec.makeMeasureSpec(Math.max(0, width - dp(71 + leftPadding) - valueWidth), MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.EXACTLY));
+            subtitleView.measure(MeasureSpec.makeMeasureSpec(width - dp(71 + leftPadding) - valueWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.EXACTLY));
         }
         if (imageView.getVisibility() == VISIBLE) {
             if (isM3ColorfulIcon()) {
@@ -272,11 +267,7 @@ public class TextCell extends FrameLayout {
         int height = bottom - top;
         int width = right - left;
 
-        int valueBoxH = Math.max(valueSpoilersTextView.getTextHeight(), valueTextView.getTextHeight());
-        if (valueTextView.getMeasuredHeight() > dp(20)) {
-            valueBoxH = valueTextView.getMeasuredHeight();
-        }
-        int viewTop = (height - valueBoxH) / 2 + 1;
+        int viewTop = (height - Math.max(valueSpoilersTextView.getTextHeight(), valueTextView.getTextHeight())) / 2 + 1;
         int viewLeft = LocaleController.isRTL ? dp(leftPadding - 6) : width - valueTextView.getMeasuredWidth() - dp(leftPadding - 6);
         if (prioritizeTitleOverValue && !LocaleController.isRTL) {
             viewLeft = width - valueTextView.getMeasuredWidth() - dp(leftPadding);
@@ -897,11 +888,11 @@ public class TextCell extends FrameLayout {
 
     private boolean isM3ColorfulIcon() {
         return imageView.getBackground() instanceof SettingsActivity.SettingCell.Background
-                && app.tsunderegram.appearance.M3ListItems.enabled();
+                && app.exteraless.appearance.M3ListItems.enabled();
     }
 
     private int textOffsetFromImage() {
-        if ((offsetFromImage == 65 || offsetFromImage == 71) && app.tsunderegram.appearance.M3ListItems.enabled()) {
+        if ((offsetFromImage == 65 || offsetFromImage == 71) && app.exteraless.appearance.M3ListItems.enabled()) {
             return 60;
         }
         return offsetFromImage;

@@ -3,7 +3,7 @@
 SettingsController is bound to a plugin id and stores values in the same host
 setting system that BasePlugin.get_setting / ui.settings rows use: JSON values
 in the per-plugin SharedPreferences, reached through
-app.tsunderegram.plugins.PythonBridge. On a host interpreter (no Chaquopy) an
+app.exteraless.plugins.PythonBridge. On a host interpreter (no Chaquopy) an
 in-memory per-plugin store is used, which keeps plugins and tests runnable off
 device.
 """
@@ -14,7 +14,7 @@ import json
 from typing import Any, Dict
 
 try:
-    from app.tsunderegram.plugins import PythonBridge
+    from app.exteraless.plugins import PythonBridge
 except Exception:  # host interpreter (no Chaquopy)
     PythonBridge = None
 
@@ -39,8 +39,8 @@ class SettingsController:
         if PythonBridge is not None:
             try:
                 raw = PythonBridge.exportSettings(self._plugin_id)
-                from plugin_settings import decode_values
-                return decode_values(raw) if raw else {}
+                data = json.loads(raw) if raw else {}
+                return data if isinstance(data, dict) else {}
             except Exception:
                 return {}
         return dict(_local_store.get(self._plugin_id, {}))
@@ -54,11 +54,9 @@ class SettingsController:
             if raw is None:
                 return default
             try:
-                value = json.loads(raw)
+                return json.loads(raw)
             except (ValueError, TypeError):
                 return default
-            from plugin_settings import coerce_value
-            return coerce_value(value, default)
         return _local_store.get(self._plugin_id, {}).get(key, default)
 
     def get(self, key: str, default: Any = None) -> Any:

@@ -31,7 +31,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import app.tsunderegram.components.VerticalImageSpan;
+import app.exteraless.components.VerticalImageSpan;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.FileLog;
@@ -181,12 +181,12 @@ public class TextCheckCell extends FrameLayout {
             }
         } else {
             final boolean detail = valueTextView.getVisibility() == VISIBLE;
-            final float shift = detail ? AndroidUtilities.dp(app.tsunderegram.appearance.M3ListItems.detailRowHeight(64) - 64) / 2f : 0;
+            final float shift = detail ? AndroidUtilities.dp(app.exteraless.appearance.M3ListItems.detailRowHeight(64) - 64) / 2f : 0;
             textView.setTranslationY(shift);
             valueTextView.setTranslationY(shift);
             final int fixed = AndroidUtilities.dp(detail
-                    ? app.tsunderegram.appearance.M3ListItems.detailRowHeight(64)
-                    : app.tsunderegram.appearance.M3ListItems.rowHeight(height));
+                    ? app.exteraless.appearance.M3ListItems.detailRowHeight(64)
+                    : app.exteraless.appearance.M3ListItems.rowHeight(height));
             final int width = MeasureSpec.getSize(widthMeasureSpec);
             int wanted = fixed;
             if (detail) {

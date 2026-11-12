@@ -124,11 +124,11 @@ class _IntentCallback:
 
 def _plugin_services():
     try:
-        from app.tsunderegram.plugins import PluginServices
+        from app.exteraless.plugins import PluginServices
         return PluginServices
     except Exception:
         from extera_utils.plugin_loader import engine_java_class
-        return engine_java_class("app.tsunderegram.plugins.PluginServices")
+        return engine_java_class("app.exteraless.plugins.PluginServices")
 
 
 class IntentsManager:
@@ -228,7 +228,7 @@ class IntentsManager:
         }
 
 
-# Called from BasePlugin._tsunderegram_cleanup_resources() on plugin unload.
+# Called from BasePlugin._exteraless_cleanup_resources() on plugin unload.
 def _unhandle_all_for_plugin(plugin_id: str):
     if not plugin_id:
         return

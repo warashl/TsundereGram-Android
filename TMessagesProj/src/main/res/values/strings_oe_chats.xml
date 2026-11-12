@@ -59,14 +59,11 @@
     <string name="OEChatsTapToSwitchRecord">Tap to Switch Voice and Video</string>
     <string name="OEChatsKeepAttachButton">Keep the Attach Button While Typing</string>
     <string name="OEChatsRemoveMessageTail">Remove Message Tail</string>
-    <string name="OEChatsUnreadCapsule">Compact unread messages label</string>
     <string name="OEChatsReplaceEditedWithIcon">Replace \"%1$s\" with an Icon</string>
     <string name="OEChatsShowOnlineStatus">Show Online Indicator</string>
     <string name="OEChatsHideShareButton">Hide Side \"%1$s\" Button</string>
     <string name="OEChatsHideGiftButton">Hide Gift Button in Channels</string>
     <string name="OEChatsHideSearchButton">Hide Search Button in Channels</string>
-    <string name="OEChatsHideCallButton">Hide Call Button</string>
-    <string name="OEChatsHideMoneyButton">Hide \"%1$s\" in Attach Menu</string>
     <string name="OEChatsShowResultsBeforeVoting">Show Results Before Voting</string>
     <string name="OEChatsShowResultsBeforeVotingInfo">Results of public polls will be visible without casting a vote.</string>
     <string name="OEChatsHideReactions">Hide Reactions</string>
@@ -159,7 +156,7 @@
     <string name="OEChatsInlineMathCurrencyInfo">Expressions with currencies like “10 usd to rub =” are sent to @calcmulabot to get the rate.</string>
     <string name="OEChatsInlineMathAnnouncement">Result: %1$s</string>
     <string name="OELocalPremiumInfo">Premium emoji are sent as links that TsundereGram and other clients that support this show as the real emoji. Other Premium features work only on this device.</string>
-    <string name="OELocalPremiumEmojiHint">Without **Telegram Premium** this emoji is sent as a link: in **TsundereGram** it shows up animated, other apps show it as a regular emoji link.</string>
+    <string name="OELocalPremiumEmojiHint">You don\'t have **Telegram Premium**, so this emoji is sent as a link: only users of **TsundereGram** and clients that support this will see it.</string>
     <string name="OEChatsSections">Sections</string>
     <string name="OEChatsMenus">Menus and Buttons</string>
     <string name="OEChatsMenusInfo">Chat, message and media viewer menus</string>
@@ -170,6 +167,4 @@
     <string name="OEChatsMenusHeader">Menus</string>
     <string name="OEChatsPlaybackHeader">Playback</string>
     <string name="OEChatsVoiceHeader">Voice Messages</string>
-    <string name="OEDoubleTapSaveToDevice">Save to device</string>
-    <string name="OESendAfterSlowMode">Send when slow mode ends</string>
 </resources>

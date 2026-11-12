@@ -489,8 +489,8 @@ public class SeekBarView extends FrameLayout {
         return configStyle;
     }
 
-    // Метрики MD3-слайдера. TsundereGram встраивает настоящий com.google.android.material.slider.Slider
-    // (com/tsunderegram/messenger/utils/ui/MaterialSliderUiHelper.java:60-69): trackHeight 8dp,
+    // Метрики MD3-слайдера. exteraGram встраивает настоящий com.google.android.material.slider.Slider
+    // (com/exteragram/messenger/utils/ui/MaterialSliderUiHelper.java:60-69): trackHeight 8dp,
     // thumbHeight 24dp, thumbWidth 3dp, trackStopIndicatorSize 0, haloRadius 0; из темы
     // Widget.Material3.Slider (res/values/styles.xml:8902) — thumbTrackGapSize 6dp,
     // trackInsideCornerSize 2dp. Зависимости material в дереве нет — рисуем сами теми же числами.
@@ -503,7 +503,7 @@ public class SeekBarView extends FrameLayout {
     /**
      * Material-слайдер не включается для двусторонней шкалы,
      * при заданном минимуме, при буферизации, при своей толщине линии и при наличии таймкодов.
-     * Условие TsundereGram {@code lineWidthDp != 3} у нас выражено флагом hasCustomLineWidthValue:
+     * Условие exteraGram {@code lineWidthDp != 3} у нас выражено флагом hasCustomLineWidthValue:
      * lineWidthDp мы сами переписываем под стиль.
      */
     private boolean canUseMaterialSlider() {
@@ -642,7 +642,7 @@ public class SeekBarView extends FrameLayout {
                 canvas.drawCircle(thumbX + selectorWidth / 2, y + thumbSize / 2, currentRadius, outerPaint1);
             }
         } else if (needCustomDraw() == SLIDER_STYLE_MD3) {
-            // геометрия по TsundereGram: дорожка 8dp, торцы скруглены наполовину (4dp),
+            // геометрия по exteraGram: дорожка 8dp, торцы скруглены наполовину (4dp),
             // внутренние углы у ползунка 2dp, зазор 6dp, ползунок 3x24dp
             float radius = AndroidUtilities.dp(MD3_TRACK_HEIGHT_DP / 2f);
             float radius2 = AndroidUtilities.dp(MD3_TRACK_INSIDE_CORNER_DP);

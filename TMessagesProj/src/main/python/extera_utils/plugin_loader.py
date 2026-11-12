@@ -1,6 +1,6 @@
-"""Java-facing plugin loader: import, lifecycle, hook dispatch — tsunderegram plugin SDK.
+"""Java-facing plugin loader: import, lifecycle, hook dispatch — exteraless plugin SDK.
 
-The Java engine (app.tsunderegram.plugins.PythonPluginsEngine) calls the
+The Java engine (app.exteraless.plugins.PythonPluginsEngine) calls the
 module-level functions of this module via Chaquopy. All return values that
 cross the bridge are JSON strings, plain strings or booleans.
 
@@ -118,11 +118,11 @@ _java_runtime_class = _RUNTIME_UNSET
 
 
 def _java_runtime():
-    """app.tsunderegram.plugins.PluginRuntime или None (нет JVM / старая сборка)."""
+    """app.exteraless.plugins.PluginRuntime или None (нет JVM / старая сборка)."""
     global _java_runtime_class
     if _java_runtime_class is _RUNTIME_UNSET:
         try:
-            from app.tsunderegram.plugins import PluginRuntime as _Runtime
+            from app.exteraless.plugins import PluginRuntime as _Runtime
             _java_runtime_class = _Runtime
         except Exception:
             _java_runtime_class = None
@@ -310,7 +310,7 @@ _OUT_OF_SYNC = [p for p in (PERM_UI, PERM_MESSAGES_READ, PERM_MESSAGES_SEND,
                             PERM_SETTINGS, PERM_HOOKS, PERM_NATIVE)
                 if p not in KNOWN_PERMISSIONS]
 if _OUT_OF_SYNC:  # набор разошёлся с metadata_parser/PluginPermissions — это баг
-    print(f"[tsunderegram:plugin_loader] unknown permission keys {_OUT_OF_SYNC}",
+    print(f"[exteraless:plugin_loader] unknown permission keys {_OUT_OF_SYNC}",
           file=sys.stderr)
 
 # Файл плагина -> его id. Заполняется ДО exec_module, иначе импорты верхнего
@@ -463,19 +463,19 @@ _JAVA_CLASS_RULES = {
 #: (`PluginTrustLevel.setLevel(id, 2)`, `PluginPermissions.grant(id, "native")`)
 #: выдавал себе TRUSTED. Ни один плагин каталога эти классы не зовёт.
 _JAVA_CLASS_DENIED = frozenset({
-    "app.tsunderegram.plugins.PluginPermissions",
-    "app.tsunderegram.plugins.PluginTrustLevel",
-    "app.tsunderegram.plugins.PluginGrantStore",
-    "app.tsunderegram.plugins.SignedGrantPreferences",
-    "app.tsunderegram.plugins.PluginSinkGate",
-    "app.tsunderegram.plugins.PluginsWatchdog",
-    "app.tsunderegram.plugins.PluginRuntime",
-    "app.tsunderegram.plugins.PluginServices",
-    "app.tsunderegram.plugins.PluginAuditJournal",
-    "app.tsunderegram.plugins.PluginDenialNotice",
-    "app.tsunderegram.plugins.files.FilesControllerJava",
-    "app.tsunderegram.plugins.intents.IntentsDispatcher",
-    "app.tsunderegram.plugins.menus.MenusController",
+    "app.exteraless.plugins.PluginPermissions",
+    "app.exteraless.plugins.PluginTrustLevel",
+    "app.exteraless.plugins.PluginGrantStore",
+    "app.exteraless.plugins.SignedGrantPreferences",
+    "app.exteraless.plugins.PluginSinkGate",
+    "app.exteraless.plugins.PluginsWatchdog",
+    "app.exteraless.plugins.PluginRuntime",
+    "app.exteraless.plugins.PluginServices",
+    "app.exteraless.plugins.PluginAuditJournal",
+    "app.exteraless.plugins.PluginDenialNotice",
+    "app.exteraless.plugins.files.FilesControllerJava",
+    "app.exteraless.plugins.intents.IntentsDispatcher",
+    "app.exteraless.plugins.menus.MenusController",
     "java.lang.ProcessBuilder",
     "java.lang.Process",
 })
@@ -577,7 +577,7 @@ def engine_java_class(name):
     except Exception as e:
         # Не через _log: он ходит в android_utils.log, а тот сам резолвит мост
         # этой же функцией — на хосте без Chaquopy получалась бы рекурсия.
-        print(f"[tsunderegram:plugin_loader] engine class {name!r} unavailable: {e}",
+        print(f"[exteraless:plugin_loader] engine class {name!r} unavailable: {e}",
               file=sys.stderr)
         return None
     finally:
@@ -599,7 +599,7 @@ def guard_java_class(name):
     Полной эту проверку считать нельзя: 210 плагинов каталога тянут
     org.telegram.* обычным импортом на верхнем уровне модуля, и туда она не
     достаёт. Настоящая граница — хуки на самих действиях
-    (app.tsunderegram.plugins.PluginSinkGate), эта проверка лишь снимает самый
+    (app.exteraless.plugins.PluginSinkGate), эта проверка лишь снимает самый
     ходовой путь: 178 плагинов зовут find_class, 94 — jclass.
     """
     if unsafe_mode() or _engine_lookup():
@@ -728,18 +728,14 @@ def _reflection_gate(op, target, member):
 
 def _install_reflection_gate() -> None:
     try:
-        from java.chaquopy import set_reflection_policy
+        from java.chaquopy import get_reflection_policy, set_reflection_policy
     except Exception:
         return
     try:
-        from java.chaquopy import get_reflection_policy
-    except Exception:
-        get_reflection_policy = None
-    try:
-        if get_reflection_policy is None or get_reflection_policy() is not _reflection_gate:
+        if get_reflection_policy() is not _reflection_gate:
             set_reflection_policy(_reflection_gate)
     except Exception as e:
-        print(f"[tsunderegram:plugin_loader] reflection gate install failed: {e}",
+        print(f"[exteraless:plugin_loader] reflection gate install failed: {e}",
               file=sys.stderr)
         return
     try:
@@ -754,7 +750,7 @@ def _log(message: str) -> None:
         from android_utils import log as _android_log
         _android_log(message)
     except Exception:
-        print(f"[tsunderegram:plugin_loader] {message}", file=sys.stderr)
+        print(f"[exteraless:plugin_loader] {message}", file=sys.stderr)
 
 
 _logged_denials = set()
@@ -980,7 +976,7 @@ def _permissions():
     global _permissions_class
     if _permissions_class is _PERMISSIONS_UNSET:
         try:
-            from app.tsunderegram.plugins import PythonBridge
+            from app.exteraless.plugins import PythonBridge
             _permissions_class = PythonBridge
         except Exception:
             return None
@@ -1157,7 +1153,7 @@ def _sandboxed_import_module(name, package=None):
     return _original_import_module(name, package)
 
 
-_sandboxed_import_module._tsunderegram_sandbox = True
+_sandboxed_import_module._exteraless_sandbox = True
 
 
 def _log_neighbour_import_failure(name, exc) -> None:
@@ -1271,8 +1267,8 @@ def _sandboxed_import(name, globals=None, locals=None, fromlist=(), level=0):
     except ModuleNotFoundError as exc:
         # Chaquopy отдаёт «No module named 'org'» — корень пакета, а не то, что
         # действительно не нашлось. Настоящий запрос знает только этот кадр.
-        if getattr(exc, "_tsunderegram_java_import", None) is None:
-            exc._tsunderegram_java_import = (name, tuple(fromlist or ()))
+        if getattr(exc, "_exteraless_java_import", None) is None:
+            exc._exteraless_java_import = (name, tuple(fromlist or ()))
         raise
     if key is not None and _cacheable_java_import(module, name, key[1]):
         if len(_java_from_imports) >= _JAVA_FROM_IMPORTS_MAX:
@@ -1281,7 +1277,7 @@ def _sandboxed_import(name, globals=None, locals=None, fromlist=(), level=0):
     return module
 
 
-_sandboxed_import._tsunderegram_sandbox = True
+_sandboxed_import._exteraless_sandbox = True
 
 _java_from_imports = {}
 _JAVA_FROM_IMPORTS_MAX = 4096
@@ -1337,7 +1333,7 @@ def _sandboxed_open(file, mode="r", *args, **kwargs):
         _context_state.open_checked = previous
 
 
-_sandboxed_open._tsunderegram_sandbox = True
+_sandboxed_open._exteraless_sandbox = True
 
 
 #: Функции os, работающие с уже открытым дескриптором или со ссылкой.
@@ -1356,7 +1352,7 @@ def _install_fd_guards() -> None:
     try:
         for name in _FD_FUNCTIONS:
             original = getattr(os, name, None)
-            if original is None or getattr(original, "_tsunderegram_sandbox", False):
+            if original is None or getattr(original, "_exteraless_sandbox", False):
                 continue
             _original_fd_functions[name] = original
 
@@ -1373,13 +1369,13 @@ def _install_fd_guards() -> None:
                         pass
                     return func(*args, **kwargs)
 
-                guarded._tsunderegram_sandbox = True
+                guarded._exteraless_sandbox = True
                 guarded.__name__ = func_name
                 return guarded
 
             setattr(os, name, make(name, original))
     except Exception as e:
-        print(f"[tsunderegram:plugin_loader] fd guards failed: {e}", file=sys.stderr)
+        print(f"[exteraless:plugin_loader] fd guards failed: {e}", file=sys.stderr)
 
 
 def owner_of_object(obj) -> Optional[str]:
@@ -1407,13 +1403,13 @@ def _install_thread_marking() -> None:
     try:
         import threading
         original_run = threading.Thread.run
-        if getattr(original_run, "_tsunderegram_marked", False):
+        if getattr(original_run, "_exteraless_marked", False):
             return
 
         def run(self):
             owner = None
             try:
-                owner = getattr(self, "_tsunderegram_owner", None)
+                owner = getattr(self, "_exteraless_owner", None)
                 if owner is None:
                     owner = owner_of_object(getattr(self, "_target", None))
                 if owner is None:
@@ -1427,11 +1423,11 @@ def _install_thread_marking() -> None:
             with java_runtime_mark(owner):
                 return original_run(self)
 
-        run._tsunderegram_marked = True
+        run._exteraless_marked = True
         threading.Thread.run = run
 
         original_start = threading.Thread.start
-        if not getattr(original_start, "_tsunderegram_marked", False):
+        if not getattr(original_start, "_exteraless_marked", False):
             def start(self):
                 # Владельца берём в момент запуска, на стеке создателя: у
                 # threading.Timer колбэк лежит в .function, а воркеры
@@ -1439,16 +1435,16 @@ def _install_thread_marking() -> None:
                 # библиотеки — по объекту потока владелец в обоих случаях
                 # не определяется, и поток уходил без метки.
                 try:
-                    if getattr(self, "_tsunderegram_owner", None) is None:
-                        self._tsunderegram_owner = plugin_frame_owner()
+                    if getattr(self, "_exteraless_owner", None) is None:
+                        self._exteraless_owner = plugin_frame_owner()
                 except Exception:
                     pass
                 return original_start(self)
 
-            start._tsunderegram_marked = True
+            start._exteraless_marked = True
             threading.Thread.start = start
     except Exception as e:
-        print(f"[tsunderegram:plugin_loader] thread marking failed: {e}", file=sys.stderr)
+        print(f"[exteraless:plugin_loader] thread marking failed: {e}", file=sys.stderr)
 
 
 def _mirror_on_native_module(name, original, replacement) -> None:
@@ -1458,7 +1454,7 @@ def _mirror_on_native_module(name, original, replacement) -> None:
         if native is not None and getattr(native, name, None) is original:
             setattr(native, name, replacement)
     except Exception as e:
-        print(f"[tsunderegram:plugin_loader] native {name} guard failed: {e}",
+        print(f"[exteraless:plugin_loader] native {name} guard failed: {e}",
               file=sys.stderr)
 
 
@@ -1518,7 +1514,7 @@ def _int_shim(original):
             return original(self, *coerced)
         return bound(*coerced)
 
-    shim._tsunderegram_int_shim = True
+    shim._exteraless_int_shim = True
     return shim
 
 
@@ -1562,20 +1558,20 @@ def _install_color_int_shims() -> None:
             cls = jclass(class_name)
             names = _int_over_long_methods(class_name)
         except Exception as e:
-            print(f"[tsunderegram:plugin_loader] int shim scan failed for {class_name}: {e}",
+            print(f"[exteraless:plugin_loader] int shim scan failed for {class_name}: {e}",
                   file=sys.stderr)
             continue
         for name in names:
             try:
                 original = getattr(cls, name, None)
-                if original is None or getattr(original, "_tsunderegram_int_shim", False):
+                if original is None or getattr(original, "_exteraless_int_shim", False):
                     continue
                 _set_class_attr(cls, name, _int_shim(original))
-                if not getattr(getattr(cls, name, None), "_tsunderegram_int_shim", False):
-                    print(f"[tsunderegram:plugin_loader] int shim for {class_name}.{name} "
+                if not getattr(getattr(cls, name, None), "_exteraless_int_shim", False):
+                    print(f"[exteraless:plugin_loader] int shim for {class_name}.{name} "
                           f"did not stick", file=sys.stderr)
             except Exception as e:
-                print(f"[tsunderegram:plugin_loader] int shim for {class_name}.{name} "
+                print(f"[exteraless:plugin_loader] int shim for {class_name}.{name} "
                       f"failed: {e}", file=sys.stderr)
 
 
@@ -1630,7 +1626,7 @@ def _install_dual_member_setters() -> None:
             cls = jclass(class_name)
             fields = _dual_member_fields(class_name)
         except Exception as e:
-            print(f"[tsunderegram:plugin_loader] field setter scan failed for {class_name}: {e}",
+            print(f"[exteraless:plugin_loader] field setter scan failed for {class_name}: {e}",
                   file=sys.stderr)
             continue
         if not fields:
@@ -1646,7 +1642,7 @@ def _install_dual_member_setters() -> None:
         try:
             _set_class_attr(cls, "__setattr__", __setattr__)
         except Exception as e:
-            print(f"[tsunderegram:plugin_loader] field setters for {class_name} failed: {e}",
+            print(f"[exteraless:plugin_loader] field setters for {class_name} failed: {e}",
                   file=sys.stderr)
 
 
@@ -1776,13 +1772,13 @@ def _install_java_getters() -> None:
         original = getattr(root, "__getattr__", None)
         _set_class_attr(root, "__getattr__", _java_getattr(original))
     except Exception as e:
-        print(f"[tsunderegram:plugin_loader] java getters failed: {e}", file=sys.stderr)
+        print(f"[exteraless:plugin_loader] java getters failed: {e}", file=sys.stderr)
         return
     try:
         proxy = jclass("com.chaquo.python.PyProxy")
         _set_class_attr(proxy, "__setattr__", _java_setattr(root.__setattr__))
     except Exception as e:
-        print(f"[tsunderegram:plugin_loader] proxy attribute cache failed: {e}", file=sys.stderr)
+        print(f"[exteraless:plugin_loader] proxy attribute cache failed: {e}", file=sys.stderr)
 
 
 def _install_jclass_guard() -> None:
@@ -1795,7 +1791,7 @@ def _install_jclass_guard() -> None:
     try:
         import java
         original = getattr(java, "jclass", None)
-        if original is None or getattr(original, "_tsunderegram_guard", False):
+        if original is None or getattr(original, "_exteraless_guard", False):
             return
 
         from .class_aliases import resolve, adapt
@@ -1826,11 +1822,11 @@ def _install_jclass_guard() -> None:
             except Exception:
                 return found
 
-        jclass._tsunderegram_guard = True
+        jclass._exteraless_guard = True
         java.jclass = jclass
         _mirror_on_native_module("jclass", original, jclass)
     except Exception as e:
-        print(f"[tsunderegram:plugin_loader] jclass guard failed: {e}", file=sys.stderr)
+        print(f"[exteraless:plugin_loader] jclass guard failed: {e}", file=sys.stderr)
 
 
 _PROXY_DEFAULTS = {
@@ -1894,11 +1890,11 @@ def _guard_proxy_method(fn, default, owner):
 
         def on_error(e):
             if isinstance(e, PermissionError):
-                print(f"[tsunderegram:plugin_loader] {owner}.{name} denied: {e}",
+                print(f"[exteraless:plugin_loader] {owner}.{name} denied: {e}",
                       file=sys.stderr)
                 return
             import traceback
-            print(f"[tsunderegram:plugin_loader] {owner}.{name} "
+            print(f"[exteraless:plugin_loader] {owner}.{name} "
                   f"raised into Java:\n{traceback.format_exc()}", file=sys.stderr)
 
         return GuardedMethod(fn, default, on_error)
@@ -1910,16 +1906,16 @@ def _guard_proxy_method(fn, default, owner):
         try:
             return fn(*args, **kwargs)
         except PermissionError as e:
-            print(f"[tsunderegram:plugin_loader] {owner}.{fn.__name__} denied: {e}",
+            print(f"[exteraless:plugin_loader] {owner}.{fn.__name__} denied: {e}",
                   file=sys.stderr)
             return default
         except Exception:
             import traceback
-            print(f"[tsunderegram:plugin_loader] {owner}.{fn.__name__} "
+            print(f"[exteraless:plugin_loader] {owner}.{fn.__name__} "
                   f"raised into Java:\n{traceback.format_exc()}", file=sys.stderr)
             return default
 
-    guarded._tsunderegram_guarded = True
+    guarded._exteraless_guarded = True
     return guarded
 
 
@@ -1929,7 +1925,7 @@ def _guard_proxy_subclass(cls, defaults):
             continue
         if defaults and name not in defaults:
             continue
-        if getattr(value, "_tsunderegram_guarded", False):
+        if getattr(value, "_exteraless_guarded", False):
             continue
         if isinstance(value, (staticmethod, classmethod, type)):
             continue
@@ -1974,27 +1970,27 @@ def _install_proxy_class_guard() -> None:
     try:
         from java import jclass
         root = jclass("java.lang.Object")
-        if getattr(getattr(vars(root).get("__init_subclass__"), "__func__", None), "_tsunderegram_guard", False):
+        if getattr(getattr(vars(root).get("__init_subclass__"), "__func__", None), "_exteraless_guard", False):
             return
 
         def __init_subclass__(cls, **kwargs):
             try:
                 _guard_new_proxy_class(cls)
             except Exception as e:
-                print(f"[tsunderegram:plugin_loader] proxy class guard skipped: {e}",
+                print(f"[exteraless:plugin_loader] proxy class guard skipped: {e}",
                       file=sys.stderr)
 
-        __init_subclass__._tsunderegram_guard = True
+        __init_subclass__._exteraless_guard = True
         _set_class_attr(root, "__init_subclass__", classmethod(__init_subclass__))
     except Exception as e:
-        print(f"[tsunderegram:plugin_loader] proxy class guard failed: {e}", file=sys.stderr)
+        print(f"[exteraless:plugin_loader] proxy class guard failed: {e}", file=sys.stderr)
 
 
 def _install_dynamic_proxy_guard() -> None:
     try:
         import java
         original = getattr(java, "dynamic_proxy", None)
-        if original is None or getattr(original, "_tsunderegram_guard", False):
+        if original is None or getattr(original, "_exteraless_guard", False):
             return
 
         def dynamic_proxy(*interfaces, **kwargs):
@@ -2007,15 +2003,15 @@ def _install_dynamic_proxy_guard() -> None:
 
                 base.__init_subclass__ = classmethod(__init_subclass__)
             except Exception as e:
-                print(f"[tsunderegram:plugin_loader] proxy guard skipped: {e}",
+                print(f"[exteraless:plugin_loader] proxy guard skipped: {e}",
                       file=sys.stderr)
             return base
 
-        dynamic_proxy._tsunderegram_guard = True
+        dynamic_proxy._exteraless_guard = True
         java.dynamic_proxy = dynamic_proxy
         _mirror_on_native_module("dynamic_proxy", original, dynamic_proxy)
     except Exception as e:
-        print(f"[tsunderegram:plugin_loader] dynamic_proxy guard failed: {e}",
+        print(f"[exteraless:plugin_loader] dynamic_proxy guard failed: {e}",
               file=sys.stderr)
 
 
@@ -2068,7 +2064,7 @@ def _callable_interface_proxy(interface, fn):
         import types
 
         def forward(self, *args):
-            return self._tsunderegram_callable(*args)
+            return self._exteraless_callable(*args)
 
         forward.__name__ = name
         proxy_class = types.new_class(
@@ -2077,7 +2073,7 @@ def _callable_interface_proxy(interface, fn):
             exec_body=lambda namespace: namespace.update({name: forward}))
         _CALLABLE_INTERFACE_PROXIES[key] = proxy_class
     proxy = proxy_class()
-    proxy._tsunderegram_callable = fn
+    proxy._exteraless_callable = fn
     return proxy
 
 
@@ -2101,7 +2097,7 @@ def _install_interface_call_shim() -> None:
     try:
         from java.chaquopy import JavaClass
         original = JavaClass.__call__
-        if getattr(original, "_tsunderegram_guard", False):
+        if getattr(original, "_exteraless_guard", False):
             return
 
         def __call__(cls, *args, **kwargs):
@@ -2120,10 +2116,10 @@ def _install_interface_call_shim() -> None:
                     raise
                 return proxy
 
-        __call__._tsunderegram_guard = True
+        __call__._exteraless_guard = True
         JavaClass.__call__ = __call__
     except Exception as e:
-        print(f"[tsunderegram:plugin_loader] interface call shim failed: {e}",
+        print(f"[exteraless:plugin_loader] interface call shim failed: {e}",
               file=sys.stderr)
 
 
@@ -2247,7 +2243,7 @@ def _install_sandbox() -> None:
             # возвращает None и передаёт очередь дальше.
             sys.meta_path.insert(0, _PermissionFinder())
     except Exception as e:
-        print(f"[tsunderegram:plugin_loader] sandbox install failed: {e}",
+        print(f"[exteraless:plugin_loader] sandbox install failed: {e}",
               file=sys.stderr)
 
 
@@ -2284,7 +2280,7 @@ def _missing_java_classes(exc: BaseException) -> List[str]:
     только корень («org»), а плагину нужно увидеть полное имя класса —
     в форке половина классов эталона называется иначе или отсутствует.
     """
-    requested = getattr(exc, "_tsunderegram_java_import", None)
+    requested = getattr(exc, "_exteraless_java_import", None)
     if not requested:
         return []
     module, fromlist = requested
@@ -2495,7 +2491,6 @@ def _import_module(path: str, plugin_id: str):
     # имени модуля в кадре, а импорты верхнего уровня выполняются уже внутри
     # exec_module — после него регистрировать было бы поздно.
     _register_owner(path, plugin_id)
-    before = set(sys.modules)
     try:
         # Контекст нужен и на верхнем уровне модуля: плагины каталога создают там
         # джавовые подклассы и трогают SDK, а проверки разрешений отказывают,
@@ -2504,22 +2499,9 @@ def _import_module(path: str, plugin_id: str):
             spec.loader.exec_module(module)
     except Exception:
         sys.modules.pop(module_name, None)
-        _drop_orphaned_modules(before)
         _forget_owner(path)
         raise
     return module, module_name
-
-
-def _drop_orphaned_modules(before) -> None:
-    for name in list(sys.modules):
-        if name in before or "." not in name:
-            continue
-        parent = name.rpartition(".")[0]
-        while parent:
-            if parent not in sys.modules:
-                sys.modules.pop(name, None)
-                break
-            parent = parent.rpartition(".")[0]
 
 
 def _class_owner(obj) -> Optional[str]:
@@ -2645,7 +2627,7 @@ def load_plugin(path: str, plugin_id: str) -> str:
         clock.lap("import")
         plugin_class = _find_plugin_class(module, path, plugin_id)
         instance = plugin_class()
-        instance._tsunderegram_attach(plugin_id)
+        instance._exteraless_attach(plugin_id)
         for key in ("name", "description", "author", "version", "icon",
                     "app_version", "sdk_version", "requirements"):
             try:
@@ -2692,13 +2674,8 @@ def _load_elyx_plugin(path: str, plugin_id: str, clock=None) -> str:
         record = PluginRecord(module=None, instance=None, path=path)
         record.__dict__["_elyx"] = True
         record.__dict__["_clock"] = clock
-        before = set(sys.modules)
-        try:
-            with plugin_context(plugin_id):
-                elyx_runtime.load_plugin_record(record, path)
-        except Exception:
-            _drop_orphaned_modules(before)
-            raise
+        with plugin_context(plugin_id):
+            elyx_runtime.load_plugin_record(record, path)
         record.__dict__.pop("_clock", None)
         if record.instance is None:
             raise RuntimeError("elyx_runtime did not populate the plugin record")
@@ -2751,9 +2728,9 @@ def _unload_record(plugin_id: str, quiet: bool, clock=None):
             clock.lap("on_plugin_unload")
         _mark_disabled(instance)
         try:
-            if instance is not None and hasattr(instance, "_tsunderegram_cleanup_resources"):
+            if instance is not None and hasattr(instance, "_exteraless_cleanup_resources"):
                 with plugin_context(plugin_id):
-                    instance._tsunderegram_cleanup_resources()
+                    instance._exteraless_cleanup_resources()
         except Exception:
             pass
         if clock is not None:
@@ -2821,7 +2798,7 @@ def uninstall_plugin(plugin_id: str) -> None:
         try:
             pip_controller.remove_requirements(plugin_id)
         except Exception as e:
-            print(f"[tsunderegram:plugin_loader] remove_requirements({plugin_id!r}) "
+            print(f"[exteraless:plugin_loader] remove_requirements({plugin_id!r}) "
                   f"failed: {e}", file=sys.stderr)
         finally:
             _context_state.engine_write = previous
@@ -2829,7 +2806,7 @@ def uninstall_plugin(plugin_id: str) -> None:
     try:
         import elyx_runtime
         if hasattr(elyx_runtime, "purge_plugin"):
-            from app.tsunderegram.plugins import PythonBridge
+            from app.exteraless.plugins import PythonBridge
             elyx_runtime.purge_plugin(str(PythonBridge.getPluginsDir()), plugin_id)
     except Exception:
         pass
@@ -3417,7 +3394,7 @@ def notify_setting_changed(plugin_id: str, key: str, json_value: str) -> None:
 
 def invalidate_settings_mirror(plugin_id: str) -> None:
     record = plugins.get(plugin_id)
-    drop = getattr(getattr(record, "instance", None), "_tsunderegram_drop_settings_cache", None)
+    drop = getattr(getattr(record, "instance", None), "_exteraless_drop_settings_cache", None)
     if callable(drop):
         drop()
     mirror = sys.modules.get("plugin_settings")
@@ -3429,7 +3406,7 @@ def invalidate_settings_mirror(plugin_id: str) -> None:
 def dispatch_setting_click(plugin_id: str, callback_id: str, view=None) -> None:
     """Invoke the on_click callback registered under *callback_id*.
 
-    Вьюха нажатой строки передаётся первым аргументом: у TsundereGram колбэк
+    Вьюха нажатой строки передаётся первым аргументом: у exteraGram колбэк
     зовётся как ``callback.call(view)``, и плагины привязывают к ней меню.
     """
     record = plugins.get(plugin_id)
@@ -3461,7 +3438,7 @@ def _build_custom_view(item, context):
         return None
     if getattr(factory, "getClass", None) is not None:
         from java import jclass
-        custom_setting = jclass("app.tsunderegram.plugins.models.CustomSetting")
+        custom_setting = jclass("app.exteraless.plugins.models.CustomSetting")
         if isinstance(factory, custom_setting.Factory):
             return custom_setting(factory, getattr(item, "factory_args", None),
                                   getattr(item, "on_click", None),
@@ -3560,40 +3537,10 @@ def start_dev_server() -> None:
         import dev_server
         dev_server.start()
     except Exception as e:
-        print(f"[tsunderegram:plugin_loader] dev server start failed: {e}",
+        print(f"[exteraless:plugin_loader] dev server start failed: {e}",
               file=sys.stderr)
     return None
 
-
-def _extract_native_assets() -> None:
-    try:
-        from java.android import importer
-        from pkgutil import get_importer
-        prefix = importer.ASSET_PREFIX
-    except Exception:
-        return
-    for entry in list(sys.path):
-        if not isinstance(entry, str) or not entry.startswith(prefix + os.sep):
-            continue
-        try:
-            finder = get_importer(entry)
-        except Exception:
-            continue
-        if not isinstance(finder, importer.AssetFinder) or finder.prefix:
-            continue
-        for zip_file in finder.zip_files:
-            for info in zip_file.infolist():
-                name = info.filename
-                if info.is_dir() or not name.endswith(".so") or name.startswith("debugpy/"):
-                    continue
-                try:
-                    zip_file.extract_if_changed(info, finder.extract_root)
-                except Exception as e:
-                    print(f"[tsunderegram:plugin_loader] extract {name} failed: {e}",
-                          file=sys.stderr)
-
-
-_extract_native_assets()
 
 # Песочницу ставим на импорте модуля: враппер builtins.__import__ должен
 # оказаться в цепочке ДО того, как elyx_runtime.namespace захватит себе
@@ -3606,5 +3553,5 @@ if pip_controller is not None:
     try:
         pip_controller.restore_sys_path()
     except Exception as e:
-        print(f"[tsunderegram:plugin_loader] restore_sys_path failed: {e}",
+        print(f"[exteraless:plugin_loader] restore_sys_path failed: {e}",
               file=sys.stderr)

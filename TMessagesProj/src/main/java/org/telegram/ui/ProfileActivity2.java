@@ -227,8 +227,7 @@ public class ProfileActivity2 extends BaseFragment implements
         actionBar.setAddToContainer(false);
         actionBar.setClipContent(true);
         actionBar.setBackgroundColor(Color.TRANSPARENT);
-        // a sheet's window is over the status bar (on tablets too)
-        actionBar.setOccupyStatusBar(isMain || parentLayout != null && parentLayout.isSheet() || !AndroidUtilities.isTablet() && !inBubbleMode);
+        actionBar.setOccupyStatusBar(isMain || !AndroidUtilities.isTablet() && !inBubbleMode);
 
         actionBar.setBackButtonDrawable(new BackDrawable(false));
         final ActionBarMenu menu = actionBar.createMenu();

@@ -116,12 +116,12 @@ public class EmojiHelper extends BaseRemoteHelper implements NotificationCenter.
 
     @Override
     protected long getMetadataChannelId() {
-        return app.tsunderegram.OpenExteraConfig.downloadEmojiPacks() ? NAGRAMX_METADATA_ID : CHANNEL_METADATA_ID;
+        return app.exteraless.OpenExteraConfig.downloadEmojiPacks() ? NAGRAMX_METADATA_ID : CHANNEL_METADATA_ID;
     }
 
     @Override
     protected String getMetadataChannelName() {
-        return app.tsunderegram.OpenExteraConfig.downloadEmojiPacks() ? NAGRAMX_METADATA_NAME : CHANNEL_METADATA_NAME;
+        return app.exteraless.OpenExteraConfig.downloadEmojiPacks() ? NAGRAMX_METADATA_NAME : CHANNEL_METADATA_NAME;
     }
 
     public static EmojiHelper getInstance() {

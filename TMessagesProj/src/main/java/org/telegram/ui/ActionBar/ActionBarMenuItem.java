@@ -63,7 +63,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
 import androidx.core.view.WindowInsetsCompat;
 
-import app.tsunderegram.components.ActionRow;
+import app.exteraless.components.ActionRow;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.AnimationNotificationsLocker;
@@ -1345,13 +1345,13 @@ public class ActionBarMenuItem extends FrameLayout {
     }
 
     /**
-     * Центрирование заголовка включается либо нашим ключом (порт TsundereGram), либо
+     * Центрирование заголовка включается либо нашим ключом (порт exteraGram), либо
      * флагом NagramX, который читает ActionBar.isCentered(). Проверка нужна только чтобы
      * не дёргать лишний requestLayout при выключенной фиче.
      * (там ключ один — ExteraConfig.getCenterTitle()).
      */
     private static boolean isCenterTitleEnabled() {
-        return app.tsunderegram.appearance.AppearanceConfig.centerTitle()
+        return app.exteraless.appearance.AppearanceConfig.centerTitle()
                 || xyz.nextalone.nagram.NaConfig.INSTANCE.getCenterActionBarTitle().Bool();
     }
 

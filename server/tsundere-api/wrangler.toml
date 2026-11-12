@@ -1,0 +1,16 @@
+name = "tsundere-api"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+# не трогать переменные, заданные в дашборде Cloudflare
+keep_vars = true
+# Развёрнут: https://tsundere-api.tsunderegram.workers.dev (аккаунт Cloudflare через GitHub warashl)
+
+[vars]
+# канал конфига стал приватным — ID из /info; [vars] при деплое перезаписывают значение из дашборда
+CHANNEL = "-1004487310631"
+CREATOR_IDS = "5133421262"
+# BOT_TOKEN задаётся секретом: npx wrangler secret put BOT_TOKEN
+
+# Workers AI — распознавание голосовых без настройки (POST /transcribe), бесплатный лимит Cloudflare
+[ai]
+binding = "AI"

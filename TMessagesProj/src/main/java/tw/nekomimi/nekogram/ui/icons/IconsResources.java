@@ -7,7 +7,7 @@ import android.util.LruCache;
 
 import androidx.annotation.Nullable;
 
-import app.tsunderegram.icons.IconPackManager;
+import app.exteraless.icons.IconPackManager;
 
 import xyz.nextalone.nagram.NaConfig;
 
@@ -16,15 +16,11 @@ public class IconsResources extends Resources {
 
     public static final int ICON_REPLACE_SOLAR = 1;
     public static volatile IconsResources instance;
-    // TsundereGram: экземпляров несколько (Application + Activity), чистим кэш у всех
-    private static final java.util.Set<IconsResources> instances =
-            java.util.Collections.synchronizedSet(java.util.Collections.newSetFromMap(new java.util.WeakHashMap<>()));
     private final LruCache<Long, Drawable.ConstantState> constantStates = new LruCache<>(500);
 
     public IconsResources(Resources resources) {
         super(resources.getAssets(), resources.getDisplayMetrics(), resources.getConfiguration());
         instance = this;
-        instances.add(this);
     }
 
     public void clearCaches() {
@@ -32,13 +28,6 @@ public class IconsResources extends Resources {
     }
 
     public static void clearAllCaches() {
-        synchronized (instances) {
-            for (IconsResources r : instances) {
-                if (r != null) {
-                    r.clearCaches();
-                }
-            }
-        }
         if (instance != null) {
             instance.clearCaches();
         }
@@ -104,8 +93,8 @@ public class IconsResources extends Resources {
     private int getConversion(int icon, int forcedIconsType) {
         int consideredIconsType = forcedIconsType == -1 ? NaConfig.INSTANCE.getIconReplacements().Int() : forcedIconsType;
 
-        if (consideredIconsType == app.tsunderegram.icons.BaseIconPacks.BASE_SOLAR || consideredIconsType == app.tsunderegram.icons.BaseIconPacks.BASE_REMIX) {
-            int mapped = app.tsunderegram.icons.BaseIconPacks.getIcon(icon);
+        if (consideredIconsType == app.exteraless.icons.BaseIconPacks.BASE_SOLAR || consideredIconsType == app.exteraless.icons.BaseIconPacks.BASE_REMIX) {
+            int mapped = app.exteraless.icons.BaseIconPacks.getIcon(icon);
             if (mapped != icon && mapped != 0) {
                 return mapped;
             }

@@ -1231,7 +1231,6 @@ public class BottomSheet extends Dialog implements BaseFragment.AttachedSheet {
 
     public BottomSheet(Context context, boolean needFocus, EdgeToEdge edgeToEdge, Theme.ResourcesProvider resourcesProvider) {
         super(context, R.style.TransparentDialog);
-        org.telegram.ui.Wallet.WalletPluginFreeze.enterIfWallet(this);
         this.resourcesProvider = resourcesProvider;
         if (BuildConfig.DEBUG) {
             LeakDetector.getInstance().add(this);
@@ -1542,8 +1541,9 @@ public class BottomSheet extends Dialog implements BaseFragment.AttachedSheet {
                 container.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_FULLSCREEN);
             }
             params.height = ViewGroup.LayoutParams.MATCH_PARENT;
-            // same as the activity window: SHORT_EDGES keeps the window out of a cutout on a long edge (e.g. top in landscape), so it ends up below the status bar
-            AndroidUtilities.applyEdgeToEdgeLayoutParams(params);
+            if (Build.VERSION.SDK_INT >= 28) {
+                params.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+            }
             window.setAttributes(params);
         }
     }
@@ -2040,7 +2040,7 @@ public class BottomSheet extends Dialog implements BaseFragment.AttachedSheet {
     }
 
     // ---- Predictive back для шторки ----
-    // Перенос из TsundereGram 12.9.0, BottomSheet.java:1579-1670, :1224/:1235, :1816.
+    // Перенос из exteraGram 12.9.0, BottomSheet.java:1579-1670, :1224/:1235, :1816.
     // У нас BottomSheet вообще не знал про OnBackAnimationCallback: шторки закрывались
     // мгновенно, без следования за жестом.
 
@@ -2362,7 +2362,6 @@ public class BottomSheet extends Dialog implements BaseFragment.AttachedSheet {
     }
 
     public void dismissInternal() {
-        org.telegram.ui.Wallet.WalletPluginFreeze.leave(this);
         if (attachedFragment != null) {
             attachedFragment.removeSheet(this);
             AndroidUtilities.removeFromParent(container);

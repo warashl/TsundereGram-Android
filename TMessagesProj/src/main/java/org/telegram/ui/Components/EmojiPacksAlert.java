@@ -88,7 +88,7 @@ import java.util.regex.Pattern;
 import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.utils.ProxyUtil;
 
-import app.tsunderegram.chats.UserLookup;
+import app.exteraless.chats.UserLookup;
 
 public class EmojiPacksAlert extends BottomSheet implements NotificationCenter.NotificationCenterDelegate {
 

@@ -2594,9 +2594,9 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
     /**
      * openExtera: отключает глобальное масштабирование радиуса для этого ресивера.
      * <p>
-     * Хук ниже умножает <b>запрошенный</b> радиус на corners/28 и совпадает с TsundereGram только
+     * Хук ниже умножает <b>запрошенный</b> радиус на corners/28 и совпадает с exteraGram только
      * там, где сток просит ровно половину стороны. Где сток просит больше (радиус во всю сторону
-     * ради гарантированного круга), масштабирование даёт круг и на середине слайдера — TsundereGram
+     * ради гарантированного круга), масштабирование даёт круг и на середине слайдера — exteraGram
      * в таких местах зовёт {@code ExteraConfig.getAvatarCorners(сторона)} напрямую
      *. Вызывающий, сделавший так же,
      * обязан взвести этот флаг.
@@ -2609,13 +2609,13 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
     }
 
     /**
-     * openExtera: радиус для аватарки со стороной {@code sizePx} пикселей — ровно контракт TsundereGram
+     * openExtera: радиус для аватарки со стороной {@code sizePx} пикселей — ровно контракт exteraGram
      * {@code ExteraConfig.getAvatarCorners(f, true)}. Порядок вызовов не важен: флаг взводится до
      * записи радиуса.
      */
     public void setRoundRadiusForAvatar(float sizePx) {
         oeAvatarCornersApplied = true;
-        setRoundRadius(app.tsunderegram.appearance.AppearanceConfig.getAvatarCorners(sizePx));
+        setRoundRadius(app.exteraless.appearance.AppearanceConfig.getAvatarCorners(sizePx));
     }
 
     private void updateAvatarRadiusWidth() {
@@ -2628,8 +2628,8 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
 
     private void applyRoundRadiusInternal() {
         int[] value = oeRequestedRoundRadius;
-        if (oeIsAvatar && !oeAvatarCornersApplied && !app.tsunderegram.appearance.AppearanceConfig.avatarCornersDefault()) {
-            if (app.tsunderegram.appearance.AppearanceConfig.singleCornerRadius()) {
+        if (oeIsAvatar && !oeAvatarCornersApplied && !app.exteraless.appearance.AppearanceConfig.avatarCornersDefault()) {
+            if (app.exteraless.appearance.AppearanceConfig.singleCornerRadius()) {
                 // When "singleCornerRadius" is ON, all avatars must get the same corners
                 // regardless of what radius the stock code requested (circle vs squircle).
                 // Infer the avatar diameter from the max requested radius (= half-side for circles)
@@ -2642,15 +2642,15 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
                     }
                     if (r > maxR) maxR = r;
                 }
-                int uniformCorner = app.tsunderegram.appearance.AppearanceConfig.getAvatarCorners(maxR * 2f);
+                int uniformCorner = app.exteraless.appearance.AppearanceConfig.getAvatarCorners(maxR * 2f);
                 int[] scaled = new int[4];
                 for (int a = 0; a < 4; a++) {
                     scaled[a] = uniformCorner;
                 }
                 value = scaled;
             } else {
-                int corners = app.tsunderegram.appearance.AppearanceConfig.avatarCorners();
-                int max = app.tsunderegram.appearance.AppearanceConfig.AVATAR_CORNERS_MAX;
+                int corners = app.exteraless.appearance.AppearanceConfig.avatarCorners();
+                int max = app.exteraless.appearance.AppearanceConfig.AVATAR_CORNERS_MAX;
                 int[] scaled = new int[4];
                 for (int a = 0; a < 4; a++) {
                     int r = value[a];

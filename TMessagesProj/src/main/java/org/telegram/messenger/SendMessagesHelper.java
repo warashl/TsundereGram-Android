@@ -51,9 +51,9 @@ import androidx.annotation.UiThread;
 import androidx.collection.LongSparseArray;
 import androidx.core.view.inputmethod.InputContentInfoCompat;
 
-import com.tsunderegram.privacy.utils.AyuGhostPreferences;
-import com.tsunderegram.privacy.utils.AyuGhostUtils;
-import com.tsunderegram.privacy.utils.AyuState;
+import com.radolyn.ayugram.utils.AyuGhostPreferences;
+import com.radolyn.ayugram.utils.AyuGhostUtils;
+import com.radolyn.ayugram.utils.AyuState;
 
 import org.json.JSONObject;
 import org.telegram.messenger.audioinfo.AudioInfo;
@@ -197,12 +197,6 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         } else if (replyQuote != null && replyQuote.todo && replyQuote.task != null) {
             replyTo.flags |= 64;
             replyTo.todo_item_id = replyQuote.task.id;
-        } else if (replyQuote != null && replyQuote.isRich) {
-            if (replyQuote.rich != null && !replyQuote.rich.isEmpty()) {
-                replyTo.quote_rich = new ArrayList<>(replyQuote.rich);
-                replyTo.flags |= 16;
-                replyTo.quote_offset = replyQuote.getQuoteOffset();
-            }
         } else if (replyQuote != null && !replyQuote.todo && !replyQuote.poll) {
             replyTo.quote_text = replyQuote.getText();
             if (!TextUtils.isEmpty(replyTo.quote_text)) {
@@ -239,13 +233,11 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             replyTo.reply_to_peer_id = MessagesController.getInstance(currentAccount).getInputPeer(replyHeader.reply_to_peer_id);
         }
         if (replyHeader.quote) {
-            if (replyHeader.quote_rich != null) {
-                replyTo.quote_rich = replyHeader.quote_rich;
-            } else if ((replyHeader.flags & 64) != 0) {
+            if ((replyHeader.flags & 64) != 0) {
                 replyTo.flags |= 4;
                 replyTo.quote_text = replyHeader.quote_text;
             }
-            if (replyHeader.quote_rich == null && (replyHeader.flags & 128) != 0) {
+            if ((replyHeader.flags & 128) != 0) {
                 replyTo.flags |= 8;
                 replyTo.quote_entities = replyHeader.quote_entities;
             }
@@ -2260,13 +2252,6 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         if (messages == null || messages.isEmpty()) {
             return 0;
         }
-        if (scheduleDate == 0 && payStars == 0 && monoForumPeerId == 0 && suggestionParams == null && shouldGhostSchedule(peer)) {
-            return sendMessage(messages, peer, forwardFromMyName, hideCaption, notify, getConnectionsManager().getCurrentTime() + 12, scheduleRepeatPeriod,
-                    replyToTopMsg, video_timestamp, payStars, monoForumPeerId, suggestionParams);
-        }
-        if (app.tsunderegram.privacy.BotAccountRouter.guardSend(currentAccount, peer,
-                () -> sendMessage(messages, peer, forwardFromMyName, hideCaption, notify, scheduleDate, scheduleRepeatPeriod,
-                        replyToTopMsg, video_timestamp, payStars, monoForumPeerId, suggestionParams))) return 0;
         int sendResult = 0;
         long myId = getUserConfig().getClientUserId();
         boolean isChannel = false;
@@ -2476,7 +2461,6 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                         newMsg.flags = TLRPC.MESSAGE_FLAG_FWD;
                     }
                     if (peer == myId && newMsg.fwd_from != null) {
-                        newMsg.fwd_from.saved_out = true;
                         newMsg.fwd_from.flags |= 16;
                         newMsg.fwd_from.saved_from_msg_id = msgObj.getId();
                         newMsg.fwd_from.saved_from_peer = msgObj.messageOwner.peer_id;
@@ -3080,7 +3064,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
 
         TLRPC.Message newMsg = messageObject.messageOwner;
         messageObject.cancelEditing = false;
-        app.tsunderegram.chats.LinkedCustomEmoji.replaceForSend(currentAccount, messageObject.getDialogId(), messageObject.editingMessageEntities);
+        app.exteraless.chats.LinkedCustomEmoji.replaceForSend(currentAccount, messageObject.getDialogId(), messageObject.editingMessageEntities);
 
         int pollAddingIndex = -1;
 
@@ -3608,7 +3592,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         if (fragment == null || fragment.getParentActivity() == null) {
             return 0;
         }
-        app.tsunderegram.chats.LinkedCustomEmoji.replaceForSend(currentAccount, messageObject.getDialogId(), entities);
+        app.exteraless.chats.LinkedCustomEmoji.replaceForSend(currentAccount, messageObject.getDialogId(), entities);
 
         final TLRPC.TL_messages_editMessage req;
         if (messageObject.isEphemeral()) {
@@ -3674,7 +3658,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         }
 
         req.peer = getMessagesController().getInputPeer(messageObject.getDialogId());
-        app.tsunderegram.chats.LinkedCustomEmoji.replaceForSend(currentAccount, messageObject.getDialogId(), rich);
+        app.exteraless.chats.LinkedCustomEmoji.replaceForSend(currentAccount, messageObject.getDialogId(), rich);
         req.rich_message = richMessageToInputRichMessage(rich, users);
         req.flags |= TLObject.FLAG_23;
         if (messageObject.scheduled) {
@@ -3926,16 +3910,6 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         return waitingForVote.get(key);
     }
 
-    private void markReadOnInteraction(int messageId, TLRPC.InputPeer peer) {
-        // --- Ghost Mode ---
-        if (messageId != 0 && NekoConfig.markReadAfterSend.Bool() && !NekoConfig.sendReadMessagePackets.Bool()) {
-            if (!AyuGhostPreferences.getGhostModeReadExclusion(AyuGhostUtils.getDialogId(peer))) {
-                AyuGhostUtils.markReadOnServer(messageId, peer, false);
-            }
-        }
-        // --- Ghost Mode ---
-    }
-
     public int sendVote(final MessageObject messageObject, final ArrayList<TLRPC.PollAnswer> answers, final Runnable finishRunnable) {
         if (messageObject == null) {
             return 0;
@@ -3960,7 +3934,6 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             options = new byte[0];
         }
         waitingForVote.put(key, options);
-        markReadOnInteraction(req.msg_id, req.peer);
         return getConnectionsManager().sendRequest(req, (response, error) -> {
             if (error == null) {
                 voteSendTime.put(messageObject.getPollId(), 0L);
@@ -4064,7 +4037,13 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             req.flags |= 2;
             req.big = true;
         }
-        markReadOnInteraction(req.msg_id, req.peer);
+        // --- Ghost Mode ---
+        if (req.msg_id != 0 && NekoConfig.markReadAfterSend.Bool() && !NekoConfig.sendReadMessagePackets.Bool()) {
+            if (!AyuGhostPreferences.getGhostModeReadExclusion(AyuGhostUtils.getDialogId(req.peer))) {
+                AyuGhostUtils.markReadOnServer(req.msg_id, req.peer, false);
+            }
+        }
+        // --- Ghost Mode ---
         getConnectionsManager().sendRequest(req, (response, error) -> {
             if (response != null) {
                 getMessagesController().processUpdates((TLRPC.Updates) response, false);
@@ -4474,17 +4453,12 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
     }
 
     private boolean shouldSendAsGhostScheduled(SendMessageParams params, long peer, String quickReplyShortcut, int quickReplyShortcutId) {
-        if (params.retryMessageObject != null || params.sendingStory != null || params.invoice != null || params.game != null
-                || params.stars > 0 || params.payStars > 0 || params.monoForumPeer != 0 || params.suggestionParams != null
-                || quickReplyShortcut != null || quickReplyShortcutId != 0
-                || (params.sendMessageChatArguments != null && params.sendMessageChatArguments.welcomeMessageChatId != 0)) {
+        if (!NaConfig.INSTANCE.getGhostScheduledSend().Bool() || NekoConfig.sendOnlinePackets.Bool()) {
             return false;
         }
-        return shouldGhostSchedule(peer);
-    }
-
-    private boolean shouldGhostSchedule(long peer) {
-        if (!NaConfig.INSTANCE.getGhostScheduledSend().Bool() || NekoConfig.sendOnlinePackets.Bool()) {
+        if (params.retryMessageObject != null || params.sendingStory != null || params.invoice != null || params.game != null
+                || params.stars > 0 || quickReplyShortcut != null || quickReplyShortcutId != 0
+                || (params.sendMessageChatArguments != null && params.sendMessageChatArguments.welcomeMessageChatId != 0)) {
             return false;
         }
         if (peer == 0 || DialogObject.isEncryptedDialog(peer) || peer == UserConfig.getInstance(currentAccount).getClientUserId()) {
@@ -4498,10 +4472,10 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
     }
 
     public void sendMessage(SendMessageParams originalParams) {
-        app.tsunderegram.plugins.HookResult hookResult = app.tsunderegram.plugins.HookResult.DEFAULT;
-        // tsunderegram plugins: исходящее сообщение через on_send_message_hook (CANCEL = не отправлять)
-        if (app.tsunderegram.plugins.PluginsController.getInstance().hasSendMessageHooks()) {
-            hookResult = app.tsunderegram.plugins.PluginsController.getInstance()
+        app.exteraless.plugins.HookResult hookResult = app.exteraless.plugins.HookResult.DEFAULT;
+        // exteraless plugins: исходящее сообщение через on_send_message_hook (CANCEL = не отправлять)
+        if (app.exteraless.plugins.PluginsController.getInstance().hasSendMessageHooks()) {
+            hookResult = app.exteraless.plugins.PluginsController.getInstance()
                     .executeOnSendMessageHook(currentAccount, originalParams);
             if (hookResult.isCancel()) {
                 return;
@@ -4509,10 +4483,9 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         }
         SendMessageParams replacement = hookResult.replacement(SendMessageParams.class);
         final SendMessageParams sendMessageParams = replacement != null ? replacement : originalParams;
-        if (app.tsunderegram.privacy.BotAccountRouter.guardSend(currentAccount, sendMessageParams.peer, () -> sendMessage(sendMessageParams))) return;
-        app.tsunderegram.chats.DeletedReplyQuote.rewrite(currentAccount, sendMessageParams);
-        app.tsunderegram.chats.LinkedCustomEmoji.replaceForSend(currentAccount, sendMessageParams.peer, sendMessageParams.entities);
-        app.tsunderegram.morph.TextMorphController.getInstance().applyMorph(currentAccount, sendMessageParams);
+        app.exteraless.chats.DeletedReplyQuote.rewrite(currentAccount, sendMessageParams);
+        app.exteraless.chats.LinkedCustomEmoji.replaceForSend(currentAccount, sendMessageParams.peer, sendMessageParams.entities);
+        app.exteraless.morph.TextMorphController.getInstance().applyMorph(sendMessageParams);
         final SendMessageChatArguments sendMessageChatArguments = sendMessageParams.sendMessageChatArguments != null ?
                 sendMessageParams.sendMessageChatArguments : SendMessageChatArguments.EMPTY;
         String message = sendMessageParams.message;
@@ -4583,7 +4556,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         if (richMessage != null && DialogObject.isEncryptedDialog(peer)) {
             return;
         }
-        app.tsunderegram.chats.LinkedCustomEmoji.replaceForSend(currentAccount, peer, richMessage);
+        app.exteraless.chats.LinkedCustomEmoji.replaceForSend(currentAccount, peer, richMessage);
         if (message == null && caption == null && richMessage == null) {
             caption = "";
         }
@@ -5205,8 +5178,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                         newMsg.reply_to.quote = true;
                         newMsg.reply_to.flags |= 64;
                         newMsg.reply_to.flags |= 1024;
-                        newMsg.reply_to.quote_offset = replyQuote.getQuoteOffset();
-                        newMsg.reply_to.quote_rich = replyQuote.isRich ? RichQuote.copyList(replyQuote.rich) : null;
+                        newMsg.reply_to.quote_offset = replyQuote.start;
                         newMsg.reply_to.quote_entities = replyQuote.getEntities();
                         if (newMsg.reply_to.quote_entities != null && !newMsg.reply_to.quote_entities.isEmpty()) {
                             newMsg.reply_to.quote_entities = new ArrayList<>(newMsg.reply_to.quote_entities);
@@ -5333,8 +5305,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                             newMsg.reply_to.flags |= 64;
                             newMsg.reply_to.quote_text = replyQuote.getText();
                             newMsg.reply_to.flags |= 1024;
-                            newMsg.reply_to.quote_offset = replyQuote.getQuoteOffset();
-                            newMsg.reply_to.quote_rich = replyQuote.isRich ? RichQuote.copyList(replyQuote.rich) : null;
+                            newMsg.reply_to.quote_offset = replyQuote.start;
                         }
                         if (replyQuote.getEntities() != null) {
                             newMsg.reply_to.flags |= 128;
@@ -10273,17 +10244,10 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     }
                     mediaCount++;
                     long prevGroupId = groupId[0];
-                    final boolean isGroupFinal = !forcedPollDoNotSendFinal && (pollSendParams == null && mediaCount == 10 || a == count - 1);
-                    error = prepareSendingDocumentInternal(accountInstance, paths.get(a), originalPaths.get(a), null, mime, dialogId, replyToMsg, replyToTopMsg, storyItem, quote, a == 0 ? captionEntities : null, editingMessageObject, groupId, isGroupFinal, captionFinal, notify, scheduleDate, scheduleRepeatPeriod, docType, inputContent == null, sendMessageChatArguments, first ? effectId : 0, invertMedia, payStars, monoForumPeerId, suggestionParams, pollSendParams, pollSendIndexes!= null ? pollSendIndexes.get(a) : -1);
+                    error = prepareSendingDocumentInternal(accountInstance, paths.get(a), originalPaths.get(a), null, mime, dialogId, replyToMsg, replyToTopMsg, storyItem, quote, a == 0 ? captionEntities : null, editingMessageObject, groupId, !forcedPollDoNotSendFinal && (pollSendParams == null && mediaCount == 10 || a == count - 1), captionFinal, notify, scheduleDate, scheduleRepeatPeriod, docType, inputContent == null, sendMessageChatArguments, first ? effectId : 0, invertMedia, payStars, monoForumPeerId, suggestionParams, pollSendParams, pollSendIndexes!= null ? pollSendIndexes.get(a) : -1);
                     first = false;
                     if (prevGroupId != groupId[0] || groupId[0] == -1) {
                         mediaCount = 1;
-                    }
-                    if (error != 0 && isGroupFinal && pollSendParams == null && groupId[0] != 0) {
-                        // the file that should have closed the group was not sent, close it with the files already queued
-                        finishGroup(accountInstance, groupId[0], scheduleDate);
-                        groupId[0] = 0;
-                        mediaCount = 0;
                     }
                 }
             }
@@ -10303,17 +10267,10 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     }
                     mediaCount++;
                     long prevGroupId = groupId[0];
-                    final boolean isGroupFinal = !forcedPollDoNotSendFinal && (pollSendParams == null && mediaCount == 10 || a == count - 1);
-                    error = prepareSendingDocumentInternal(accountInstance, null, null, uris.get(a), mime, dialogId, replyToMsg, replyToTopMsg, storyItem, quote, captionEntitiesFinal, editingMessageObject, groupId, isGroupFinal, captionFinal, notify, scheduleDate, scheduleRepeatPeriod, docType, inputContent == null, sendMessageChatArguments, first ? effectId : 0, invertMedia, payStars, monoForumPeerId, suggestionParams, pollSendParams, pollSendUriIndexes != null ? pollSendUriIndexes.get(a) : -1);
+                    error = prepareSendingDocumentInternal(accountInstance, null, null, uris.get(a), mime, dialogId, replyToMsg, replyToTopMsg, storyItem, quote, captionEntitiesFinal, editingMessageObject, groupId, !forcedPollDoNotSendFinal && (pollSendParams == null && mediaCount == 10 || a == count - 1), captionFinal, notify, scheduleDate, scheduleRepeatPeriod, docType, inputContent == null, sendMessageChatArguments, first ? effectId : 0, invertMedia, payStars, monoForumPeerId, suggestionParams, pollSendParams, pollSendUriIndexes != null ? pollSendUriIndexes.get(a) : -1);
                     first = false;
                     if (prevGroupId != groupId[0] || groupId[0] == -1) {
                         mediaCount = 1;
-                    }
-                    if (error != 0 && isGroupFinal && pollSendParams == null && groupId[0] != 0) {
-                        // the file that should have closed the group was not sent, close it with the files already queued
-                        finishGroup(accountInstance, groupId[0], scheduleDate);
-                        groupId[0] = 0;
-                        mediaCount = 0;
                     }
                 }
             }
@@ -12235,10 +12192,6 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
     @UiThread
     public static void prepareSendingVideo(AccountInstance accountInstance, String videoPath, VideoEditedInfo info, String coverPath, TLRPC.Photo coverPhoto, long dialogId, MessageObject replyToMsg, MessageObject replyToTopMsg, TL_stories.StoryItem storyItem, ChatActivity.ReplyQuote quote, ArrayList<TLRPC.MessageEntity> entities, int ttl, MessageObject editingMessageObject, boolean notify, int scheduleDate, int scheduleRepeatPeriod, boolean forceDocument, boolean hasMediaSpoilers, CharSequence caption, String quickReplyShortcut, int quickReplyShortcutId, long effectId, long stars) {
         prepareSendingVideo(accountInstance, videoPath, info, coverPath, coverPhoto, dialogId, replyToMsg, replyToTopMsg, storyItem, quote, entities, ttl, editingMessageObject, notify, scheduleDate, scheduleRepeatPeriod, forceDocument, hasMediaSpoilers, caption, chatArguments(quickReplyShortcut, quickReplyShortcutId), effectId, stars);
-    }
-
-    public static void prepareSendingVideo(AccountInstance accountInstance, String videoPath, VideoEditedInfo info, String coverPath, TLRPC.Photo coverPhoto, long dialogId, MessageObject replyToMsg, MessageObject replyToTopMsg, TL_stories.StoryItem storyItem, ChatActivity.ReplyQuote quote, ArrayList<TLRPC.MessageEntity> entities, int ttl, MessageObject editingMessageObject, boolean notify, int scheduleDate, boolean forceDocument, boolean hasMediaSpoilers, CharSequence caption, String quickReplyShortcut, int quickReplyShortcutId, long effectId, long stars, long monoForumPeerId, MessageSuggestionParams suggestionParams) {
-        prepareSendingVideo(accountInstance, videoPath, info, coverPath, coverPhoto, dialogId, replyToMsg, replyToTopMsg, storyItem, quote, entities, ttl, editingMessageObject, notify, scheduleDate, 0, forceDocument, hasMediaSpoilers, caption, chatArguments(quickReplyShortcut, quickReplyShortcutId), effectId, stars, monoForumPeerId, suggestionParams);
     }
 
     @UiThread

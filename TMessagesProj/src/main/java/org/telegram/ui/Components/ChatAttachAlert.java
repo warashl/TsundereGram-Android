@@ -186,7 +186,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import app.tsunderegram.chats.ChatsConfig;
 import kotlin.Unit;
 import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.helpers.ChatsHelper;
@@ -1129,12 +1128,12 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
     private View bottomFadeView;
     protected FrameLayout buttonsRecyclerViewWrapper;
 
-    // TsundereGram 12.9.0, ChatAttachAlert.java:238 — при hideCameraTile плитки камеры в сетке нет,
-    // и снимок делать неоткуда; TsundereGram вешает вместо неё плавающую кнопку поверх шторки.
+    // exteraGram 12.9.0, ChatAttachAlert.java:238 — при hideCameraTile плитки камеры в сетке нет,
+    // и снимок делать неоткуда; exteraGram вешает вместо неё плавающую кнопку поверх шторки.
     private FragmentFloatingButton cameraFloatingButton;
 
     /**
-     * Мост к камере плитки. TsundereGram зовёт публичный ChatAttachAlertPhotoLayout.openCamera(boolean)
+     * Мост к камере плитки. exteraGram зовёт публичный ChatAttachAlertPhotoLayout.openCamera(boolean)
      * (ChatAttachAlertPhotoLayout.java:4593) прямо из клик-листенера; у нас этот метод private
      * (ChatAttachAlertPhotoLayout.java:2490), а файл правит другой агент. Достаточно одной строки
      * в конструкторе ChatAttachAlertPhotoLayout:
@@ -2649,7 +2648,7 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
                 }
             }
 
-            // TsundereGram 12.9.0, ChatAttachAlert.java:2913-2925 — FAB камеры едет вместе с рядом
+            // exteraGram 12.9.0, ChatAttachAlert.java:2913-2925 — FAB камеры едет вместе с рядом
             // кнопок вложений, поэтому пересчитываем её положение на каждое их движение.
             @Override
             public void setAlpha(float alpha) {
@@ -3023,7 +3022,7 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
         botProgressView.setVisibility(View.GONE);
         containerView.addView(botProgressView, LayoutHelper.createFrame(28, 28, Gravity.BOTTOM | Gravity.RIGHT, 0, 0, 10, 10));
 
-        // TsundereGram 12.9.0, ChatAttachAlert.java:3119-3136 — плавающая кнопка камеры.
+        // exteraGram 12.9.0, ChatAttachAlert.java:3119-3136 — плавающая кнопка камеры.
         cameraFloatingButton = new FragmentFloatingButton(context, resourcesProvider);
         cameraFloatingButton.setImageResource(R.drawable.camera);
         cameraFloatingButton.setOnClickListener(v -> {
@@ -3041,8 +3040,8 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
         });
         cameraFloatingButton.setOnLongClickListener(v -> {
             // ChatAttachAlert.java:4276-4284 (lambda$new$18) — долгий тап отдаёт съёмку системной камере.
-            // TsundereGram передаёт invertMedia = false, хотя аналогичный лонг-тап по плитке
-            // (ChatAttachAlertPhotoLayout.java:2509) передаёт isCaptionAbove(); повторяем TsundereGram.
+            // exteraGram передаёт invertMedia = false, хотя аналогичный лонг-тап по плитке
+            // (ChatAttachAlertPhotoLayout.java:2509) передаёт isCaptionAbove(); повторяем exteraGram.
             if (delegate != null) {
                 delegate.didPressedButton(0, false, true, 0, 0, 0, false, false, 0);
             }
@@ -4830,7 +4829,7 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
         }
         nextAttachLayout.onShow(currentAttachLayout);
         nextAttachLayout.setVisibility(View.VISIBLE);
-        updateCameraButtonVisibility(); // TsundereGram 12.9.0, ChatAttachAlert.java:5882
+        updateCameraButtonVisibility(); // exteraGram 12.9.0, ChatAttachAlert.java:5882
 
         if (layout.getParent() != null) {
             containerView.removeView(nextAttachLayout);
@@ -5441,7 +5440,7 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
                 commentTextView.setLayoutParams(lp);
             }
         }
-        updateCameraButtonVisibility(); // TsundereGram 12.9.0, ChatAttachAlert.java:5811
+        updateCameraButtonVisibility(); // exteraGram 12.9.0, ChatAttachAlert.java:5811
         return true;
     }
 
@@ -6047,11 +6046,11 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
                 }
             }
         }
-        updateCameraButtonVisibility(); // TsundereGram 12.9.0, ChatAttachAlert.java:6118
+        updateCameraButtonVisibility(); // exteraGram 12.9.0, ChatAttachAlert.java:6118
     }
 
     /**
-     * TsundereGram 12.9.0, ChatAttachAlert.java:6121-6150. Кнопка живёт только на вкладке галереи,
+     * exteraGram 12.9.0, ChatAttachAlert.java:6121-6150. Кнопка живёт только на вкладке галереи,
      * только при скрытой плитке и только пока ничего не выбрано — иначе её место занимает
      * кнопка отправки.
      */
@@ -6059,7 +6058,7 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
         if (cameraFloatingButton == null) {
             return;
         }
-        final boolean show = app.tsunderegram.chats.ChatsConfig.hideCameraTile.Bool()
+        final boolean show = app.exteraless.chats.ChatsConfig.hideCameraTile.Bool()
                 && (nextAttachLayout != null ? nextAttachLayout == photoLayout : currentAttachLayout == photoLayout)
                 && photoLayout != null
                 && hasGoodCameraForFloatingButton()
@@ -6086,7 +6085,7 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
     }
 
     /**
-     * TsundereGram читает package-private ChatAttachAlertPhotoLayout.deviceHasGoodCamera
+     * exteraGram читает package-private ChatAttachAlertPhotoLayout.deviceHasGoodCamera
      * (ChatAttachAlertPhotoLayout.java:153). У нас поле приватное, а файл чужой, поэтому тот же
      * признак собираем из публичного состояния: deviceHasGoodCamera выставляется ровно так же —
      * false без inappCamera и false пока камера не инициализирована (в том числе когда
@@ -6096,7 +6095,7 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
         return SharedConfig.inappCamera && CameraController.getInstance().isCameraInitied();
     }
 
-    /** TsundereGram 12.9.0, ChatAttachAlert.java:6722 — вызывается из ChatAttachAlertPhotoLayout. */
+    /** exteraGram 12.9.0, ChatAttachAlert.java:6722 — вызывается из ChatAttachAlertPhotoLayout. */
     public void onCameraStateChanged() {
         updateCameraButtonVisibility();
     }
@@ -6135,7 +6134,7 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
         } else if (dy != 0) {
             previousScrollOffsetY = scrollOffsetY[idx];
         }
-        updateCameraButtonVisibility(); // TsundereGram 12.9.0, ChatAttachAlert.java:7775
+        updateCameraButtonVisibility(); // exteraGram 12.9.0, ChatAttachAlert.java:7775
     }
 
     @Override
@@ -6730,7 +6729,7 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
 
     private boolean shownAiButton;
     private void showAiButton(boolean show_) {
-        final boolean show = show_ && (baseFragment instanceof ChatActivity && !((ChatActivity) baseFragment).isSecretChat()) && !app.tsunderegram.appearance.AiFeaturesHelper.isAiEditorHidden();
+        final boolean show = show_ && (baseFragment instanceof ChatActivity && !((ChatActivity) baseFragment).isSecretChat()) && !app.exteraless.appearance.AiFeaturesHelper.isAiEditorHidden();
 
         if (shownAiButton == show) return;
         if (show) {
@@ -7025,7 +7024,7 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
                 final boolean paidUser = user != null && ((ChatActivity) baseFragment).getMessagesController().getSendPaidMessagesStars(user.id) > 0;
                 galleryButton = buttonsCount++;
                 documentButton = buttonsCount++;
-                if (MessagesController.getInstance(currentAccount).config.walletAvailable.get() && !ChatsConfig.hideMoneyButton.Bool() && ((ChatActivity) baseFragment).getChatMode() == ChatActivity.MODE_DEFAULT && isMoneyTabRecipient(user)) {
+                if (MessagesController.getInstance(currentAccount).config.walletAvailable.get() && ((ChatActivity) baseFragment).getChatMode() == ChatActivity.MODE_DEFAULT && isMoneyTabRecipient(user)) {
                     moneyButton = buttonsCount++;
                 }
 

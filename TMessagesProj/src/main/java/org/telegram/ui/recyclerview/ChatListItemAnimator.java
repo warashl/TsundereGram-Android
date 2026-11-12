@@ -349,9 +349,8 @@ public class ChatListItemAnimator extends DefaultItemAnimator {
         if (!(chatMessageCell != null && chatMessageCell.getTransitionParams().ignoreAlpha)) {
             holder.itemView.setAlpha(1);
         }
-        final boolean customSendAnimation = org.telegram.tsunderestyle.chats.TsundereStyleChats.sendAnimation() && chatMessageCell != null && chatMessageCell.getMessageObject() != null && chatMessageCell.getMessageObject().isOutOwner();
-        if (customSendAnimation) {
-            org.telegram.tsunderestyle.chats.TsundereStyleChats.playSendAnimation(view, true);
+        if (org.telegram.othergram.chats.OtherGramChats.sendAnimation() && chatMessageCell != null && chatMessageCell.getMessageObject() != null && chatMessageCell.getMessageObject().isOutOwner()) {
+            org.telegram.othergram.chats.OtherGramChats.playSendAnimation(view, true);
         }
         if (activity != null && chatMessageCell != null && activity.animatingMessageObjects.contains(chatMessageCell.getMessageObject())) {
             activity.animatingMessageObjects.remove(chatMessageCell.getMessageObject());
@@ -362,10 +361,7 @@ public class ChatListItemAnimator extends DefaultItemAnimator {
                         transition.start();
                     }
                 } else {
-                    // Telegram's "text flies out of the input" transition draws the cell itself in a separate
-                    // container, so the chosen send animation (scale/alpha/slide on the cell) was invisible on
-                    // short messages and only showed up on long ones, where this transition is skipped.
-                    if (!customSendAnimation && SharedConfig.getDevicePerformanceClass() != SharedConfig.PERFORMANCE_CLASS_LOW && Math.abs(view.getTranslationY()) < recyclerListView.getMeasuredHeight()) {
+                    if (SharedConfig.getDevicePerformanceClass() != SharedConfig.PERFORMANCE_CLASS_LOW && Math.abs(view.getTranslationY()) < recyclerListView.getMeasuredHeight()) {
                         TextMessageEnterTransition transition = new TextMessageEnterTransition(chatMessageCell, activity, recyclerListView, activity.messageEnterTransitionContainer, resourcesProvider);
                         transition.start();
                     }

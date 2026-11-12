@@ -27,7 +27,7 @@ public class ReactionFilter {
     }
 
     public static boolean shouldFilter(int currentAccount, long dialogId) {
-        if (dialogId >= 0L || !AyuFilter.shouldHideSenders()) {
+        if (!NekoConfig.ignoreBlocked.Bool() || dialogId >= 0L) {
             return false;
         }
         int account = currentAccount >= 0 ? currentAccount : UserConfig.selectedAccount;
@@ -39,7 +39,7 @@ public class ReactionFilter {
             return false;
         }
         int account = currentAccount >= 0 ? currentAccount : UserConfig.selectedAccount;
-        if (NekoConfig.ignoreBlocked.Bool() && MessagesController.getInstance(account).blockePeers.indexOfKey(peerId) >= 0) {
+        if (MessagesController.getInstance(account).blockePeers.indexOfKey(peerId) >= 0) {
             return true;
         }
         if (peerId > 0L) {

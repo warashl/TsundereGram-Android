@@ -453,10 +453,10 @@ public class UniversalRecyclerView extends RecyclerListView {
     }
 
     public void setSections() {
-        setSections(dp(12), dp(app.tsunderegram.appearance.AppearanceConfig.sectionRadius()), false);
+        setSections(dp(12), dp(app.exteraless.appearance.AppearanceConfig.sectionRadius()), false);
     }
     public void setSections(boolean topPadding) {
-        setSections(dp(12), dp(app.tsunderegram.appearance.AppearanceConfig.sectionRadius()), topPadding);
+        setSections(dp(12), dp(app.exteraless.appearance.AppearanceConfig.sectionRadius()), topPadding);
     }
     public void setSections(int padding, float roundRadius, boolean topPadding) {
         super.setSections(
@@ -466,11 +466,11 @@ public class UniversalRecyclerView extends RecyclerListView {
                 final int viewType = viewHolder.getItemViewType();
                 if (UniversalAdapter.isShadow(viewType)) return false;
                 if (UniversalAdapter.isHeader(viewType)
-                        && app.tsunderegram.appearance.AppearanceConfig.sectionsSeparatedHeaders()) {
+                        && app.exteraless.appearance.AppearanceConfig.sectionsSeparatedHeaders()) {
                     return false;
                 }
                 // Элемент, помеченный transparent, не должен получать карточку секции:
-                // так TsundereGram рисует пустые состояния (папка + подсказка) — на голом фоне,
+                // так exteraGram рисует пустые состояния (папка + подсказка) — на голом фоне,
                 // а не внутри скруглённого блока.
                 final int position = viewHolder.getAdapterPosition();
                 if (position == NO_POSITION) {
@@ -481,7 +481,7 @@ public class UniversalRecyclerView extends RecyclerListView {
             },
             viewType -> !UniversalAdapter.isShadow(viewType)
                     && !(UniversalAdapter.isHeader(viewType)
-                        && app.tsunderegram.appearance.AppearanceConfig.sectionsSeparatedHeaders()),
+                        && app.exteraless.appearance.AppearanceConfig.sectionsSeparatedHeaders()),
             padding, roundRadius,
             super::drawBackgroundRect,
             topPadding

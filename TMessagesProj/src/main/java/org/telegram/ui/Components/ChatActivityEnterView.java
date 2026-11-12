@@ -122,8 +122,8 @@ import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import org.telegram.ui.recyclerview.ChatListItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import app.tsunderegram.chats.LinkedCustomEmoji;
-import app.tsunderegram.components.ChatActivityEnterViewStaticIconView;
+import app.exteraless.chats.LinkedCustomEmoji;
+import app.exteraless.components.ChatActivityEnterViewStaticIconView;
 
 import org.jetbrains.annotations.NotNull;
 import org.telegram.messenger.AccountInstance;
@@ -314,10 +314,6 @@ public class ChatActivityEnterView extends FrameLayout implements
 
     public interface ChatActivityEnterViewDelegate {
         default void beforeMessageSend(CharSequence message, boolean notify, int scheduleDate, long payStars) {}
-
-        default boolean onEditLastMessage() {
-            return false;
-        }
 
         default void onEditTextScroll() {}
 
@@ -724,8 +720,7 @@ public class ChatActivityEnterView extends FrameLayout implements
 
     private boolean destroyed;
 
-    public MessageObject editingMessageObject;
-    private app.tsunderegram.chats.DeletedReplyQuote.Prefix editingQuotePrefix;
+    private MessageObject editingMessageObject;
     private boolean editingCaption;
 
     private TL_account.TL_businessChatLink editingBusinessLink;
@@ -3755,7 +3750,9 @@ public class ChatActivityEnterView extends FrameLayout implements
 
                 oldSendButton.setVisibility(View.GONE);
             }
-            sendButton.setStarsPrice(paidMessagesPrice, 1);
+            if (paidMessagesPrice > 0 || isLiveComment) {
+                sendButton.setStarsPrice(paidMessagesPrice, 1);
+            }
             updateFieldRight(lastAttachVisible);
         }
         if (isLiveComment) {
@@ -5606,16 +5603,6 @@ public class ChatActivityEnterView extends FrameLayout implements
                 });
                 sendWhenOnlineButton = options.getLast();
             }
-            if (!self && slowModeTimer > 0 && slowModeTimer < Integer.MAX_VALUE - 1) {
-                options.add(R.drawable.msg_recent, getString(R.string.OESendAfterSlowMode), () -> {
-                    int now = ConnectionsManager.getInstance(currentAccount).getCurrentTime();
-                    sendMessageInternal(true, Math.max(slowModeTimer + 1, now + 15), 0, 0, true);
-                    if (messageSendPreview != null) {
-                        messageSendPreview.dismiss(false);
-                        messageSendPreview = null;
-                    }
-                });
-            }
         }
 
         if (parentFragment != null && delegate != null && ChatObject.isMonoForum(parentFragment.getCurrentChat())) {
@@ -6280,7 +6267,7 @@ public class ChatActivityEnterView extends FrameLayout implements
         final ContentInfoCompat withUri = split.first;
         final ContentInfoCompat rest = split.second;
         // isEditingBusinessLink()/isLiveComment выставляются уже ПОСЛЕ createMessageEditText(),
-        // так что условие TsundereGram при регистрации всегда истинно — реальный отсев здесь.
+        // так что условие exteraGram при регистрации всегда истинно — реальный отсев здесь.
         // Возвращаем rest: текст вставится, а медиа-элементы просто выбрасываем
         if (withUri == null || parentFragment == null || isEditingBusinessLink() || isLiveComment) {
             return rest;
@@ -6631,7 +6618,7 @@ public class ChatActivityEnterView extends FrameLayout implements
         if (parentFragment != null && !isEditingBusinessLink() && !isLiveComment) {
             ViewCompat.setOnReceiveContentListener(messageEditText, RECEIVE_CONTENT_MIME_TYPES, (view, payload) -> onReceiveMediaContent(payload));
         }
-        messageEditText.setInlineMath(new app.tsunderegram.math.InlineMathController(messageEditText, new app.tsunderegram.math.InlineMathController.Delegate() {
+        messageEditText.setInlineMath(new app.exteraless.math.InlineMathController(messageEditText, new app.exteraless.math.InlineMathController.Delegate() {
             @Override
             public int accentColor() {
                 return getThemedColor(Theme.key_chat_messagePanelCursor);
@@ -6685,13 +6672,6 @@ public class ChatActivityEnterView extends FrameLayout implements
         messageEditText.setSingleLine(false);
         messageEditText.setMaxLines(6);
         messageEditText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
-        try {
-            final android.graphics.Typeface tsundereFont = org.telegram.tsunderestyle.theme.TsundereStyleFonts.messages(); // TsundereGram: шрифт сообщений и в поле ввода
-            if (tsundereFont != null) {
-                messageEditText.setTypeface(tsundereFont);
-            }
-        } catch (Throwable ignore) {
-        }
         messageEditText.setGravity(Gravity.BOTTOM);
         messageEditText.setPadding(0, dp(9), 0, dp(10));
         messageEditText.setBackgroundDrawable(null);
@@ -6754,14 +6734,8 @@ public class ChatActivityEnterView extends FrameLayout implements
                         }
                     }
                     return true;
-                } else if (keyCode == KeyEvent.KEYCODE_DPAD_UP && keyEvent.getAction() == KeyEvent.ACTION_DOWN && keyEvent.hasNoModifiers() && editingMessageObject == null && messageEditText != null && messageEditText.length() == 0 && delegate != null && delegate.onEditLastMessage()) {
-                    return true;
-                } else if (keyCode == KeyEvent.KEYCODE_ENTER && !keyEvent.isShiftPressed() && (sendByEnter ? !keyEvent.isCtrlPressed() : keyEvent.isCtrlPressed()) && keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
-                    if (editingMessageObject != null) {
-                        doneEditingMessage();
-                    } else {
-                        sendMessage();
-                    }
+                } else if (keyCode == KeyEvent.KEYCODE_ENTER && !keyEvent.isShiftPressed() && (sendByEnter ? !keyEvent.isCtrlPressed() : keyEvent.isCtrlPressed()) && keyEvent.getAction() == KeyEvent.ACTION_DOWN && editingMessageObject == null) {
+                    sendMessage();
                     return true;
                 }
                 return false;
@@ -6775,12 +6749,8 @@ public class ChatActivityEnterView extends FrameLayout implements
                     sendMessage();
                     return true;
                 } else if (keyEvent != null && i == EditorInfo.IME_NULL) {
-                    if (!keyEvent.isShiftPressed() && (sendByEnter ? !keyEvent.isCtrlPressed() : keyEvent.isCtrlPressed()) && keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
-                        if (editingMessageObject != null) {
-                            doneEditingMessage();
-                        } else {
-                            sendMessage();
-                        }
+                    if (!keyEvent.isShiftPressed() && (sendByEnter ? !keyEvent.isCtrlPressed() : keyEvent.isCtrlPressed()) && keyEvent.getAction() == KeyEvent.ACTION_DOWN && editingMessageObject == null) {
+                        sendMessage();
                         return true;
                     }
                 }
@@ -6968,7 +6938,7 @@ public class ChatActivityEnterView extends FrameLayout implements
 
     private boolean shownAiButton;
     private void showAiButton(boolean show_) {
-        final boolean show = (show_ || richDraftActive) && parentFragment != null && !parentFragment.isSecretChat() && !app.tsunderegram.appearance.AiFeaturesHelper.isAiEditorHidden();
+        final boolean show = (show_ || richDraftActive) && parentFragment != null && !parentFragment.isSecretChat() && !app.exteraless.appearance.AiFeaturesHelper.isAiEditorHidden();
 
         if (shownAiButton == show) return;
         if (show) {
@@ -7078,7 +7048,6 @@ public class ChatActivityEnterView extends FrameLayout implements
                     status.setOnCancelListener((__) -> {
                         cancel.set(true);
                     });
-                    status.getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
                     status.show();
                 }
 
@@ -7095,7 +7064,6 @@ public class ChatActivityEnterView extends FrameLayout implements
                     status.dismiss();
                     AlertUtil.showTransFailedDialog(parentActivity, unsupported, message, () -> {
                         status = AlertUtil.showProgress(parentActivity);
-                        status.getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
                         status.show();
                         Translator.translateWithContext(target, origin, new ArrayList<>(), null, provider, this);
                     });
@@ -7113,7 +7081,6 @@ public class ChatActivityEnterView extends FrameLayout implements
                         cancel.set(true);
                     });
 
-                    status.getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
                     status.show();
 
                 }
@@ -7130,7 +7097,6 @@ public class ChatActivityEnterView extends FrameLayout implements
                     status.dismiss();
                     AlertUtil.showTransFailedDialog(parentActivity, unsupported, message, () -> {
                         status = AlertUtil.showProgress(parentActivity);
-                        status.getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
                         status.show();
                         Translator.translate(target, origin, 0, this);
                     });
@@ -8144,7 +8110,7 @@ public class ChatActivityEnterView extends FrameLayout implements
                 suggestButton.setVisibility(VISIBLE);
             }
         }
-        if (use && app.tsunderegram.chats.ChatsConfig.keepAttachButton.Bool()) {
+        if (use && app.exteraless.chats.ChatsConfig.keepAttachButton.Bool()) {
             use = false;
         }
         int fromRes;
@@ -8538,7 +8504,6 @@ public class ChatActivityEnterView extends FrameLayout implements
     }
 
     protected boolean sendMessageInternal(boolean notify, int scheduleDate, int scheduleRepeatPeriod, long payStars, boolean allowConfirm, SendMessageInternalParams internalParams) {
-        if (app.tsunderegram.privacy.BotAccountRouter.guardComposer(parentFragment, currentAccount, dialog_id)) return true;
         final boolean allowConfirmFinal = allowConfirm && !animatorEphemeralMessageVisibility.getValue();
 
         final Runnable send = () -> {
@@ -8993,17 +8958,6 @@ public class ChatActivityEnterView extends FrameLayout implements
             return;
         }
         ArrayList<TLRPC.MessageEntity> entities = MediaDataController.getInstance(currentAccount).getEntities(message, supportsSendingNewEntities());
-        if (editingQuotePrefix != null) {
-            if (withMarkdown) {
-                entities = editingQuotePrefix.prependEntities(message[0], entities);
-                message[0] = editingQuotePrefix.prepend(message[0]);
-            } else {
-                String plain = messageEditText.getText().toString();
-                entities = editingQuotePrefix.prependEntities(plain, null);
-                message[0] = editingQuotePrefix.prepend(plain);
-                withMarkdown = true;
-            }
-        }
         if (!TextUtils.equals(message[0], editingMessageObject.messageText) || entities != null && !entities.isEmpty() || !editingMessageObject.messageOwner.entities.isEmpty() || editingMessageObject.messageOwner.media instanceof TLRPC.TL_messageMediaWebPage) {
             editingMessageObject.editingMessage = withMarkdown ? message[0] : messageEditText.getText().toString();
             editingMessageObject.editingMessageEntities = withMarkdown ? entities : new ArrayList<>();
@@ -11334,7 +11288,6 @@ public class ChatActivityEnterView extends FrameLayout implements
         createMessageEditText();
         boolean hadEditingMessage = editingMessageObject != null;
         editingMessageObject = messageObject;
-        editingQuotePrefix = null;
         editingCaption = caption;
         CharSequence textToSetWithKeyboard;
         if (editingMessageObject != null) {
@@ -11443,15 +11396,6 @@ public class ChatActivityEnterView extends FrameLayout implements
 
                 ArrayList<TLRPC.MessageEntity> entities = editingMessageObject.messageOwner.entities;
                 textToSetWithKeyboard = applyMessageEntities(entities, editingText, fontMetricsInt);
-                app.tsunderegram.chats.DeletedReplyQuote.Prefix quotePrefix = app.tsunderegram.chats.DeletedReplyQuote.prefix(currentAccount, editingMessageObject);
-                if (quotePrefix != null && textToSetWithKeyboard.length() >= quotePrefix.text.length()
-                        && TextUtils.equals(textToSetWithKeyboard.subSequence(0, quotePrefix.text.length()).toString(), quotePrefix.text)) {
-                    int quoteLength = quotePrefix.text.length();
-                    int cut = quoteLength < textToSetWithKeyboard.length() && textToSetWithKeyboard.charAt(quoteLength) == '\n' ? quoteLength + 1 : quoteLength;
-                    textToSetWithKeyboard = new SpannableStringBuilder(textToSetWithKeyboard, cut, textToSetWithKeyboard.length());
-                    editingQuotePrefix = quotePrefix;
-                    currentLimit = Math.max(0, currentLimit - quotePrefix.text.codePointCount(0, quoteLength) - 1);
-                }
             } else {
                 textToSetWithKeyboard = "";
             }
@@ -14854,11 +14798,8 @@ public class ChatActivityEnterView extends FrameLayout implements
         return emojiViewVisible || botKeyboardViewVisible;
     }
 
-    public boolean canHidePopupByBackButton() {
-        if (!isPopupShowing()) {
-            return false;
-        }
-        return !(currentPopupContentType == POPUP_CONTENT_BOT_KEYBOARD && botReplyMarkup != null && botReplyMarkup.is_persistent && botButtonsMessageObject != null);
+    public boolean isPersistentBotKeyboardShowing() {
+        return isPopupShowing() && currentPopupContentType == POPUP_CONTENT_BOT_KEYBOARD && botReplyMarkup != null && botReplyMarkup.is_persistent;
     }
 
     public boolean closeCreationLinkDialog(boolean invoked) {

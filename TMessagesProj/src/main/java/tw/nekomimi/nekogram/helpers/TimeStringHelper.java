@@ -4,9 +4,7 @@ import static org.telegram.messenger.LocaleController.getString;
 
 import android.graphics.drawable.Drawable;
 import android.text.SpannableStringBuilder;
-import android.text.Spanned;
 import android.text.TextUtils;
-import android.text.style.ForegroundColorSpan;
 
 import androidx.core.content.ContextCompat;
 
@@ -31,7 +29,7 @@ public class TimeStringHelper {
     /**
      * openExtera: «изменено» иконкой вместо слова.
      * Источник один — NaConfig.useEditedIcon: на него смотрят оба экрана,
-     * и NagramX-овский, и TsundereGram-овский.
+     * и NagramX-овский, и exteraGram-овский.
      */
     public static boolean useEditedIcon() {
         return NaConfig.INSTANCE.getUseEditedIcon().Bool();
@@ -39,7 +37,6 @@ public class TimeStringHelper {
 
     public static SpannableStringBuilder deletedSpan;
     public static Drawable deletedDrawable;
-    private static ColoredImageSpan deletedImageSpan;
     public static SpannableStringBuilder editedSpan;
     public static Drawable editedDrawable;
     public static SpannableStringBuilder channelLabelSpan;
@@ -82,19 +79,18 @@ public class TimeStringHelper {
         createSpan();
         SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder();
 
-        spannableStringBuilder
-                .append(messageObject.messageOwner.post_author != null ? " " : "");
+        CharSequence deletedPart;
         if (NaConfig.INSTANCE.getUseDeletedIcon().Bool()) {
-            spannableStringBuilder.append(deletedSpan);
+            deletedPart = deletedSpan;
         } else {
-            int deletedStart = spannableStringBuilder.length();
-            spannableStringBuilder.append(deletedStrFin);
-            int deletedMarkColor = deletedMarkColorOrDefault();
-            if (deletedMarkColor != 0) {
-                spannableStringBuilder.setSpan(new ForegroundColorSpan(deletedMarkColor),
-                        deletedStart, spannableStringBuilder.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            }
+            SpannableStringBuilder redText = new SpannableStringBuilder(deletedStrFin);
+            redText.setSpan(new android.text.style.ForegroundColorSpan(0xFFE53935), 0, redText.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            deletedPart = redText;
         }
+
+        spannableStringBuilder
+                .append(messageObject.messageOwner.post_author != null ? " " : "")
+                .append(deletedPart);
         if (isEdited) {
             spannableStringBuilder
                     .append("  ")
@@ -218,13 +214,12 @@ public class TimeStringHelper {
 
         if (deletedDrawable == null) {
             deletedDrawable = Objects.requireNonNull(ContextCompat.getDrawable(ApplicationLoader.applicationContext, R.drawable.msg_delete_solar_12)).mutate();
+            deletedDrawable.setColorFilter(new android.graphics.PorterDuffColorFilter(0xFFE53935, android.graphics.PorterDuff.Mode.SRC_IN));
         }
         if (deletedSpan == null) {
             deletedSpan = new SpannableStringBuilder("\u200B");
-            deletedImageSpan = new ColoredImageSpan(deletedDrawable, true);
-            deletedSpan.setSpan(deletedImageSpan, 0, 1, 0);
+            deletedSpan.setSpan(new ColoredImageSpan(deletedDrawable, false), 0, 1, 0);
         }
-        deletedImageSpan.setOverrideColor(deletedMarkColorOrDefault());
 
         if (translatedDrawable == null) {
             if (NaConfig.INSTANCE.getIconReplacements().Int() == IconsResources.ICON_REPLACE_SOLAR) {
@@ -282,10 +277,4 @@ public class TimeStringHelper {
         return channelLabelSpan;
     }
 
-
-    // TsundereGram: метка удалённого сообщения по умолчанию красная (как было до 13.1.1)
-    private static int deletedMarkColorOrDefault() {
-        int c = NaConfig.INSTANCE.getDeletedMarkColor().Int();
-        return c != 0 ? c : 0xFFE53935;
-    }
 }

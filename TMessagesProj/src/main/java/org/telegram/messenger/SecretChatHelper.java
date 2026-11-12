@@ -37,9 +37,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import tw.nekomimi.nekogram.utils.AlertUtil;
 import xyz.nextalone.nagram.NaConfig;
-import com.tsunderegram.privacy.AyuConstants;
-import com.tsunderegram.privacy.messages.AyuMessagesController;
-import com.tsunderegram.privacy.messages.AyuSavePreferences;
+import com.radolyn.ayugram.AyuConstants;
+import com.radolyn.ayugram.messages.AyuMessagesController;
+import com.radolyn.ayugram.messages.AyuSavePreferences;
 
 public class SecretChatHelper extends BaseController {
 

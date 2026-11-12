@@ -31,8 +31,6 @@ object DoubleTap {
         10
     const val DOUBLE_TAP_ACTION_FORWARD =
         11
-    const val DOUBLE_TAP_ACTION_DOWNLOAD =
-        12
 
     init {
         doubleTapActionMap[DOUBLE_TAP_ACTION_NONE] =
@@ -82,10 +80,6 @@ object DoubleTap {
         doubleTapActionMap[DOUBLE_TAP_ACTION_FORWARD] =
             getString(
                 R.string.Forward
-            )
-        doubleTapActionMap[DOUBLE_TAP_ACTION_DOWNLOAD] =
-            getString(
-                R.string.OEDoubleTapSaveToDevice
             )
     }
 }

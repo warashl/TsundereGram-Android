@@ -1,4 +1,4 @@
-"""Telegram client helpers: queues, requests, controllers, sending — tsunderegram plugin SDK.
+"""Telegram client helpers: queues, requests, controllers, sending — exteraless plugin SDK.
 
 All Java interop is lazy; importing this module on a host interpreter is
 safe, calling into it requires the Android runtime.
@@ -59,7 +59,7 @@ def _log(message):
         from android_utils import log
         log(message)
     except Exception:
-        print(f"[tsunderegram:client_utils] {message}", file=sys.stderr)
+        print(f"[exteraless:client_utils] {message}", file=sys.stderr)
 
 
 def _require(perm: str, what: str, detail=None):
@@ -173,7 +173,7 @@ def get_queue_by_name(name: str):
 
 
 def show_error_bulletin(message, fragment=None):
-    """Ошибка плашкой. Есть в SDK TsundereGram и зовётся плагинами из client_utils,
+    """Ошибка плашкой. Есть в SDK exteraGram и зовётся плагинами из client_utils,
     хотя реализация живёт в ui.bulletin, — без этого имени они не грузятся."""
     from ui.bulletin import BulletinHelper
     BulletinHelper.show_error(message, fragment)
@@ -246,8 +246,8 @@ def _request_delegate_type():
     class _RequestDelegate(dynamic_proxy(RequestDelegate)):
         def run(self, response, error):
             # Колбэк уходит в Java: ошибка плагина не должна ронять приложение.
-            with hook_scope(self._tsunderegram_account):
-                safe_call(self._tsunderegram_fn, response, error)
+            with hook_scope(self._exteraless_account):
+                safe_call(self._exteraless_fn, response, error)
 
     _request_delegate_class = _RequestDelegate
     return _RequestDelegate
@@ -269,11 +269,11 @@ def RequestCallback(fn, account=None):
     """
     resolved = _resolve_account(account, "RequestCallback")
     proxy = _request_delegate_type()()
-    proxy._tsunderegram_fn = fn
-    proxy._tsunderegram_account = resolved
+    proxy._exteraless_fn = fn
+    proxy._exteraless_account = resolved
     # Marks an already-wrapped callback so send_request does not double-wrap.
     try:
-        proxy.__dict__["_tsunderegram_request_delegate"] = True
+        proxy.__dict__["_exteraless_request_delegate"] = True
     except Exception:
         pass
     return proxy
@@ -281,7 +281,7 @@ def RequestCallback(fn, account=None):
 
 def _is_request_delegate(fn) -> bool:
     """True when *fn* is already a Java RequestDelegate rather than a callable."""
-    if getattr(fn, "_tsunderegram_request_delegate", False):
+    if getattr(fn, "_exteraless_request_delegate", False):
         return True
     # A dynamic_proxy instance exposes run() but is not callable itself;
     # every plain Python callback is callable. That is the discriminator.
@@ -320,7 +320,7 @@ def send_request(request, fn, account=None) -> int:
 
 def _plugin_services():
     try:
-        from app.tsunderegram.plugins import PluginServices
+        from app.exteraless.plugins import PluginServices
         return PluginServices
     except Exception:
         return None
@@ -675,7 +675,7 @@ def send_audio(peer_id, path, caption=None, parse_mode=None,
 
 
 def _media_services():
-    from app.tsunderegram.plugins import PluginMediaServices
+    from app.exteraless.plugins import PluginMediaServices
     return PluginMediaServices
 
 
@@ -927,7 +927,7 @@ class NotificationCenterDelegate(_notification_delegate_base()):
     """Python base for NotificationCenter.NotificationCenterDelegate.
 
     The instance itself is the Java delegate: pass it straight to
-    addObserver/removeObserver, like on TsundereGram. Override
+    addObserver/removeObserver, like on exteraGram. Override
     didReceivedNotification(id, account, args) in a subclass or assign it on
     the instance. `.java` is kept for plugins written against the old proxy.
 

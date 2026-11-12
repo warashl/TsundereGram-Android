@@ -46,9 +46,9 @@
     <string name="OEGeneralExportEtgSettings">Eksportuj ustawienia</string>
     <string name="OEGeneralImportEtgSettings">Importuj ustawienia</string>
     <string name="OEGeneralExportFormatFull">Wszystkie ustawienia (.json)</string>
-    <string name="OEGeneralExportFormatExtera">Format TsundereGram (.extera)</string>
+    <string name="OEGeneralExportFormatExtera">Format exteraGram (.extera)</string>
     <string name="OEGeneralImportEtgConfirm">Ustawienia z tego pliku (%1$d) zastąpią obecne.</string>
-    <string name="OEGeneralImportEtgEmpty">W tym pliku nie znaleziono ustawień TsundereGram.</string>
+    <string name="OEGeneralImportEtgEmpty">W tym pliku nie znaleziono ustawień exteraGram.</string>
     <string name="OEGeneralImportEtgDone">Zaimportowane ustawienia: %1$d</string>
     <string name="OEGeneralResetSettings">Zresetuj ustawienia</string>
     <string name="OEGeneralResetSettingsInfo">Wszystkie ustawienia zostaną przywrócone do wartości domyślnych, a aplikacja uruchomi się ponownie.</string>
@@ -64,6 +64,15 @@
     <string name="OEGeneralAyuMomentsDisableAll">Wyłącz wszystkie funkcje AyuMoments</string>
     <string name="OELastActivityFormatted">ostatnia aktywność %1$s</string>
     <string name="OELastActivityDateFormatted">ostatnia aktywność %1$s</string>
+    <string name="OEGeneralLastFm">Last.fm</string>
+    <string name="OEGeneralLastFmHint">nazwa użytkownika</string>
+    <string name="OEGeneralLastFmNotSet">Nie ustawiono</string>
+    <string name="OEGeneralLastFmApplied">Zaktualizowano muzykę profilu</string>
+    <string name="OEGeneralLastFmNoMusic">Najpierw ustaw muzykę profilu</string>
+    <string name="OEGeneralLastFmFailed">Nie udało się zaktualizować muzyki profilu</string>
+    <string name="OEGeneralLastFmNoFile">Nie udało się pobrać utworu</string>
+    <string name="OEGeneralLastFmNoUpload">Przekroczono czas wysyłania</string>
+    <string name="OEGeneralLastFmAbout">Ta funkcja opiera się na muzyce profilu: zapisuje ukryte bajty z Twoją nazwą użytkownika Last.fm w najnowszym utworze profilu. Po ustawieniu nazwy utwór jest wysyłany ponownie ze zmianą.\n\nPo wyłączeniu funkcji utwór wraca do pierwotnej postaci.</string>
     <string name="OEGeneralNotificationsHeader">Powiadomienia</string>
     <string name="OEGeneralPushStatus">Stan powiadomień push</string>
     <string name="OEGeneralPushStatusBlocked">zablokowane przez system</string>
@@ -120,7 +129,7 @@
     <string name="OEAyuSaveInArchivedInfo">Usunięte i edytowane wiadomości z zarchiwizowanych czatów też są zapisywane.</string>
     <string name="OEAyuDatabaseExport">Eksportuj bazę danych</string>
     <string name="OEAyuDatabaseImport">Importuj bazę danych</string>
-    <string name="OEAyuDatabaseImportInfo">Usunięte i edytowane wiadomości z tego pliku zostaną dodane do już zapisanych. Obsługiwane są eksporty z TsundereGram. Multimedia z innej aplikacji mogą być niedostępne.</string>
+    <string name="OEAyuDatabaseImportInfo">Usunięte i edytowane wiadomości z tego pliku zostaną dodane do już zapisanych. Obsługiwane są eksporty z TsundereGram i AyuGram. Multimedia z innej aplikacji mogą być niedostępne.</string>
     <string name="OEAyuDatabaseImportDone">Dodano wiadomości: %1$d</string>
     <string name="OEAyuDatabaseImportFailed">Nie udało się zaimportować pliku</string>
     <string name="OEAyuRegexReversed">Odwrócony</string>
@@ -140,6 +149,4 @@
     <string name="OEUpdaterChannelStableInfo">Nowe wydania na GitHubie są sprawdzane co 6 godzin.</string>
     <string name="OEUpdaterChannelBetaInfo">Oferuje też wydania wstępne z GitHuba, zanim staną się wydaniami.</string>
     <string name="OEUpdaterAllReleases">Wszystkie wydania na GitHubie</string>
-    <string name="OELiteFollowSystemSaver">Zgodnie z systemowym oszczędzaniem baterii</string>
-    <string name="OELiteFollowSystemSaverInfo">Oszczędzanie energii włącza się razem z systemowym trybem oszczędzania baterii.</string>
 </resources>

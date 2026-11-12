@@ -793,9 +793,9 @@ public class ProfileSearchCell extends BaseCell implements NotificationCenter.No
 
     public void updateStatus(boolean verified, TLRPC.User user, TLRPC.Chat chat, boolean animated) {
         statusDrawable.center = LocaleController.isRTL;
-        com.tsunderegram.messenger.api.dto.BadgeDTO badge = (user != null || chat != null) && !savedMessages ? com.tsunderegram.messenger.badges.BadgesController.INSTANCE.getBadge(user != null ? user : chat) : null;
+        com.exteragram.messenger.api.dto.BadgeDTO badge = (user != null || chat != null) && !savedMessages ? com.exteragram.messenger.badges.BadgesController.INSTANCE.getBadge(user != null ? user : chat) : null;
         if (badge != null && badge.isCustomBadge()) {
-            statusDrawable.set(com.tsunderegram.messenger.badges.BadgesController.INSTANCE.getCustomBadgeDrawable(badge, 18), animated);
+            statusDrawable.set(com.exteragram.messenger.badges.BadgesController.INSTANCE.getCustomBadgeDrawable(badge, 18), animated);
             statusDrawable.setColor(null);
         } else if (badge != null && badge.getDocumentId() != 0) {
             statusDrawable.set(badge.getDocumentId(), animated);
@@ -803,8 +803,8 @@ public class ProfileSearchCell extends BaseCell implements NotificationCenter.No
         } else if (allowEmojiStatus && verified) {
             statusDrawable.set(new CombinedDrawable(Theme.dialogs_verifiedDrawable, Theme.dialogs_verifiedCheckDrawable, 0, 0), animated);
             statusDrawable.setColor(null);
-        } else if (allowEmojiStatus && user != null && !savedMessages && DialogObject.getEmojiStatusDocumentId(user) != 0) {
-            statusDrawable.set(DialogObject.getEmojiStatusDocumentId(user), animated);
+        } else if (allowEmojiStatus && user != null && !savedMessages && DialogObject.getEmojiStatusDocumentId(user.emoji_status) != 0) {
+            statusDrawable.set(DialogObject.getEmojiStatusDocumentId(user.emoji_status), animated);
             statusDrawable.setColor(Theme.getColor(Theme.key_chats_verifiedBackground, resourcesProvider));
         } else if (allowEmojiStatus && chat != null && !savedMessages && DialogObject.getEmojiStatusDocumentId(chat.emoji_status) != 0) {
             statusDrawable.set(DialogObject.getEmojiStatusDocumentId(chat.emoji_status), animated);
@@ -880,13 +880,13 @@ public class ProfileSearchCell extends BaseCell implements NotificationCenter.No
         final int avatarSize = dp(rectangularAvatar ? 42 : 46);
         final int radius;
         if (ChatObject.isCommunity(chat)) {
-            radius = app.tsunderegram.appearance.AppearanceConfig.getAvatarCorners(avatarSize, app.tsunderegram.appearance.AppearanceConfig.CORNER_TYPE_COMMUNITY);
+            radius = app.exteraless.appearance.AppearanceConfig.getAvatarCorners(avatarSize, app.exteraless.appearance.AppearanceConfig.CORNER_TYPE_COMMUNITY);
         } else if (chat != null && chat.monoforum) {
             radius = 0;
         } else if (chat != null && chat.forum) {
-            radius = app.tsunderegram.appearance.AppearanceConfig.getAvatarCorners(avatarSize, app.tsunderegram.appearance.AppearanceConfig.CORNER_TYPE_FORUM);
+            radius = app.exteraless.appearance.AppearanceConfig.getAvatarCorners(avatarSize, app.exteraless.appearance.AppearanceConfig.CORNER_TYPE_FORUM);
         } else {
-            radius = app.tsunderegram.appearance.AppearanceConfig.getAvatarCorners(avatarSize);
+            radius = app.exteraless.appearance.AppearanceConfig.getAvatarCorners(avatarSize);
         }
         avatarImage.setAvatarCornersApplied(chat == null || !chat.monoforum);
         avatarImage.setRoundRadius(radius);
@@ -1005,25 +1005,7 @@ public class ProfileSearchCell extends BaseCell implements NotificationCenter.No
 
             canvas.save();
             canvas.translate(nameLeft, nameTop);
-            // Градиентный ник TsundereGram в журнале звонков (по ширине текста)
-            int[] tsGrad = callCellStyle && user != null
-                    ? app.tsunderegram.appearance.TsundereChatCustomizer.getInstance().getGradientColorsForUser(user.id) : null;
-            android.graphics.Shader tsOldShader = null;
-            if (tsGrad != null && nameLayout.getLineCount() > 0) {
-                float gl = nameLayout.getLineLeft(0), gr = nameLayout.getLineRight(0);
-                if (gr - gl > dp(8)) {
-                    tsOldShader = nameLayout.getPaint().getShader();
-                    nameLayout.getPaint().setShader(new android.graphics.LinearGradient(gl, 0, gr, 0, tsGrad[0], tsGrad[1], android.graphics.Shader.TileMode.CLAMP));
-                } else {
-                    tsGrad = null;
-                }
-            } else {
-                tsGrad = null;
-            }
             nameLayout.draw(canvas);
-            if (tsGrad != null) {
-                nameLayout.getPaint().setShader(tsOldShader);
-            }
             canvas.restore();
 
             if (LocaleController.isRTL) {

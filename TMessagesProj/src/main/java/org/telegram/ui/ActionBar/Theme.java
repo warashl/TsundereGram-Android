@@ -1537,8 +1537,8 @@ public class Theme {
                 return getString(R.string.ThemeDay);
             } else if ("Night".equals(name)) {
                 return getString(R.string.ThemeNight);
-            } else if (org.telegram.tsunderestyle.theme.TsundereStyleThemes.isBuiltIn(name)) {
-                return org.telegram.tsunderestyle.theme.TsundereStyleThemes.getDisplayName(name);
+            } else if (org.telegram.othergram.theme.OtherGramThemes.isBuiltIn(name)) {
+                return org.telegram.othergram.theme.OtherGramThemes.getDisplayName(name);
             }
             return info != null ? info.title : name;
         }
@@ -1683,8 +1683,8 @@ public class Theme {
                 isDark = DARK;
             } else if ("Blue".equals(name) || "Arctic Blue".equals(name) || "Day".equals(name) || "Monet Light".equals(name)) {
                 isDark = LIGHT;
-            } else if (org.telegram.tsunderestyle.theme.TsundereStyleThemes.isBuiltIn(name)) {
-                isDark = org.telegram.tsunderestyle.theme.TsundereStyleThemes.isDark(name) ? DARK : LIGHT;
+            } else if (org.telegram.othergram.theme.OtherGramThemes.isBuiltIn(name)) {
+                isDark = org.telegram.othergram.theme.OtherGramThemes.isDark(name) ? DARK : LIGHT;
             }
             if (isDark == UNKNOWN && pathToFile != null) {
                 String[] wallpaperLink = new String[1];
@@ -2289,7 +2289,7 @@ public class Theme {
 
     public static Paint dividerPaint;
     /**
-     * Кисть подшапочной линии. TsundereGram рисует ей ровно 1 px вместо градиентной тени
+     * Кисть подшапочной линии. exteraGram рисует ей ровно 1 px вместо градиентной тени
      * (12.9.0: Theme.java:425, 6476-6481, ActionBarLayout.java:2603-2615).
      * Цвет берётся из {@link #getDividerColor}, поэтому линия не гаснет в режиме «сегменты»,
      * но исчезает вместе со всеми разделителями в режиме «скрыт».
@@ -4070,8 +4070,8 @@ public class Theme {
         for (int a = 0; a < 2; a++) {
             final boolean dark = a == 1;
             themeInfo = new ThemeInfo();
-            themeInfo.name = dark ? org.telegram.tsunderestyle.theme.TsundereStyleThemes.VANILLA_BEIGE_DARK : org.telegram.tsunderestyle.theme.TsundereStyleThemes.VANILLA_BEIGE;
-            themeInfo.assetName = dark ? org.telegram.tsunderestyle.theme.TsundereStyleThemes.VANILLA_BEIGE_DARK_ASSET : org.telegram.tsunderestyle.theme.TsundereStyleThemes.VANILLA_BEIGE_ASSET;
+            themeInfo.name = dark ? org.telegram.othergram.theme.OtherGramThemes.VANILLA_BEIGE_DARK : org.telegram.othergram.theme.OtherGramThemes.VANILLA_BEIGE;
+            themeInfo.assetName = dark ? org.telegram.othergram.theme.OtherGramThemes.VANILLA_BEIGE_DARK_ASSET : org.telegram.othergram.theme.OtherGramThemes.VANILLA_BEIGE_ASSET;
             themeInfo.previewBackgroundColor = dark ? 0xff17110d : 0xffe5cfb5;
             themeInfo.previewInColor = dark ? 0xff2e241d : 0xfffff7ed;
             themeInfo.previewOutColor = dark ? 0xff6e5644 : 0xffe0cdb8;
@@ -5748,7 +5748,7 @@ public class Theme {
     }
 
     private static String monetAssetName(String base) {
-        return base + app.tsunderegram.appearance.AppearanceConfig.monetAssetSuffix() + ".attheme";
+        return base + app.exteraless.appearance.AppearanceConfig.monetAssetSuffix() + ".attheme";
     }
 
     public static void reloadMonetThemes() {
@@ -6242,7 +6242,7 @@ public class Theme {
         }
         applyCalculatedTableColors(currentColorsNoAccent, currentColors, currentTheme.isDark());
         applyCalculatedArticleCodeColors(currentColorsNoAccent, currentColors, currentTheme.isDark());
-        org.telegram.tsunderestyle.theme.TsundereStyleColors.apply(currentColors, currentTheme.isDark());
+        org.telegram.othergram.theme.OtherGramColors.apply(currentColors, currentTheme.isDark());
         if (!messages) {
             boolean async = !(LaunchActivity.getLastFragment() instanceof ChatActivity);
             reloadWallpaper(async);
@@ -7829,7 +7829,31 @@ public class Theme {
 
             Resources resources = context.getResources();
 
-            loadAvatarIconDrawables(resources);
+            avatarDrawables[0] = resources.getDrawable(R.drawable.chats_saved);
+            avatarDrawables[1] = resources.getDrawable(R.drawable.ghost);
+            avatarDrawables[2] = resources.getDrawable(R.drawable.msg_folders_private);
+            avatarDrawables[3] = resources.getDrawable(R.drawable.msg_folders_requests);
+            avatarDrawables[4] = resources.getDrawable(R.drawable.msg_folders_groups);
+            avatarDrawables[5] = resources.getDrawable(R.drawable.msg_folders_channels);
+            avatarDrawables[6] = resources.getDrawable(R.drawable.msg_folders_bots);
+            avatarDrawables[7] = resources.getDrawable(R.drawable.msg_folders_muted);
+            avatarDrawables[8] = resources.getDrawable(R.drawable.msg_folders_read);
+            avatarDrawables[9] = resources.getDrawable(R.drawable.msg_folders_archive);
+            avatarDrawables[10] = resources.getDrawable(R.drawable.msg_folders_private);
+            avatarDrawables[11] = resources.getDrawable(R.drawable.chats_replies);
+            avatarDrawables[12] = resources.getDrawable(R.drawable.other_chats);
+            avatarDrawables[13] = resources.getDrawable(R.drawable.msg_stories_closefriends);
+            avatarDrawables[14] = resources.getDrawable(R.drawable.filled_gift_premium);
+            avatarDrawables[15] = resources.getDrawable(R.drawable.filled_unknown);
+            avatarDrawables[16] = resources.getDrawable(R.drawable.filled_unclaimed);
+            avatarDrawables[17] = resources.getDrawable(R.drawable.large_repost_story);
+            avatarDrawables[18] = resources.getDrawable(R.drawable.large_hidden);
+            avatarDrawables[19] = resources.getDrawable(R.drawable.large_notes);
+            avatarDrawables[20] = resources.getDrawable(R.drawable.filled_folder_new);
+            avatarDrawables[21] = resources.getDrawable(R.drawable.filled_folder_existing);
+            avatarDrawables[22] = resources.getDrawable(R.drawable.filled_giveaway_premium);
+            avatarDrawables[23] = resources.getDrawable(R.drawable.filled_giveaway_stars);
+            avatarDrawables[24] = resources.getDrawable(R.drawable.filled_suggest_chat_avatar);
 
             if (dialogs_archiveAvatarDrawable != null) {
                 dialogs_archiveAvatarDrawable.setCallback(null);
@@ -7933,50 +7957,6 @@ public class Theme {
         PremiumGradient.getInstance().checkIconColors();
     }
 
-    // TsundereGram: вынесено, чтобы при смене набора иконок перезагрузить их без перезапуска
-    private static void loadAvatarIconDrawables(Resources resources) {
-        avatarDrawables[0] = resources.getDrawable(R.drawable.chats_saved);
-        avatarDrawables[1] = resources.getDrawable(R.drawable.ghost);
-        avatarDrawables[2] = resources.getDrawable(R.drawable.msg_folders_private);
-        avatarDrawables[3] = resources.getDrawable(R.drawable.msg_folders_requests);
-        avatarDrawables[4] = resources.getDrawable(R.drawable.msg_folders_groups);
-        avatarDrawables[5] = resources.getDrawable(R.drawable.msg_folders_channels);
-        avatarDrawables[6] = resources.getDrawable(R.drawable.msg_folders_bots);
-        avatarDrawables[7] = resources.getDrawable(R.drawable.msg_folders_muted);
-        avatarDrawables[8] = resources.getDrawable(R.drawable.msg_folders_read);
-        avatarDrawables[9] = resources.getDrawable(R.drawable.msg_folders_archive);
-        avatarDrawables[10] = resources.getDrawable(R.drawable.msg_folders_private);
-        avatarDrawables[11] = resources.getDrawable(R.drawable.chats_replies);
-        avatarDrawables[12] = resources.getDrawable(R.drawable.other_chats);
-        avatarDrawables[13] = resources.getDrawable(R.drawable.msg_stories_closefriends);
-        avatarDrawables[14] = resources.getDrawable(R.drawable.filled_gift_premium);
-        avatarDrawables[15] = resources.getDrawable(R.drawable.filled_unknown);
-        avatarDrawables[16] = resources.getDrawable(R.drawable.filled_unclaimed);
-        avatarDrawables[17] = resources.getDrawable(R.drawable.large_repost_story);
-        avatarDrawables[18] = resources.getDrawable(R.drawable.large_hidden);
-        avatarDrawables[19] = resources.getDrawable(R.drawable.large_notes);
-        avatarDrawables[20] = resources.getDrawable(R.drawable.filled_folder_new);
-        avatarDrawables[21] = resources.getDrawable(R.drawable.filled_folder_existing);
-        avatarDrawables[22] = resources.getDrawable(R.drawable.filled_giveaway_premium);
-        avatarDrawables[23] = resources.getDrawable(R.drawable.filled_giveaway_stars);
-        avatarDrawables[24] = resources.getDrawable(R.drawable.filled_suggest_chat_avatar);
-    }
-
-    /** TsundereGram: пересоздать закэшированные в Theme иконки после смены набора иконок. */
-    public static void reloadIconDrawables(Context context) {
-        if (context == null) {
-            return;
-        }
-        try {
-            if (avatarDrawables[0] != null) {
-                loadAvatarIconDrawables(context.getResources());
-            }
-            reloadAllResources(context);
-        } catch (Throwable t) {
-            FileLog.e(t);
-        }
-    }
-
     public static void createCommonDialogResources(Context context) {
         if (dialogs_countTextPaint == null) {
             dialogs_countTextPaint = new TextPaint(TextPaint.ANTI_ALIAS_FLAG);
@@ -8008,7 +7988,6 @@ public class Theme {
                 dialogs_nameEncryptedPaint[a] = new TextPaint(TextPaint.ANTI_ALIAS_FLAG);
                 dialogs_nameEncryptedPaint[a].setTypeface(AndroidUtilities.bold());
                 dialogs_messagePaint[a] = new TextPaint(TextPaint.ANTI_ALIAS_FLAG);
-                dialogs_messagePaint[a].setTypeface(org.telegram.tsunderestyle.theme.TsundereStyleFonts.regular()); // TsundereStyle: interface font
                 dialogs_messagePrintingPaint[a] = new TextPaint(TextPaint.ANTI_ALIAS_FLAG);
             }
             dialogs_searchNamePaint = new TextPaint(TextPaint.ANTI_ALIAS_FLAG);
@@ -8190,7 +8169,6 @@ public class Theme {
         synchronized (sync) {
             if (chat_msgTextPaint == null) {
                 chat_msgTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-                chat_msgTextPaint.setTypeface(org.telegram.tsunderestyle.theme.TsundereStyleFonts.messages()); // TsundereStyle: messages font
                 chat_msgGameTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
                 chat_msgTextPaintEmoji = new TextPaint[6];
                 chat_msgTextPaintOneEmoji = new TextPaint(Paint.ANTI_ALIAS_FLAG);
@@ -8204,8 +8182,6 @@ public class Theme {
                 chat_replyNamePaint.setTypeface(AndroidUtilities.bold());
                 chat_replyTextPaint = new TextPaint(TextPaint.ANTI_ALIAS_FLAG);
                 chat_quoteTextPaint = new TextPaint(TextPaint.ANTI_ALIAS_FLAG);
-                org.telegram.tsunderestyle.theme.TsundereStyleFonts.applyMessageFont(chat_replyTextPaint); // TsundereGram: текст ответа шрифтом сообщений
-                org.telegram.tsunderestyle.theme.TsundereStyleFonts.applyMessageFont(chat_quoteTextPaint);
                 chat_explanationTextPaint = new TextPaint(TextPaint.ANTI_ALIAS_FLAG);
                 chat_titleLabelTextPaint = new TextPaint(TextPaint.ANTI_ALIAS_FLAG);
                 chat_topicTextPaint = new TextPaint(TextPaint.ANTI_ALIAS_FLAG);
@@ -8306,7 +8282,6 @@ public class Theme {
             chat_replyNamePaint = new TextPaint(TextPaint.ANTI_ALIAS_FLAG);
             chat_replyNamePaint.setTypeface(AndroidUtilities.bold());
             chat_replyTextPaint = new TextPaint(TextPaint.ANTI_ALIAS_FLAG);
-            org.telegram.tsunderestyle.theme.TsundereStyleFonts.applyMessageFont(chat_replyTextPaint); // TsundereGram
             chat_topicTextPaint = new TextPaint(TextPaint.ANTI_ALIAS_FLAG);
             chat_topicTextPaint.setTypeface(AndroidUtilities.bold());
             chat_titleLabelTextPaint = new TextPaint(TextPaint.ANTI_ALIAS_FLAG);
@@ -8635,21 +8610,20 @@ public class Theme {
         }
 
         if (chat_msgInDrawable != null && !fontsOnly) {
-            final boolean gradientService = serviceBitmapShader != null;
             chat_gamePaint.setColor(getColor(key_chat_previewGameText));
             chat_durationPaint.setColor(getColor(key_chat_previewDurationText));
-            chat_botButtonPaint.setColor(gradientService ? 0xffffffff : getColor(key_chat_botButtonText));
+            chat_botButtonPaint.setColor(getColor(key_chat_botButtonText));
             chat_urlPaint.setColor(getColor(key_chat_linkSelectBackground));
             chat_outUrlPaint.setColor(getColor(key_chat_outLinkSelectBackground));
             chat_textSearchSelectionPaint.setColor(getColor(key_chat_textSelectBackground));
             chat_msgErrorPaint.setColor(getColor(key_chat_sentError));
             chat_statusPaint.setColor(getColor(key_chat_status));
             chat_statusRecordPaint.setColor(getColor(key_chat_status));
-            chat_actionTextPaint.setColor(gradientService ? 0xffffffff : getColor(key_chat_serviceText));
-            chat_actionTextPaint2.setColor(gradientService ? 0xffffffff : getColor(key_chat_serviceText));
-            chat_actionTextPaint3.setColor(gradientService ? 0xffffffff : getColor(key_chat_serviceText));
-            chat_actionTextPaint.linkColor = gradientService ? 0xffffffff : getColor(key_chat_serviceLink);
-            chat_unlockExtendedMediaTextPaint.setColor(gradientService ? 0xffffffff : getColor(key_chat_serviceText));
+            chat_actionTextPaint.setColor(getColor(key_chat_serviceText));
+            chat_actionTextPaint2.setColor(getColor(key_chat_serviceText));
+            chat_actionTextPaint3.setColor(getColor(key_chat_serviceText));
+            chat_actionTextPaint.linkColor = getColor(key_chat_serviceLink);
+            chat_unlockExtendedMediaTextPaint.setColor(getColor(key_chat_serviceText));
             chat_contextResult_titleTextPaint.setColor(getColor(key_windowBackgroundWhiteBlackText));
             chat_composeBackgroundPaint.setColor(getColor(key_chat_messagePanelBackground));
             chat_timeBackgroundPaint.setColor(getColor(key_chat_mediaTimeBackground));
@@ -9189,8 +9163,8 @@ public class Theme {
      * разделитель под ActionBar.
      */
     public static int getDividerColor(ResourcesProvider provider) {
-        if (app.tsunderegram.appearance.AppearanceConfig.dividerStyle()
-                == app.tsunderegram.appearance.AppearanceConfig.DIVIDER_HIDDEN) {
+        if (app.exteraless.appearance.AppearanceConfig.dividerStyle()
+                == app.exteraless.appearance.AppearanceConfig.DIVIDER_HIDDEN) {
             return 0x00ffffff;
         }
         resolvingDividerColor = true;
@@ -9198,8 +9172,8 @@ public class Theme {
             if (provider != null) {
                 return provider.getColor(key_divider);
             }
-            final boolean ignoreAnimation = app.tsunderegram.appearance.AppearanceConfig.dividerStyle()
-                    != app.tsunderegram.appearance.AppearanceConfig.DIVIDER_LINE;
+            final boolean ignoreAnimation = app.exteraless.appearance.AppearanceConfig.dividerStyle()
+                    != app.exteraless.appearance.AppearanceConfig.DIVIDER_LINE;
             return getColor(key_divider, null, ignoreAnimation);
         } finally {
             resolvingDividerColor = false;
@@ -9213,7 +9187,7 @@ public class Theme {
     public static int getColor(int key, ResourcesProvider provider) {
         // Скрытие разделителей должно работать и при непустом ResourcesProvider
         // (чат-темы, боттом-шиты, профиль): иначе линии остаются там, где цвет берёт провайдер.
-        if (key_divider == key && !resolvingDividerColor && app.tsunderegram.appearance.AppearanceConfig.dividerHidden()) {
+        if (key_divider == key && !resolvingDividerColor && app.exteraless.appearance.AppearanceConfig.dividerHidden()) {
             return 0x00ffffff;
         }
         if (provider != null) {
@@ -9241,7 +9215,7 @@ public class Theme {
                 return animatingColors.valueAt(index);
             }
         }
-        if (key_divider == key && !resolvingDividerColor && app.tsunderegram.appearance.AppearanceConfig.dividerHidden()) {
+        if (key_divider == key && !resolvingDividerColor && app.exteraless.appearance.AppearanceConfig.dividerHidden()) {
             return 0x00ffffff;
         }
         if (serviceBitmapShader != null && (key_chat_serviceText == key || key_chat_serviceLink == key || key_chat_serviceIcon == key

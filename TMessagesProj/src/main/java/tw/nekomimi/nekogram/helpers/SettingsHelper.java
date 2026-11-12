@@ -21,20 +21,16 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import app.tsunderegram.ai.ui.AiSettingsActivity;
-import app.tsunderegram.icons.IconPacksActivity;
-import app.tsunderegram.pillstack.pills.weather.WeatherSettingsActivity;
-import app.tsunderegram.settings.OpenExteraCloudActivity;
-import app.tsunderegram.settings.OpenExteraGlyphActivity;
-import app.tsunderegram.pillstack.PillStackSettingsActivity;
-import app.tsunderegram.plugins.ui.PluginsActivity;
-import app.tsunderegram.settings.OpenExteraAppNavigationActivity;
-import app.tsunderegram.settings.OpenExteraAppearanceActivity;
-import app.tsunderegram.settings.OpenExteraAyuMomentsActivity;
-import app.tsunderegram.settings.OpenExteraChatsActivity;
-import app.tsunderegram.settings.OpenExteraGeneralActivity;
-import app.tsunderegram.settings.OpenExteraOtherActivity;
-import app.tsunderegram.settings.OpenExteraSettingsActivity;
+import app.exteraless.ai.ui.AiSettingsActivity;
+import app.exteraless.pillstack.PillStackSettingsActivity;
+import app.exteraless.plugins.ui.PluginsActivity;
+import app.exteraless.settings.OpenExteraAppNavigationActivity;
+import app.exteraless.settings.OpenExteraAppearanceActivity;
+import app.exteraless.settings.OpenExteraAyuMomentsActivity;
+import app.exteraless.settings.OpenExteraChatsActivity;
+import app.exteraless.settings.OpenExteraGeneralActivity;
+import app.exteraless.settings.OpenExteraOtherActivity;
+import app.exteraless.settings.OpenExteraSettingsActivity;
 import tw.nekomimi.nekogram.settings.BaseNekoSettingsActivity;
 import tw.nekomimi.nekogram.settings.BaseNekoXSettingsActivity;
 import tw.nekomimi.nekogram.settings.NekoAboutActivity;
@@ -45,9 +41,7 @@ import tw.nekomimi.nekogram.settings.NekoTranslatorSettingsActivity;
 public class SettingsHelper {
 
     private static final String HOST_NAGRAM = "nasettings";
-    private static final String HOST_TSUNDEREGRAM = "tsunderegram";
-    /** Публичный префикс ссылок на настройки (старый HOST_TSUNDEREGRAM по-прежнему принимается). */
-    private static final String HOST_TSUNDERE = "tsunderegram";
+    private static final String HOST_EXTERALESS = "exteraless";
 
     private static final Map<String, String> SEARCH_TITLE_ALIASES = new HashMap<>();
     private static final Map<String, String> TRANSLATOR_ROWS = new HashMap<>();
@@ -55,9 +49,7 @@ public class SettingsHelper {
     private static final Map<String, String> MOVED_ROWS = new HashMap<>();
 
     static {
-        SEARCH_TITLE_ALIASES.put("OEGeneral:botPrivacyAlwaysAsk", "OEBotPrivacyAlwaysAsk");
-        SEARCH_TITLE_ALIASES.put("OEGeneral:botPrivacyEnabled", "OEBotPrivacyEnabled");
-        SEARCH_TITLE_ALIASES.put("OEGeneral:botPrivacyAccount", "OEBotPrivacyAccount");
+        SEARCH_TITLE_ALIASES.put("OEGeneral:lastfm", "OEGeneralLastFm");
         SEARCH_TITLE_ALIASES.put("OEAyu:ayuGhost", "GhostMode");
         SEARCH_TITLE_ALIASES.put("OEAyu:ayuDisableAll", "OEGeneralAyuMomentsDisableAll");
         SEARCH_TITLE_ALIASES.put("OEAyu:ayuClearDatabase", "ClearMessageDatabase");
@@ -145,7 +137,7 @@ public class SettingsHelper {
         }
     }
 
-    private static final Set<String> TSUNDEREGRAM_SCREENS = new HashSet<>(Arrays.asList(
+    private static final Set<String> EXTERALESS_SCREENS = new HashSet<>(Arrays.asList(
             "settings", "general", "appearance", "chats", "plugins", "pillstack", "other",
             "ayumoments", "navigation", "menus", "media", "hiding"));
 
@@ -156,13 +148,10 @@ public class SettingsHelper {
         if (path.startsWith(HOST_NAGRAM + "/")) {
             return true;
         }
-        if (path.startsWith(HOST_TSUNDERE + "/")) {
-            return TSUNDEREGRAM_SCREENS.contains(path.substring(HOST_TSUNDERE.length() + 1));
-        }
-        if (!path.startsWith(HOST_TSUNDEREGRAM + "/")) {
+        if (!path.startsWith(HOST_EXTERALESS + "/")) {
             return false;
         }
-        return TSUNDEREGRAM_SCREENS.contains(path.substring(HOST_TSUNDEREGRAM.length() + 1));
+        return EXTERALESS_SCREENS.contains(path.substring(HOST_EXTERALESS.length() + 1));
     }
 
     public static String linkPathFor(String key) {
@@ -170,32 +159,29 @@ public class SettingsHelper {
             return null;
         }
         switch (key) {
-            case "tsunderegram":
-                return HOST_TSUNDERE + "/settings";
-            case "tsunderegram_general":
-                return HOST_TSUNDERE + "/general";
-            case "tsunderegram_appearance":
-                return HOST_TSUNDERE + "/appearance";
-            case "tsunderegram_chats":
-                return HOST_TSUNDERE + "/chats";
-            case "tsunderegram_menus":
-                return HOST_TSUNDERE + "/menus";
-            case "tsunderegram_media":
-                return HOST_TSUNDERE + "/media";
-            case "tsunderegram_hiding":
-                return HOST_TSUNDERE + "/hiding";
-            case "tsunderegram_other":
-                return HOST_TSUNDERE + "/other";
-            case "tsunderegram_ayumoments":
-                return HOST_TSUNDERE + "/ayumoments";
+            case "exteraless":
+                return HOST_EXTERALESS + "/settings";
+            case "exteraless_general":
+                return HOST_EXTERALESS + "/general";
+            case "exteraless_appearance":
+                return HOST_EXTERALESS + "/appearance";
+            case "exteraless_chats":
+                return HOST_EXTERALESS + "/chats";
+            case "exteraless_menus":
+                return HOST_EXTERALESS + "/menus";
+            case "exteraless_media":
+                return HOST_EXTERALESS + "/media";
+            case "exteraless_hiding":
+                return HOST_EXTERALESS + "/hiding";
+            case "exteraless_other":
+                return HOST_EXTERALESS + "/other";
+            case "exteraless_ayumoments":
+                return HOST_EXTERALESS + "/ayumoments";
             case "pillstack":
-                return HOST_TSUNDERE + "/pillstack";
-            case "tsunderegram_navigation":
-                return HOST_TSUNDERE + "/navigation";
+                return HOST_EXTERALESS + "/pillstack";
+            case "exteraless_navigation":
+                return HOST_EXTERALESS + "/navigation";
             default:
-                if (key.startsWith("tsunderegram_")) {
-                    return HOST_NAGRAM + "/tsundere_" + key.substring("tsunderegram_".length());
-                }
                 return HOST_NAGRAM + "/" + key;
         }
     }
@@ -210,13 +196,12 @@ public class SettingsHelper {
             unknown.run();
             return;
         }
-        final boolean tsunderegram = HOST_TSUNDEREGRAM.equals(segments.get(0)) || HOST_TSUNDERE.equals(segments.get(0));
-        final String seg1 = segments.size() > 1 ? normalizeKey(segments.get(1)) : null;
-        if (!tsunderegram && !HOST_NAGRAM.equals(segments.get(0))) {
+        final boolean exteraless = HOST_EXTERALESS.equals(segments.get(0));
+        if (!exteraless && !HOST_NAGRAM.equals(segments.get(0))) {
             unknown.run();
             return;
         }
-        if (tsunderegram && segments.size() < 2) {
+        if (exteraless && segments.size() < 2) {
             unknown.run();
             return;
         }
@@ -228,9 +213,9 @@ public class SettingsHelper {
         BaseNekoSettingsActivity neko_fragment = null;
         BaseNekoXSettingsActivity nekox_fragment = null;
         OpenExteraAppNavigationActivity navigation_fragment = null;
-        String screen = tsunderegram ? segments.get(1) : nagramScreen(seg1, row);
-        if (screen == null && segments.size() == 2 && seg1.startsWith("tsunderegram_")) {
-            String base = seg1.substring("tsunderegram_".length());
+        String screen = exteraless ? segments.get(1) : nagramScreen(segments.size() == 1 ? null : segments.get(1), row);
+        if (screen == null && segments.size() == 2 && segments.get(1).startsWith("exteraless_")) {
+            String base = segments.get(1).substring("exteraless_".length());
             if (row != null && MOVED_ROWS.containsKey(base + ":" + row)) {
                 screen = base;
             }
@@ -295,10 +280,10 @@ public class SettingsHelper {
                     unknown.run();
                     return;
             }
-        } else if (PasscodeHelper.getSettingsKey().equals(seg1)) {
+        } else if (PasscodeHelper.getSettingsKey().equals(segments.get(1))) {
             fragment = neko_fragment = new NekoPasscodeSettingsActivity();
         } else {
-            switch (seg1) {
+            switch (segments.get(1)) {
                 case "about":
                     fragment = new NekoAboutActivity();
                     break;
@@ -310,10 +295,10 @@ public class SettingsHelper {
                 case "t":
                     fragment = nekox_fragment = new NekoTranslatorSettingsActivity();
                     break;
-                case "tsunderegram":
+                case "exteraless":
                     fragment = neko_fragment = new OpenExteraSettingsActivity();
                     break;
-                case "tsunderegram_general":
+                case "exteraless_general":
                     if (TRANSLATOR_ROWS.containsKey(row)) {
                         fragment = nekox_fragment = new NekoTranslatorSettingsActivity();
                         row = TRANSLATOR_ROWS.get(row);
@@ -321,36 +306,21 @@ public class SettingsHelper {
                         fragment = neko_fragment = new OpenExteraGeneralActivity();
                     }
                     break;
-                case "tsunderegram_appearance":
+                case "exteraless_appearance":
                     fragment = neko_fragment = "useSystemEmoji".equals(row)
                             ? new NekoEmojiSettingsActivity() : new OpenExteraAppearanceActivity();
                     break;
-                case "tsunderegram_chats":
+                case "exteraless_chats":
                     fragment = neko_fragment = new OpenExteraChatsActivity();
                     break;
-                case "tsunderegram_other":
+                case "exteraless_other":
                     fragment = neko_fragment = new OpenExteraOtherActivity();
                     break;
-                case "tsunderegram_ayumoments":
+                case "exteraless_ayumoments":
                     fragment = neko_fragment = new OpenExteraAyuMomentsActivity();
                     break;
                 case "pillstack":
                     fragment = neko_fragment = new PillStackSettingsActivity();
-                    break;
-                case "pillstackweather":
-                    fragment = neko_fragment = new WeatherSettingsActivity();
-                    break;
-                case "iconpacks":
-                    fragment = neko_fragment = new IconPacksActivity();
-                    break;
-                case "tsunderegram_ai":
-                    fragment = neko_fragment = new AiSettingsActivity();
-                    break;
-                case "tsunderegram_cloud":
-                    fragment = neko_fragment = new OpenExteraCloudActivity();
-                    break;
-                case "tsunderegram_glyph":
-                    fragment = neko_fragment = new OpenExteraGlyphActivity();
                     break;
                 case "send_logs":
                     sendLogs(activity, false);
@@ -383,20 +353,6 @@ public class SettingsHelper {
                 }
             }
         }
-    }
-
-    /** «tsundere_xxx» (новые ссылки) → внутренний ключ «tsunderegram_xxx». */
-    private static String normalizeKey(String key) {
-        if (key == null) {
-            return null;
-        }
-        if ("tsundere".equals(key)) {
-            return "tsunderegram";
-        }
-        if (key.startsWith("tsundere_")) {
-            return "tsunderegram_" + key.substring("tsundere_".length());
-        }
-        return key;
     }
 
     private static String nagramScreen(String segment, String row) {
@@ -468,21 +424,21 @@ public class SettingsHelper {
         ArrayList<BaseNekoXSettingsActivity> fragments = new ArrayList<>();
         fragments.add(new NekoTranslatorSettingsActivity());
 
-        ArrayList<BaseNekoSettingsActivity> tsunderegramFragments = new ArrayList<>();
-        tsunderegramFragments.add(new OpenExteraSettingsActivity());
-        tsunderegramFragments.add(new OpenExteraGeneralActivity());
-        tsunderegramFragments.add(new OpenExteraAppearanceActivity());
-        tsunderegramFragments.add(new OpenExteraChatsActivity());
-        tsunderegramFragments.add(new OpenExteraChatsActivity(OpenExteraChatsActivity.SCREEN_MENUS));
-        tsunderegramFragments.add(new OpenExteraChatsActivity(OpenExteraChatsActivity.SCREEN_MEDIA));
-        tsunderegramFragments.add(new OpenExteraChatsActivity(OpenExteraChatsActivity.SCREEN_HIDING));
-        tsunderegramFragments.add(new OpenExteraOtherActivity());
-        tsunderegramFragments.add(new OpenExteraAyuMomentsActivity());
-        tsunderegramFragments.add(new PillStackSettingsActivity());
-        tsunderegramFragments.add(new AiSettingsActivity());
+        ArrayList<BaseNekoSettingsActivity> exteralessFragments = new ArrayList<>();
+        exteralessFragments.add(new OpenExteraSettingsActivity());
+        exteralessFragments.add(new OpenExteraGeneralActivity());
+        exteralessFragments.add(new OpenExteraAppearanceActivity());
+        exteralessFragments.add(new OpenExteraChatsActivity());
+        exteralessFragments.add(new OpenExteraChatsActivity(OpenExteraChatsActivity.SCREEN_MENUS));
+        exteralessFragments.add(new OpenExteraChatsActivity(OpenExteraChatsActivity.SCREEN_MEDIA));
+        exteralessFragments.add(new OpenExteraChatsActivity(OpenExteraChatsActivity.SCREEN_HIDING));
+        exteralessFragments.add(new OpenExteraOtherActivity());
+        exteralessFragments.add(new OpenExteraAyuMomentsActivity());
+        exteralessFragments.add(new PillStackSettingsActivity());
+        exteralessFragments.add(new AiSettingsActivity());
 
         String e_title = getString(R.string.OpenExtera);
-        for (BaseNekoSettingsActivity fragment : tsunderegramFragments) {
+        for (BaseNekoSettingsActivity fragment : exteralessFragments) {
             try {
                 fragment.buildRowsForSearch();
             } catch (Exception e) {

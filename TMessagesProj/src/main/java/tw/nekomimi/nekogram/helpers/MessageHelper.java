@@ -29,8 +29,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.core.content.FileProvider;
 
-import com.tsunderegram.privacy.proprietary.AyuMessageUtils;
-import com.tsunderegram.privacy.utils.AyuState;
+import com.radolyn.ayugram.proprietary.AyuMessageUtils;
+import com.radolyn.ayugram.utils.AyuState;
 
 import org.telegram.SQLite.SQLiteCursor;
 import org.telegram.SQLite.SQLiteException;
@@ -198,7 +198,7 @@ public class MessageHelper extends BaseController {
         SQLiteCursor cursor = null;
         NativeByteBuffer data = null;
         try {
-            boolean ignoreBlocked = AyuFilter.shouldHideSenders();
+            boolean ignoreBlocked = NekoConfig.ignoreBlocked.Bool();
             long currentUserId = UserConfig.getInstance(currentAccount).clientUserId;
             HashMap<Long, HashMap<Long, TLRPC.Message>> replyMessageCache = ignoreBlocked ? new HashMap<>() : null;
             String query = ignoreBlocked
@@ -1039,10 +1039,10 @@ public class MessageHelper extends BaseController {
     }
 
     public boolean isBlockedUser(long senderId) {
-        if (NekoConfig.ignoreBlocked.Bool() && getMessagesController().blockePeers.indexOfKey(senderId) >= 0) {
-            return true;
+        if (!NekoConfig.ignoreBlocked.Bool()) {
+            return false;
         }
-        return AyuFilter.isCustomFilteredPeer(senderId);
+        return getMessagesController().blockePeers.indexOfKey(senderId) >= 0 || AyuFilter.isCustomFilteredPeer(senderId);
     }
 
     public boolean isBlockedOrFiltered(TLRPC.Message message) {

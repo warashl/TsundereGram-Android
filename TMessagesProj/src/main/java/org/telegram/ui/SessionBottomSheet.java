@@ -127,8 +127,8 @@ public class SessionBottomSheet extends BottomSheet {
 
         if (isTsundere) {
             appName = "TsundereGram";
-        } else if (appName != null && (appName.contains("tsunderegram") || appName.contains("TsundereGram"))) {
-            appName = "TsundereGram";
+        } else if (appName != null && (appName.contains("exteraless") || appName.contains("exteraGram"))) {
+            appName = "exteraGram";
         }
         stringBuilder.append(appName != null ? appName : "");
         if (session.app_version != null && !session.app_version.isEmpty()) {

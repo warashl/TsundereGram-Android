@@ -1,4 +1,4 @@
-"""AlertDialog builder wrapper — part of the tsunderegram plugin SDK.
+"""AlertDialog builder wrapper — part of the exteraless plugin SDK.
 
 Wraps org.telegram.ui.ActionBar.AlertDialog.Builder. All UI operations are
 executed on the Android UI thread; mutating builder calls can be chained.
@@ -50,7 +50,7 @@ def _run_sync(fn):
             done.set()
 
     try:
-        from app.tsunderegram.plugins import PluginServices
+        from app.exteraless.plugins import PluginServices
         PluginServices.runOnUiThread(_wrap, 0)
     except Exception:
         _jclass("org.telegram.messenger.AndroidUtilities").runOnUIThread(R(_wrap))

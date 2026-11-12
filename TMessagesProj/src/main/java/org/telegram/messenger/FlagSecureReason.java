@@ -11,16 +11,10 @@ public class FlagSecureReason {
 
     private final Window window;
     private final FlagSecureCondition condition;
-    private final boolean enforced;
 
     public FlagSecureReason(Window window, FlagSecureCondition condition) {
-        this(window, condition, false);
-    }
-
-    public FlagSecureReason(Window window, FlagSecureCondition condition, boolean enforced) {
         this.window = window;
         this.condition = condition;
-        this.enforced = enforced;
     }
 
     private boolean attached = false;
@@ -50,9 +44,6 @@ public class FlagSecureReason {
     }
 
     private void update(int add) {
-        if (!enforced) {
-            return;
-        }
         if (currentSecureReasons == null) {
             currentSecureReasons = new HashMap<>();
         }
@@ -83,7 +74,7 @@ public class FlagSecureReason {
     }
 
     public static boolean isSecuredNow(Window window) {
-        return currentSecureReasons != null && currentSecureReasons.get(window) != null;
+        return false/*currentSecureReasons != null && currentSecureReasons.get(window) != null*/;
     }
 
     public interface FlagSecureCondition {

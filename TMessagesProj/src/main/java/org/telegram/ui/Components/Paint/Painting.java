@@ -59,7 +59,6 @@ public class Painting {
     private Brush brush;
     private HashMap<Integer, Texture> brushTextures = new HashMap<>();
     private Texture bitmapTexture;
-    private Texture bitmapSourceTexture;
     private Texture originalBitmapTexture;
     private ByteBuffer vertexBuffer;
     private ByteBuffer textureBuffer;
@@ -164,16 +163,14 @@ public class Painting {
     }
 
     public void setBitmap(Bitmap bitmap) {
-        if (bitmapSourceTexture == null) {
-            bitmapSourceTexture = new Texture(bitmap);
-            bitmapTexture = createBitmapTexture();
+        if (bitmapTexture == null) {
+            bitmapTexture = new Texture(bitmap);
         }
     }
 
     public void setBitmap(Bitmap bitmap, Bitmap blurBitmap) {
-        if (bitmapSourceTexture == null) {
-            bitmapSourceTexture = new Texture(bitmap);
-            bitmapTexture = createBitmapTexture();
+        if (bitmapTexture == null) {
+            bitmapTexture = new Texture(bitmap);
         }
         if (bitmapBlurTexture == null) {
             bitmapBlurTexture = new Texture(blurBitmap);
@@ -550,8 +547,7 @@ public class Painting {
 
             GLES20.glViewport(0, 0, (int) size.width, (int) size.height);
 
-            final boolean masking = this.masking && (brush instanceof Brush.Radial || brush instanceof Brush.Eraser);
-            Shader shader = shaders.get(brush.getShaderName(Brush.PAINT_TYPE_COMPOSITE) + (masking ? "_masking" : ""));
+            Shader shader = shaders.get(brush.getShaderName(Brush.PAINT_TYPE_COMPOSITE));
             if (shader == null) {
                 return null;
             }
@@ -569,13 +565,6 @@ public class Painting {
 
             GLES20.glActiveTexture(GLES20.GL_TEXTURE1);
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, getPaintTexture());
-
-            if (masking) {
-                GLES20.glUniform1i(shader.getUniform("otexture"), 2);
-                GLES20.glUniform1f(shader.getUniform("preview"), 0);
-                GLES20.glActiveTexture(GLES20.GL_TEXTURE2);
-                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, originalBitmapTexture.texture());
-            }
 
             Object lock = null;
             if (brush instanceof Brush.Blurer) {
@@ -1188,11 +1177,7 @@ public class Painting {
         }
 
         if (bitmapTexture != null) {
-            bitmapTexture.cleanResources(false);
-            bitmapTexture = null;
-        }
-        if (bitmapSourceTexture != null) {
-            bitmapSourceTexture.cleanResources(recycle);
+            bitmapTexture.cleanResources(recycle);
         }
         if (bitmapBlurTexture != null) {
             bitmapBlurTexture.cleanResources(recycle);
@@ -1244,36 +1229,10 @@ public class Painting {
     }
 
     private int getTexture() {
-        if (bitmapTexture == null && bitmapSourceTexture != null) {
-            bitmapTexture = createBitmapTexture();
-        }
         if (bitmapTexture != null) {
             return bitmapTexture.texture();
         }
         return 0;
-    }
-
-    private Texture createBitmapTexture() {
-        Texture texture = new Texture(size);
-        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, getReusableFramebuffer());
-        GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0, GLES20.GL_TEXTURE_2D, texture.texture(), 0);
-        GLES20.glViewport(0, 0, (int) size.width, (int) size.height);
-
-        Shader shader = shaders.get("unpremultiply");
-        GLES20.glUseProgram(shader.program);
-        GLES20.glUniformMatrix4fv(shader.getUniform("mvpMatrix"), 1, false, FloatBuffer.wrap(projection));
-        GLES20.glUniform1i(shader.getUniform("texture"), 0);
-        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, bitmapSourceTexture.texture());
-        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ZERO);
-        GLES20.glVertexAttribPointer(0, 2, GLES20.GL_FLOAT, false, 8, vertexBuffer);
-        GLES20.glEnableVertexAttribArray(0);
-        GLES20.glVertexAttribPointer(1, 2, GLES20.GL_FLOAT, false, 8, textureBuffer);
-        GLES20.glEnableVertexAttribArray(1);
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
-        bitmapSourceTexture.cleanResources(false);
-        return texture;
     }
 
     private int getPaintTexture() {

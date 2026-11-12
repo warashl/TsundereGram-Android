@@ -401,7 +401,7 @@ public class StoryViewer implements NotificationCenter.NotificationCenterDelegat
                 chosen[0] = true;
                 if (which == 0) {
                     ownsStoryGhostSession = true;
-                    com.tsunderegram.privacy.utils.AyuGhostUtils.storyGhostSession = true;
+                    com.radolyn.ayugram.utils.AyuGhostUtils.storyGhostSession = true;
                 }
                 storyAskPassed = true;
                 try {
@@ -1949,17 +1949,9 @@ public class StoryViewer implements NotificationCenter.NotificationCenterDelegat
 
     @Override
     public boolean showDialog(Dialog dialog) {
-        return showDialog(dialog, null);
-    }
-
-    @Override
-    public boolean showDialog(Dialog dialog, Dialog.OnDismissListener onDismissListener) {
         try {
             currentDialog = dialog;
             dialog.setOnDismissListener(dialog1 -> {
-                if (onDismissListener != null) {
-                    onDismissListener.onDismiss(dialog1);
-                }
                 if (dialog1 == currentDialog) {
                     currentDialog = null;
                     updatePlayingMode();
@@ -2739,7 +2731,7 @@ public class StoryViewer implements NotificationCenter.NotificationCenterDelegat
     private void releaseStoryGhostSession() {
         if (ownsStoryGhostSession) {
             ownsStoryGhostSession = false;
-            com.tsunderegram.privacy.utils.AyuGhostUtils.storyGhostSession = false;
+            com.radolyn.ayugram.utils.AyuGhostUtils.storyGhostSession = false;
         }
     }
 

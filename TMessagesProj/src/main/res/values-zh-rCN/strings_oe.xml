@@ -34,6 +34,7 @@
     <string name="ProxyDisableNever">从不</string>
     <string name="ProxyDisableAlways">始终</string>
     <string name="ProxyDisableOnMobileData">移动数据</string>
+    <string name="OENowPlayingScrobbling">正在记录播放</string>
     <string name="MainTabsHideCallsSettings">隐藏“通话”标签页</string>
     <string name="MainTabsHideProfile">隐藏个人资料标签页</string>
     <string name="OEBotWebViewUpdate">更新 WebView</string>
@@ -49,8 +50,4 @@
     <string name="OEProfileJoinDateUnknown">无法获取加入日期</string>
     <string name="AppIconsSelect">选择</string>
     <string name="AppIconsKeep">就用这个</string>
-    <!-- TsundereGram: restored after 13.1.1 merge -->
-    <string name="OENowPlayingScrobbling">正在记录播放</string>
-    <!-- TsundereGram: upstream 13.1.1 strings lost in merge -->
-    <string name="QrLoginConfirm">此二维码会在新设备上登录你的账号。仅当你本人在自己的设备上登录时才允许。</string>
 </resources>

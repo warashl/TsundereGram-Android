@@ -289,7 +289,7 @@ public class TL_bots {
         public boolean has_preview_medias;
         public String privacy_policy_url;
         public botAppSettings app_settings;
-        public BotVerifierSettings verifier_settings;
+        public botVerifierSettings verifier_settings;
 
         public static BotInfo TLdeserialize(InputSerializedData stream, int constructor, boolean exception) {
             return TLdeserialize(BotInfo.class, fromConstructor(constructor), stream, constructor, exception);
@@ -419,7 +419,7 @@ public class TL_bots {
                 app_settings = botAppSettings.TLdeserialize(stream, stream.readInt32(exception), exception);
             }
             if (hasFlag(flags, FLAG_9)) {
-                verifier_settings = BotVerifierSettings.TLdeserialize(stream, stream.readInt32(exception), exception);
+                verifier_settings = botVerifierSettings.TLdeserialize(stream, stream.readInt32(exception), exception);
             }
         }
 
@@ -991,80 +991,40 @@ public class TL_bots {
         }
     }
 
-    public static abstract class BotVerifierSettings extends TLObject {
+    public static class botVerifierSettings extends TLObject {
         public static final int constructor = 0xb0cd6617;
 
         public int flags;
         public boolean can_modify_custom_description;
         public long icon;
         public String company;
-        public TLRPC.TL_textWithEntities custom_description;
+        public String custom_description;
 
-        public static BotVerifierSettings TLdeserialize(InputSerializedData stream, int constructor, boolean exception) {
-            return TLdeserialize(BotVerifierSettings.class, fromConstructor(constructor), stream, constructor, exception);
+        public static botVerifierSettings TLdeserialize(InputSerializedData stream, int constructor, boolean exception) {
+            final botVerifierSettings result = botVerifierSettings.constructor != constructor ? null : new botVerifierSettings();
+            return TLdeserialize(botVerifierSettings.class, result, stream, constructor, exception);
         }
 
-        private static BotVerifierSettings fromConstructor(int constructor) {
-            switch (constructor) {
-                case TL_botVerifierSettings.constructor:
-                    return new TL_botVerifierSettings();
-                case TL_botVerifierSettings_layer229.constructor:
-                    return new TL_botVerifierSettings_layer229();
-                default:
-                    return null;
-            }
-        }
-    }
-
-    public static class TL_botVerifierSettings extends BotVerifierSettings {
-        public static final int constructor = 0xA12AEFFF;
-
+        @Override
         public void readParams(InputSerializedData stream, boolean exception) {
             flags = stream.readInt32(exception);
-            can_modify_custom_description = hasFlag(flags, FLAG_1);
+            can_modify_custom_description = hasFlag(flags, 2);
             icon = stream.readInt64(exception);
             company = stream.readString(exception);
-            if (hasFlag(flags, FLAG_0)) {
-                custom_description = TLRPC.TL_textWithEntities.TLdeserialize(stream, stream.readInt32(exception), exception);
+            if (hasFlag(flags, 1)) {
+                custom_description = stream.readString(exception);
             }
         }
 
+        @Override
         public void serializeToStream(OutputSerializedData stream) {
             stream.writeInt32(constructor);
-            flags = setFlag(flags, FLAG_0, custom_description != null);
-            flags = setFlag(flags, FLAG_1, can_modify_custom_description);
+            flags = setFlag(flags, 2, can_modify_custom_description);
             stream.writeInt32(flags);
             stream.writeInt64(icon);
             stream.writeString(company);
-            if (hasFlag(flags, FLAG_0)) {
-                custom_description.serializeToStream(stream);
-            }
-        }
-    }
-
-    public static class TL_botVerifierSettings_layer229 extends TL_botVerifierSettings {
-        public static final int constructor = 0xB0CD6617;
-
-        public void readParams(InputSerializedData stream, boolean exception) {
-            flags = stream.readInt32(exception);
-            can_modify_custom_description = hasFlag(flags, FLAG_1);
-            icon = stream.readInt64(exception);
-            company = stream.readString(exception);
-            if (hasFlag(flags, FLAG_0)) {
-                custom_description = new TLRPC.TL_textWithEntities();
-                custom_description.text = stream.readString(exception);
-            }
-        }
-
-        public void serializeToStream(OutputSerializedData stream) {
-            stream.writeInt32(constructor);
-            flags = setFlag(flags, FLAG_0, custom_description != null);
-            flags = setFlag(flags, FLAG_1, can_modify_custom_description);
-            stream.writeInt32(flags);
-            stream.writeInt64(icon);
-            stream.writeString(company);
-            if (hasFlag(flags, FLAG_0)) {
-                stream.writeString(custom_description.text);
+            if (hasFlag(flags, 1)) {
+                stream.writeString(custom_description);
             }
         }
     }
@@ -1103,35 +1063,7 @@ public class TL_bots {
             stream.writeInt64(icon);
             description.serializeToStream(stream);
         }
-
-        public TLRPC.TL_textWithEntities getDescription() {
-            return description;
-        }
     }
-
-    public static botVerification_plain botVerification() {
-        return new botVerification_plain();
-    }
-
-    public static class botVerification_plain extends botVerification_layer229 {
-        public String description;
-
-        @Override
-        public TLRPC.TL_textWithEntities getDescription() {
-            TLRPC.TL_textWithEntities result = new TLRPC.TL_textWithEntities();
-            result.text = description == null ? "" : description;
-            return result;
-        }
-
-        @Override
-        public void serializeToStream(OutputSerializedData stream) {
-            stream.writeInt32(botVerification_layer229.constructor);
-            stream.writeInt64(bot_id);
-            stream.writeInt64(icon);
-            stream.writeString(description == null ? "" : description);
-        }
-    }
-
     public static class botVerification_layer229 extends BotVerification {
         public static final int constructor = 0xf93cd45c;
 
@@ -1152,33 +1084,34 @@ public class TL_bots {
         }
     }
 
-    public static class setCustomVerification extends TLMethod<TLRPC.Bool> {
-        public static final int constructor = 0xF4946757;
+    public static class setCustomVerification extends TLObject {
+        public static final int constructor = 0x8b89dfbd;
 
         public int flags;
         public boolean enabled;
         public TLRPC.InputUser bot;
         public TLRPC.InputPeer peer;
-        public TLRPC.TL_textWithEntities custom_description;
+        public String custom_description;
 
-        public TLRPC.Bool deserializeResponseT(InputSerializedData stream, int constructor, boolean exception) {
+        @Override
+        public TLObject deserializeResponse(InputSerializedData stream, int constructor, boolean exception) {
             return TLRPC.Bool.TLdeserialize(stream, constructor, exception);
         }
 
+        @Override
         public void serializeToStream(OutputSerializedData stream) {
             stream.writeInt32(constructor);
-            flags = setFlag(flags, FLAG_0, bot != null);
-            flags = setFlag(flags, FLAG_1, enabled);
-            flags = setFlag(flags, FLAG_2, custom_description != null);
+            flags = setFlag(flags, 2, enabled);
             stream.writeInt32(flags);
-            if (hasFlag(flags, FLAG_0)) {
+            if (hasFlag(flags, 1)) {
                 bot.serializeToStream(stream);
             }
             peer.serializeToStream(stream);
-            if (hasFlag(flags, FLAG_2)) {
-                custom_description.serializeToStream(stream);
+            if (hasFlag(flags, 4)) {
+                stream.writeString(custom_description);
             }
         }
+
     }
 
     public static class getBotRecommendations extends TLObject {

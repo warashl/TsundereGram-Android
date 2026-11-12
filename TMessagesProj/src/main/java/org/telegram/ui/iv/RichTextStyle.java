@@ -135,7 +135,7 @@ public class RichTextStyle {
         }
         if (rt instanceof TL_iv.textUrl) {
             TL_iv.textUrl url = (TL_iv.textUrl) rt;
-            TL_iv.textCustomEmoji linkedEmoji = app.tsunderegram.chats.LinkedCustomEmoji.richEmoji(url);
+            TL_iv.textCustomEmoji linkedEmoji = app.exteraless.chats.LinkedCustomEmoji.richEmoji(url);
             if (linkedEmoji != null) {
                 append(sb, linkedEmoji, flags, block, allowInlineButtons);
                 return;

@@ -149,13 +149,6 @@ public class SimpleTextView extends View implements Drawable.Callback {
     public SimpleTextView(Context context) {
         super(context);
         textPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        try {
-            final android.graphics.Typeface ogRegular = org.telegram.tsunderestyle.theme.TsundereStyleFonts.regular(); // TsundereGram: шрифт интерфейса по умолчанию
-            if (ogRegular != null) {
-                textPaint.setTypeface(ogRegular);
-            }
-        } catch (Throwable ignore) {
-        }
         setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
     }
 
@@ -340,10 +333,6 @@ public class SimpleTextView extends View implements Drawable.Callback {
         }
         if (layout.getLineCount() > 0) {
             textWidth = (int) Math.max(Math.ceil(layout.getLineWidth(0)), Math.ceil(layout.getLineRight(0) - layout.getLineLeft(0)));
-            if (hasGradient && gradientShaderWidth != Math.max(dp(80), textWidth)) {
-                // TsundereGram: ширина градиента ника пересчитывается после разметки текста
-                updateGradientShader();
-            }
             if (fullLayout != null) {
                 textHeight = fullLayout.getLineBottom(fullLayout.getLineCount() - 1);
             } else if (maxLines > 1 && layout.getLineCount() > 0) {
@@ -803,22 +792,12 @@ public class SimpleTextView extends View implements Drawable.Callback {
     private int gradientColor1;
     private int gradientColor2;
     private boolean hasGradient;
-    private int gradientShaderWidth = -1;
-
-    /** TsundereGram: «переливающийся» градиент — цвета плавно бегут по тексту. */
-    private boolean gradientAnimated;
-    private float gradientShaderW;
 
     public void setGradient(int color1, int color2) {
-        setGradient(color1, color2, false);
-    }
-
-    public void setGradient(int color1, int color2, boolean animated) {
-        if (!hasGradient || gradientColor1 != color1 || gradientColor2 != color2 || gradientAnimated != animated) {
+        if (!hasGradient || gradientColor1 != color1 || gradientColor2 != color2) {
             hasGradient = true;
             gradientColor1 = color1;
             gradientColor2 = color2;
-            gradientAnimated = animated;
             updateGradientShader();
             invalidate();
         }
@@ -835,13 +814,7 @@ public class SimpleTextView extends View implements Drawable.Callback {
     public void updateGradientShader() {
         if (hasGradient) {
             float w = Math.max(dp(80), textWidth > 0 ? textWidth : getMeasuredWidth());
-            gradientShaderWidth = textWidth > 0 ? (int) w : -1;
-            gradientShaderW = w;
-            if (gradientAnimated) {
-                textPaint.setShader(app.tsunderegram.appearance.TsundereChatCustomizer.createShimmerShader(gradientColor1, gradientColor2, w));
-            } else {
-                textPaint.setShader(new LinearGradient(0, 0, w, 0, gradientColor1, gradientColor2, Shader.TileMode.CLAMP));
-            }
+            textPaint.setShader(new LinearGradient(0, 0, w, 0, gradientColor1, gradientColor2, Shader.TileMode.CLAMP));
         } else {
             textPaint.setShader(null);
         }
@@ -910,10 +883,6 @@ public class SimpleTextView extends View implements Drawable.Callback {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (hasGradient && gradientAnimated && textPaint.getShader() != null) {
-            app.tsunderegram.appearance.TsundereChatCustomizer.updateShimmer(textPaint.getShader(), gradientShaderW);
-            postInvalidateOnAnimation();
-        }
         int textOffsetX = 0;
         layoutX = 0;
         layoutY = 0;
@@ -1056,9 +1025,7 @@ public class SimpleTextView extends View implements Drawable.Callback {
         if (layout != null) {
             if (leftDrawableOutside || rightDrawableOutside || ellipsizeByGradient || paddingRight > 0) {
                 canvas.save();
-                // Клип нужен только по горизонтали; по вертикали оставляем запас,
-                // чтобы у высоких пользовательских шрифтов не срезались хвосты букв.
-                canvas.clipRect(textOffsetX, -dp(8), getMaxTextWidth() - paddingRight - dp(rightDrawable != null && !(rightDrawable instanceof AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable) && rightDrawableOutside ? 2 : 0), getMeasuredHeight() + dp(8));
+                canvas.clipRect(textOffsetX, 0, getMaxTextWidth() - paddingRight - dp(rightDrawable != null && !(rightDrawable instanceof AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable) && rightDrawableOutside ? 2 : 0), getMeasuredHeight());
             }
             Emoji.emojiDrawingUseAlpha = usaAlphaForEmoji;
             if (wrapBackgroundDrawable != null) {

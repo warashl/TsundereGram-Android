@@ -10,7 +10,7 @@ import android.util.SparseArray;
 
 import androidx.annotation.Nullable;
 
-import app.tsunderegram.appearance.AppearanceConfig;
+import app.exteraless.appearance.AppearanceConfig;
 
 import org.telegram.messenger.wallpaper.WallpaperBitmapHolder;
 import org.telegram.messenger.wallpaper.WallpaperGiftPatternPosition;
@@ -375,7 +375,7 @@ public class ChatThemeController extends BaseController {
     }
 
     public TLRPC.WallPaper getDialogWallpaper(long dialogId) {
-        // Перенос TsundereGram 12.9.0:ChatThemeController:950 — «Индивидуальные
+        // Перенос exteraGram 12.9.0:ChatThemeController:950 — «Индивидуальные
         // темы в чатах». NagramX-условие рядом про своё: показ обоев премиума.
         if (!AppearanceConfig.customThemes()) {
             return null;
@@ -815,26 +815,19 @@ public class ChatThemeController extends BaseController {
 
 
         boolean finalApplyOnRequest = applyOnRequest;
-        // TsundereGram: обои «для двоих» без Premium. Если сервер отказал (FOR_BOTH/PREMIUM), повторяем
-        // тем же обработчиком, но только для себя. Раньше повтор шёл отдельной веткой: обои в userFull
-        // не обновлялись, а плашка «Установка обоев… 0%» так и висела в чате.
-        final org.telegram.tgnet.RequestDelegate[] wallpaperDelegate = new org.telegram.tgnet.RequestDelegate[1];
-        wallpaperDelegate[0] = (response, error) -> AndroidUtilities.runOnUIThread(() -> {
-            if (error != null && error.text != null && req.for_both && (error.text.contains("FOR_BOTH") || error.text.contains("PREMIUM"))) {
+        return ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
+            if (error != null && error.text != null && (error.text.contains("FOR_BOTH") || error.text.contains("PREMIUM"))) {
                 req.for_both = false;
-                ConnectionsManager.getInstance(currentAccount).sendRequest(req, wallpaperDelegate[0]);
-                return;
-            }
-            if (error != null) {
-                MessagesController.getInstance(currentAccount).finishWallpaperUpload(wallpaperLocalPath);
-                if (callback != null) {
-                    callback.run();
-                }
-                NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.wallpaperSettedToUser);
-                final org.telegram.ui.Components.BulletinFactory bf = org.telegram.ui.Components.BulletinFactory.global();
-                if (bf != null) {
-                    bf.createErrorBulletin("Не удалось установить обои: " + error.text).show();
-                }
+                ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response2, error2) -> AndroidUtilities.runOnUIThread(() -> {
+                    if (response2 instanceof TLRPC.Updates) {
+                        TLRPC.Updates res2 = (TLRPC.Updates) response2;
+                        MessagesController.getInstance(currentAccount).processUpdateArray(res2.updates, res2.users, res2.chats, false, res2.date);
+                    }
+                    if (callback != null) {
+                        callback.run();
+                    }
+                    NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.wallpaperSettedToUser);
+                }));
                 return;
             }
             if (response instanceof TLRPC.Updates) {
@@ -881,14 +874,12 @@ public class ChatThemeController extends BaseController {
                     }
                 }
                 MessagesController.getInstance(currentAccount).processUpdateArray(res.updates, res.users, res.chats, false, res.date);
-                MessagesController.getInstance(currentAccount).finishWallpaperUpload(wallpaperLocalPath);
                 if (callback != null) {
                     callback.run();
                 }
                 NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.wallpaperSettedToUser);
             }
-        });
-        return ConnectionsManager.getInstance(currentAccount).sendRequest(req, wallpaperDelegate[0]);
+        }));
     }
 
     private final Map<Long, String> usedGiftThemesByUsers = new HashMap<>();

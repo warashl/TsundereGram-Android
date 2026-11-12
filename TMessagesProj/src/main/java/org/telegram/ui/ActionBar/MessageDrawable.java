@@ -564,10 +564,6 @@ public class MessageDrawable extends Drawable {
         if (!oeRemoveMessageTail() && paintToUse == null && paint.getStyle() == Paint.Style.FILL && gradientShader == null && overrideRoundRadius == 0 && overrideRounding <= 0) {
             Drawable background = getBackgroundDrawable();
             if (background != null) {
-                // кэш фона мог пересоздаться с альфой 255 — иначе прозрачный пузырь мигает непрозрачным
-                if (background.getAlpha() != alpha) {
-                    background.setAlpha(alpha);
-                }
                 background.setBounds(bounds);
                 background.draw(canvas);
                 return;
@@ -840,7 +836,7 @@ public class MessageDrawable extends Drawable {
     private Paint deletedOverlayPaint;
 
     private void drawLiquidGlassEffect(Canvas canvas, Path path, Rect bounds) {
-        app.tsunderegram.appearance.LiquidGlassRenderer.drawMessageGlass(canvas, path, bounds);
+        app.exteraless.appearance.LiquidGlassRenderer.drawMessageGlass(canvas, path, bounds);
     }
 
     public void setDeletedMessage(boolean deleted) {
@@ -849,7 +845,7 @@ public class MessageDrawable extends Drawable {
 
     @Override
     public void setAlpha(int alpha) {
-        float bubbleFactor = app.tsunderegram.appearance.TsundereChatCustomizer.getInstance().getBubbleAlpha();
+        float bubbleFactor = app.exteraless.appearance.TsundereChatCustomizer.getInstance().getBubbleAlpha();
         int finalAlpha = (int) (alpha * bubbleFactor);
         if (this.alpha != finalAlpha || this.paint.getAlpha() != finalAlpha) {
             this.alpha = finalAlpha;
@@ -904,8 +900,8 @@ public class MessageDrawable extends Drawable {
     /** openExtera: убрать «хвостик» пузыря сообщения (ChatsConfig.removeMessageTail). */
     private static boolean oeRemoveMessageTail() {
         try {
-            app.tsunderegram.chats.ChatsConfig.ensureLoaded();
-            return app.tsunderegram.chats.ChatsConfig.removeMessageTail.Bool();
+            app.exteraless.chats.ChatsConfig.ensureLoaded();
+            return app.exteraless.chats.ChatsConfig.removeMessageTail.Bool();
         } catch (Exception e) {
             return false;
         }

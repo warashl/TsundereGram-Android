@@ -146,6 +146,4 @@
     <string name="OEAppearanceHidingInfo">Stories, buttons, tabs and AI features</string>
     <string name="OEAppearanceHidingInChats">In Chats</string>
     <string name="OEAppearanceHidingAiPremium">AI and Premium</string>
-<string name="MD3PalettesTitle">MD3 Palettes and Colors</string><string name="MD3PalettesSubtitle">Vanilla, Mocha, Sage, Rose, custom colors</string><string name="TsundereNotificationActive">Notification service is active</string>    <!-- TsundereGram: upstream 13.1.1 strings lost in merge -->
-    <string name="OEKillApp">Close App</string>
-</resources>
+<string name="MD3PalettesTitle">MD3 Palettes and Colors</string><string name="MD3PalettesSubtitle">Vanilla, Mocha, Sage, Rose, custom colors</string><string name="TsundereNotificationActive">Notification service is active</string></resources>

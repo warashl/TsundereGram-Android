@@ -50,7 +50,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Objects;
 
-import app.tsunderegram.OpenExteraConfig;
+import app.exteraless.OpenExteraConfig;
 
 import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.helpers.remote.EmojiHelper;

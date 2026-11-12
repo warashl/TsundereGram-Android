@@ -39,7 +39,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.BackupAgent;
 import org.telegram.messenger.BuildVars;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.FileLog;
@@ -159,7 +158,6 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
     @Keep
     private int contactsSuggestRow;
     private int disableSystemAccountRow;
-    private int noAndroidBackupRow;
     @Keep
     private int contactsSyncRow;
     private int contactsDetailRow;
@@ -592,12 +590,6 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                 if (view instanceof TextCheckCell) {
                     ((TextCheckCell) view).setChecked(newSync);
                 }
-            } else if (position == noAndroidBackupRow) {
-                final boolean exclude = !BackupAgent.isExcludedFromBackup();
-                BackupAgent.setExcludedFromBackup(exclude);
-                if (view instanceof TextCheckCell) {
-                    ((TextCheckCell) view).setChecked(exclude);
-                }
             } else if (position == disableSystemAccountRow) {
                 final boolean disable = !NekoConfig.disableSystemAccount.Bool();
                 NekoConfig.disableSystemAccount.setConfigBool(disable);
@@ -836,7 +828,6 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
         contactsSyncRow = rowCount++;
         contactsSuggestRow = rowCount++;
         disableSystemAccountRow = rowCount++;
-        noAndroidBackupRow = rowCount++;
         contactsDetailRow = rowCount++;
         secretSectionRow = rowCount++;
         secretMapRow = rowCount++;
@@ -1085,7 +1076,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                     position == newChatsRow && !getContactsController().getLoadingGlobalSettings() ||
                     position == emailLoginRow || position == paymentsClearRow || position == secretMapRow ||
                     position == contactsSyncRow || position == passportRow || position == contactsDeleteRow ||
-                    position == contactsSuggestRow || position == disableSystemAccountRow || position == noAndroidBackupRow || position == autoDeleteMesages || position == botsBiometryRow;
+                    position == contactsSuggestRow || position == disableSystemAccountRow || position == autoDeleteMesages || position == botsBiometryRow;
         }
 
         @Override
@@ -1299,8 +1290,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                         } else {
                             privacyCell.setText(LocaleController.getString(R.string.SyncContactsInfoOff));
                         }*/
-                        privacyCell.setText(getString("SuggestContactsInfo", R.string.SuggestContactsInfo)
-                                + "\n\n«Не включать в резервную копию Android»: данные TsundereGram не попадут в облачную копию Google и при переносе на новый телефон — сеанс входа никуда не уйдёт с устройства.");
+                        privacyCell.setText(getString("SuggestContactsInfo", R.string.SuggestContactsInfo));
                     } else if (position == newChatsSectionRow) {
                         privacyCell.setText(getString("ArchiveAndMuteInfo", R.string.ArchiveAndMuteInfo));
                     }
@@ -1332,9 +1322,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                     } else if (position == contactsSuggestRow) {
                         textCheckCell.setTextAndCheck(getString("SuggestContacts", R.string.SuggestContacts), newSuggest, true);
                     } else if (position == disableSystemAccountRow) {
-                        textCheckCell.setTextAndCheck(getString(R.string.DisableSystemAccount), NekoConfig.disableSystemAccount.Bool(), true);
-                    } else if (position == noAndroidBackupRow) {
-                        textCheckCell.setTextAndCheck("Не включать в резервную копию Android", BackupAgent.isExcludedFromBackup(), false);
+                        textCheckCell.setTextAndCheck(getString(R.string.DisableSystemAccount), NekoConfig.disableSystemAccount.Bool(), false);
                     } else if (position == newChatsRow) {
                         textCheckCell.setTextAndCheck(getString("ArchiveAndMute", R.string.ArchiveAndMute), archiveChats, false);
                     }
@@ -1452,7 +1440,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                 return 1;
             } else if (position == securitySectionRow || position == advancedSectionRow || position == privacySectionRow || position == secretSectionRow || position == botsSectionRow || position == contactsSectionRow || position == newChatsHeaderRow) {
                 return 2;
-            } else if (position == secretWebpageRow || position == contactsSyncRow || position == contactsSuggestRow || position == disableSystemAccountRow || position == noAndroidBackupRow || position == newChatsRow) {
+            } else if (position == secretWebpageRow || position == contactsSyncRow || position == contactsSuggestRow || position == disableSystemAccountRow || position == newChatsRow) {
                 return 3;
             } else if (position == botsAndWebsitesShadowRow) {
                 return 4;

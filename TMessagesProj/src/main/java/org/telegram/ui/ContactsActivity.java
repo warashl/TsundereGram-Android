@@ -254,8 +254,8 @@ public class ContactsActivity extends BaseFragment implements FactorAnimator.Tar
         getContactsController().checkInviteText();
         getContactsController().reloadContactsStatusesMaybe(false);
 
-        additionNavigationBarHeight = hasMainTabs ? dp(app.tsunderegram.appearance.MainTabsUiHelper.getTabsViewHeightDp()) : 0;
-        additionFloatingButtonOffset = hasMainTabs ? dp(app.tsunderegram.appearance.MainTabsUiHelper.getTabsFabOffsetDp()) : 0;
+        additionNavigationBarHeight = hasMainTabs ? dp(app.exteraless.appearance.MainTabsUiHelper.getTabsViewHeightDp()) : 0;
+        additionFloatingButtonOffset = hasMainTabs ? dp(app.exteraless.appearance.MainTabsUiHelper.getTabsFabOffsetDp()) : 0;
 
         return true;
     }
@@ -284,8 +284,8 @@ public class ContactsActivity extends BaseFragment implements FactorAnimator.Tar
         searching = false;
         searchWas = false;
 
-        additionNavigationBarHeight = hasMainTabs ? dp(app.tsunderegram.appearance.MainTabsUiHelper.getTabsViewHeightDp()) : 0;
-        additionFloatingButtonOffset = hasMainTabs ? dp(app.tsunderegram.appearance.MainTabsUiHelper.getTabsFabOffsetDp()) : 0;
+        additionNavigationBarHeight = hasMainTabs ? dp(app.exteraless.appearance.MainTabsUiHelper.getTabsViewHeightDp()) : 0;
+        additionFloatingButtonOffset = hasMainTabs ? dp(app.exteraless.appearance.MainTabsUiHelper.getTabsFabOffsetDp()) : 0;
 
         actionBar.setAllowOverlayTitle(true);
         if (destroyAfterSelect) {
@@ -1725,7 +1725,7 @@ public class ContactsActivity extends BaseFragment implements FactorAnimator.Tar
 
 
         iBlur3PositionActionBar.set(0, -additionalList, fragmentView.getMeasuredWidth(), actionBar.getMeasuredHeight() + additionalList + additionalSearch );
-        app.tsunderegram.appearance.MainTabsUiHelper.setBlurBounds(iBlur3PositionMainTabs, fragmentView, navigationBarHeight);
+        app.exteraless.appearance.MainTabsUiHelper.setBlurBounds(iBlur3PositionMainTabs, fragmentView, navigationBarHeight);
         iBlur3PositionMainTabs.inset(0, LiteMode.isEnabled(LiteMode.FLAG_LIQUID_GLASS) ? 0 : -dp(48));
 
         scrollableViewNoiseSuppressor.setupRenderNodes(iBlur3Positions, hasMainTabs ? 2 : 1);

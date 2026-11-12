@@ -40,7 +40,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.graphics.ColorUtils;
 
-import com.tsunderegram.privacy.AyuConstants;
+import com.radolyn.ayugram.AyuConstants;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

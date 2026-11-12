@@ -401,18 +401,12 @@ public class DialogObject {
         if (dialogId >= 0) {
             final TLRPC.User user = MessagesController.getInstance(UserConfig.selectedAccount).getUser(dialogId);
             if (user == null) return 0;
-            return getEmojiStatusDocumentId(user);
+            return getEmojiStatusDocumentId(user.emoji_status);
         } else {
             final TLRPC.Chat chat = MessagesController.getInstance(UserConfig.selectedAccount).getChat(-dialogId);
             if (chat == null) return 0;
             return getEmojiStatusDocumentId(chat.emoji_status);
         }
-    }
-
-    /** Статус пользователя с учётом локального премиума (значок, выбранный без Telegram Premium). */
-    public static long getEmojiStatusDocumentId(TLRPC.User user) {
-        final Long id = UserObject.getEmojiStatusDocumentId(user);
-        return id == null ? 0 : id;
     }
 
     public static long getEmojiStatusDocumentId(TLRPC.EmojiStatus emojiStatus) {

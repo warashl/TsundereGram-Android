@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Строки фич, перенесённых из TsundereGram. -->
+<!-- Строки фич, перенесённых из exteraGram. -->
 <resources>
     <string name="OpenExtera" translatable="false">TsundereGram</string>
     <string name="OpenExteraInfo">Make the client truly yours</string>
@@ -25,8 +25,7 @@
     <string name="QrWifiPasswordCopied">Password copied</string>
     <string name="QrWifiUnknownNetwork">Network name is missing from the code</string>
     <string name="QrLoginHint">This code logs into an account. Use Settings → Devices → Link Desktop Device — that screen checks the code and protects your account.</string>
-    <string name="AppIconTsundereGram" translatable="false">TsundereGram</string>
-    <string name="AppIconArrow">Arrow</string>
+    <string name="AppIconExteraless" translatable="false">TsundereGram</string>
     <string name="AppIconBlueprint" translatable="false">Blueprint</string>
     <string name="AppIconRed" translatable="false">Red</string>
     <string name="AppIconNya" translatable="false">Nya</string>
@@ -39,7 +38,7 @@
     <string name="AppIconPlus" translatable="false">Plus</string>
     <string name="AppIconsSelect">Select</string>
     <string name="AppIconsKeep">Keep this one</string>
-    <string name="AppIconInfoTsundereGram"><!-- сюда подпись --></string>
+    <string name="AppIconInfoExteraless"><!-- сюда подпись --></string>
     <string name="AppIconInfoBlueprint"><!-- сюда подпись --></string>
     <string name="AppIconInfoRed"><!-- сюда подпись --></string>
     <string name="AppIconInfoNya"><!-- сюда подпись --></string>
@@ -75,6 +74,7 @@
     <string name="ProxyDisableOnVpn" translatable="false">VPN</string>
     <string name="ProxyDisableOnMobileData">Mobile data</string>
     <string name="ProxyDisableOnWiFi" translatable="false">Wi-Fi</string>
+    <string name="OENowPlayingScrobbling">Scrobbling now</string>
     <string name="MainTabsHideCallsSettings">Hide Calls tab</string>
     <string name="MainTabsHideProfile">Hide Profile tab</string>
     <string name="OEBotWebViewUpdate">Update WebView</string>
@@ -138,8 +138,4 @@
     <string name="ProfileBannerGlobalDeleted">Global banner deleted</string>
     <string name="ProfileBannerDeleting">Deleting banner…</string>
     <string name="OpenExteraGhost">Ghost Mode</string>
-    <!-- TsundereGram: restored after 13.1.1 merge -->
-    <string name="OENowPlayingScrobbling">Scrobbling now</string>
-    <!-- TsundereGram: upstream 13.1.1 strings lost in merge -->
-    <string name="QrLoginConfirm">This code signs a new device into your account. Allow only if you are logging in on your own device.</string>
 </resources>

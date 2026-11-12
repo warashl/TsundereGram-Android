@@ -139,12 +139,7 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
     @Override
     public boolean onFragmentCreate() {
         MessagesController.getGlobalMainSettings().edit().putLong("intro_crashed_time", System.currentTimeMillis()).apply();
-        loadIntroTexts();
-        return true;
-    }
 
-    /** Тексты страниц берутся из текущего языка; вызывается снова, когда языковой пакет догрузился. */
-    private void loadIntroTexts() {
         titles = new CharSequence[]{
                 null,
                 LocaleController.getString(R.string.Page2Title),
@@ -161,32 +156,7 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
                 LocaleController.getString(R.string.Page4Message),
                 LocaleController.getString(R.string.Page6Message)
         };
-    }
-
-    /**
-     * На свежей установке язык системы (например, русский) выбирается сразу, но его пакет
-     * ещё не скачан, и экран создаётся с английскими строками. Когда пакет приходит,
-     * обновляем все тексты, иначе стартовый экран так и остаётся на английском.
-     */
-    private void refreshIntroTexts() {
-        if (destroyed || fragmentView == null) {
-            return;
-        }
-        try {
-            loadIntroTexts();
-            titles[0] = LocaleController.getAppName();
-            if (startMessagingButton != null) {
-                startMessagingButton.setText(LocaleController.getString(R.string.StartMessaging));
-            }
-            if (viewPager != null) {
-                final int current = viewPager.getCurrentItem();
-                viewPager.setAdapter(new IntroAdapter());
-                viewPager.setCurrentItem(current, false);
-            }
-            checkContinueText();
-        } catch (Throwable e) {
-            FileLog.e(e);
-        }
+        return true;
     }
 
     @Override
@@ -453,7 +423,6 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
         fragmentView = scrollView;
 
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.suggestedLangpack);
-        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.reloadInterface);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.configLoaded);
         ConnectionsManager.getInstance(currentAccount).updateDcSettings();
         LocaleController.getInstance().loadRemoteLanguages(currentAccount);
@@ -498,7 +467,6 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
         super.onFragmentDestroy();
         destroyed = true;
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.suggestedLangpack);
-        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.reloadInterface);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.configLoaded);
         if (switchLanguageDelegate != null) {
             NotificationCenter.getGlobalInstance().removeObserver(switchLanguageDelegate, NotificationCenter.reloadInterface);
@@ -627,10 +595,6 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
     public void didReceivedNotification(int id, int account, Object... args) {
         if (id == NotificationCenter.suggestedLangpack || id == NotificationCenter.configLoaded) {
             checkContinueText();
-        } else if (id == NotificationCenter.reloadInterface) {
-            if (switchLanguageDelegate == null && !startPressed) {
-                refreshIntroTexts();
-            }
         }
     }
 
@@ -763,7 +727,7 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
             Bitmap icon = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
             Canvas iconCanvas = new Canvas(icon);
             Resources resources = getParentActivity().getResources();
-            for (int resId : new int[]{R.drawable.tsunderegram_icon_background, R.drawable.tsunderegram_icon_foreground}) {
+            for (int resId : new int[]{R.drawable.exteraless_icon_background, R.drawable.exteraless_icon_foreground}) {
                 Drawable layer = resources.getDrawable(resId);
                 if (layer == null) {
                     continue;

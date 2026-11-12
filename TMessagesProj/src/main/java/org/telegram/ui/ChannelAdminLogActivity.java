@@ -944,9 +944,9 @@ public class ChannelAdminLogActivity extends BaseFragment implements Notificatio
         });
 
         avatarContainer = new ChatAvatarContainer(context, null, false);
-        app.tsunderegram.appearance.ChatHeaderUiHelper.setupGlassAvatarContainer(avatarContainer);
+        app.exteraless.appearance.ChatHeaderUiHelper.setupGlassAvatarContainer(avatarContainer);
         avatarContainer.setOccupyStatusBar(!AndroidUtilities.isTablet());
-        actionBar.addView(avatarContainer, 0, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.LEFT, app.tsunderegram.appearance.ChatHeaderUiHelper.isMaterial3ChatHeaderStyle() ? app.tsunderegram.appearance.ChatHeaderUiHelper.getAvatarContainerLeftMargin(false) : 54, 0, 52, 0));
+        actionBar.addView(avatarContainer, 0, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.LEFT, app.exteraless.appearance.ChatHeaderUiHelper.isMaterial3ChatHeaderStyle() ? app.exteraless.appearance.ChatHeaderUiHelper.getAvatarContainerLeftMargin(false) : 54, 0, 52, 0));
 
         ActionBarMenu menu = actionBar.createMenu();
         searchItem = menu.addItem(0, R.drawable.outline_header_search).setIsSearchField(true).setActionBarMenuItemSearchListener(new ActionBarMenuItem.ActionBarMenuItemSearchListener() {
@@ -1156,7 +1156,7 @@ public class ChannelAdminLogActivity extends BaseFragment implements Notificatio
         contentView.setOccupyStatusBar(!AndroidUtilities.isTablet());
         contentView.setBackgroundImage(Theme.getCachedWallpaper(), Theme.isWallpaperMotion());
         actionBar.setupGlass(glassBackgroundDrawableFactory, BlurredBackgroundProviderImpl.topPanelChatActivity(resourceProvider));
-        app.tsunderegram.appearance.ChatHeaderUiHelper.applyChatHeaderGlassStyle(actionBar);
+        app.exteraless.appearance.ChatHeaderUiHelper.applyChatHeaderGlassStyle(actionBar);
         emptyViewContainer = new FrameLayout(context);
         emptyViewContainer.setVisibility(View.INVISIBLE);
         contentView.addView(emptyViewContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER));
@@ -1463,8 +1463,8 @@ public class ChannelAdminLogActivity extends BaseFragment implements Notificatio
 
         chatActivityFadeView = new ChatActivityFadeView(context);
         chatActivityFadeView.setup(navbarContentDrawableFactory);
-        app.tsunderegram.appearance.ChatHeaderUiHelper.setupChatTopFade(chatActivityFadeView, actionBar,
-                getThemedColor(app.tsunderegram.appearance.ChatHeaderUiHelper.getChatFadeColorKey()),
+        app.exteraless.appearance.ChatHeaderUiHelper.setupChatTopFade(chatActivityFadeView, actionBar,
+                getThemedColor(app.exteraless.appearance.ChatHeaderUiHelper.getChatFadeColorKey()),
                 AndroidUtilities.statusBarHeight + ActionBar.getCurrentActionBarHeight() + dp(2));
         chatActivityFadeView.setFadeZoneBottom(AndroidUtilities.navigationBarHeight + dp(9) + dp(44) + dp(7));
         chatActivityFadeView.setFadeHeightBottom(dp(60));

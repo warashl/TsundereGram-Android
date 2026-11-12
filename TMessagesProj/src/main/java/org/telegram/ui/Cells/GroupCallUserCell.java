@@ -481,8 +481,8 @@ public class GroupCallUserCell extends FrameLayout {
             botVerificationIcon = DialogObject.getBotVerificationIcon(currentUser);
             if (currentUser != null && currentUser.verified) {
                 rightDrawable.set(verifiedDrawable = (verifiedDrawable == null ? new VerifiedDrawable(getContext()) : verifiedDrawable), animated);
-            } else if (currentUser != null && DialogObject.getEmojiStatusDocumentId(currentUser) != 0) {
-                rightDrawable.set(DialogObject.getEmojiStatusDocumentId(currentUser), animated);
+            } else if (currentUser != null && DialogObject.getEmojiStatusDocumentId(currentUser.emoji_status) != 0) {
+                rightDrawable.set(DialogObject.getEmojiStatusDocumentId(currentUser.emoji_status), animated);
             } else if (currentUser != null && currentUser.premium) {
                 if (premiumDrawable == null) {
                     premiumDrawable = getContext().getResources().getDrawable(R.drawable.msg_premium_liststar).mutate();
@@ -953,16 +953,6 @@ public class GroupCallUserCell extends FrameLayout {
         avatarProgressView.setScaleY(avatarWavesDrawable.getAvatarScale());
 
         super.dispatchDraw(canvas);
-
-        // TsundereGram: рамка аватарки участника звонка
-        long frameDialogId = currentUser != null ? currentUser.id : currentChat != null ? -currentChat.id : 0;
-        if (frameDialogId != 0 && progressToAvatarPreview == 0 && avatarImageView.getVisibility() == VISIBLE) {
-            float sc = avatarImageView.getScaleX();
-            float w = avatarImageView.getMeasuredWidth() * sc;
-            float h = avatarImageView.getMeasuredHeight() * sc;
-            app.tsunderegram.frames.ProfileFrameController.getInstance().drawFrame(canvas, frameDialogId,
-                    cx - w / 2f, cy - h / 2f, w, h, avatarImageView.getAlpha());
-        }
     }
 
     public void getAvatarPosition(int[] pos) {

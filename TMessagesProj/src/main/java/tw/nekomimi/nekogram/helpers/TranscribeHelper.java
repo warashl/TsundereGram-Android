@@ -50,7 +50,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import app.tsunderegram.speech.VoskTranscriber;
+import app.exteraless.speech.VoskTranscriber;
 import tw.nekomimi.nekogram.utils.HttpClient;
 import xyz.nextalone.nagram.NaConfig;
 
@@ -96,8 +96,8 @@ public class TranscribeHelper {
         if (fragment == null) {
             return;
         }
-        final app.tsunderegram.settings.OpenExteraChatsActivity activity =
-                new app.tsunderegram.settings.OpenExteraChatsActivity(app.tsunderegram.settings.OpenExteraChatsActivity.SCREEN_MEDIA);
+        final app.exteraless.settings.OpenExteraChatsActivity activity =
+                new app.exteraless.settings.OpenExteraChatsActivity(app.exteraless.settings.OpenExteraChatsActivity.SCREEN_MEDIA);
         fragment.presentFragment(activity);
         AndroidUtilities.runOnUIThread(() -> activity.scrollToRow("transcribeProvider", () -> {}));
     }
@@ -445,10 +445,7 @@ public class TranscribeHelper {
     }
 
     private static void requestWorkersAi(String path, boolean video, BiConsumer<String, Exception> callback) {
-        // Без своих ключей Cloudflare распознаём через сервер TsundereGram (там тот же Whisper в Workers AI):
-        // голосовые расшифровываются сразу, без настройки.
-        final boolean ownCredentials = !TextUtils.isEmpty(NaConfig.INSTANCE.getTranscribeProviderCfAccountID().String()) && !TextUtils.isEmpty(NaConfig.INSTANCE.getTranscribeProviderCfApiToken().String());
-        if (!ownCredentials && !app.tsunderegram.security.TsundereApi.isConfigured()) {
+        if (TextUtils.isEmpty(NaConfig.INSTANCE.getTranscribeProviderCfAccountID().String()) || TextUtils.isEmpty(NaConfig.INSTANCE.getTranscribeProviderCfApiToken().String())) {
             callback.accept(null, new SetupRequiredException(
                     getString(R.string.TranscribeSetupCredentials)));
             return;
@@ -476,10 +473,6 @@ public class TranscribeHelper {
             }
             String base64Audio = Base64.encodeToString(audioBytes, Base64.NO_WRAP);
             String jsonBody = "{\"audio\":\"" + base64Audio + "\"}";
-            if (!ownCredentials) {
-                requestTsundereServer(jsonBody, callback);
-                return;
-            }
 
             var client = getOkHttpClient();
             var request = new Request.Builder()
@@ -494,79 +487,12 @@ public class TranscribeHelper {
                     callback.accept(whisperResponse.result.text, null);
                 } else {
                     var errors = whisperResponse.errors;
-                    callback.accept(null, new Exception(errors == null || errors.isEmpty() ? "HTTP " + response.code() : errors.size() == 1 ? errors.get(0).message : errors.toString()));
+                    callback.accept(null, new Exception(errors.size() == 1 ? errors.get(0).message : errors.toString()));
                 }
             } catch (Exception e) {
                 callback.accept(null, e);
             }
         });
-    }
-
-    /** POST /transcribe на сервере TsundereGram (Whisper в Workers AI), с подписью пользователя Telegram. */
-    private static void requestTsundereServer(String jsonBody, BiConsumer<String, Exception> callback) {
-        final byte[] payload = jsonBody.getBytes(java.nio.charset.StandardCharsets.UTF_8);
-        Exception lastError = null;
-        for (int attempt = 0; attempt < 2; attempt++) {
-            java.net.HttpURLConnection connection = null;
-            try {
-                connection = (java.net.HttpURLConnection) new java.net.URL(app.tsunderegram.security.TsundereApi.base() + "/transcribe").openConnection();
-                connection.setRequestMethod("POST");
-                connection.setConnectTimeout(20_000);
-                connection.setReadTimeout(120_000);
-                connection.setDoOutput(true);
-                connection.setFixedLengthStreamingMode(payload.length);
-                connection.setRequestProperty("Content-Type", "application/json");
-                app.tsunderegram.security.TsundereApi.authorize(connection);
-                try (var out = connection.getOutputStream()) {
-                    out.write(payload);
-                }
-                int code = connection.getResponseCode();
-                var stream = code >= 400 ? connection.getErrorStream() : connection.getInputStream();
-                String body = "";
-                if (stream != null) {
-                    try (var in = stream) {
-                        java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
-                        byte[] buf = new byte[8192];
-                        int n;
-                        while ((n = in.read(buf)) > 0) {
-                            bos.write(buf, 0, n);
-                        }
-                        body = bos.toString("UTF-8");
-                    }
-                }
-                if (code == 401 && attempt == 0) {
-                    // подпись устарела — берём новую и пробуем ещё раз
-                    app.tsunderegram.security.TsundereApi.invalidateAuth();
-                    lastError = new Exception("HTTP 401");
-                    continue;
-                }
-                WhisperResponse whisperResponse = null;
-                try {
-                    whisperResponse = gson.fromJson(body, WhisperResponse.class);
-                } catch (Exception ignore) {
-                }
-                if (whisperResponse != null && Boolean.TRUE.equals(whisperResponse.success) && whisperResponse.result != null) {
-                    String text = whisperResponse.result.text;
-                    if (TextUtils.isEmpty(text)) {
-                        callback.accept(null, new Exception(getString(R.string.VoskNothingRecognized)));
-                    } else {
-                        callback.accept(text, null);
-                    }
-                    return;
-                }
-                var errors = whisperResponse != null ? whisperResponse.errors : null;
-                String message = errors != null && !errors.isEmpty() ? errors.get(0).toString() : "HTTP " + code;
-                callback.accept(null, new Exception(app.tsunderegram.security.TsundereApi.explain(message)));
-                return;
-            } catch (Exception e) {
-                lastError = e;
-            } finally {
-                if (connection != null) {
-                    connection.disconnect();
-                }
-            }
-        }
-        callback.accept(null, lastError != null ? new Exception(app.tsunderegram.security.TsundereApi.explain(lastError)) : new Exception("transcribe failed"));
     }
 
     private static void requestGeminiAi(String path, boolean video, BiConsumer<String, Exception> callback) {

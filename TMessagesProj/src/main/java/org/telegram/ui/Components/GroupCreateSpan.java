@@ -344,7 +344,7 @@ public class GroupCreateSpan extends View {
         canvas.save();
         rect.set(0, 0, getMeasuredWidth(), dp(small ? 28 : 32));
         backPaint.setColor(Color.argb(colors[6] + (int) ((colors[7] - colors[6]) * progress), colors[0] + (int) ((colors[1] - colors[0]) * progress), colors[2] + (int) ((colors[3] - colors[2]) * progress), colors[4] + (int) ((colors[5] - colors[4]) * progress)));
-        final float spanCorners = app.tsunderegram.appearance.AppearanceConfig.getAvatarCorners(dp(small ? 28 : 32));
+        final float spanCorners = app.exteraless.appearance.AppearanceConfig.getAvatarCorners(dp(small ? 28 : 32));
         canvas.drawRoundRect(rect, spanCorners, spanCorners, backPaint);
         if (progress != 1f) {
             imageReceiver.draw(canvas);

@@ -28,7 +28,7 @@ import org.telegram.ui.Components.AnimatedLinearLayout;
 import org.telegram.ui.Components.CubicBezierInterpolator;
 import org.telegram.ui.Components.glass.GlassTabView;
 
-import app.tsunderegram.appearance.MainTabsUiHelper;
+import app.exteraless.appearance.MainTabsUiHelper;
 
 import java.util.HashSet;
 import java.util.Set;

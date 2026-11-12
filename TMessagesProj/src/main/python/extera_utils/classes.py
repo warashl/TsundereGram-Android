@@ -1,11 +1,11 @@
-"""extera_utils.classes — class-proxy DSL for the tsunderegram plugin engine.
+"""extera_utils.classes — class-proxy DSL for the exteraless plugin engine.
 
 Generates REAL Java classes at runtime (subclass Java classes, override methods,
 implement interfaces, declare fields) via the dexmaker-backed
-app.tsunderegram.plugins.utils.ClassProxyFactory on the Java side.
+app.exteraless.plugins.utils.ClassProxyFactory on the Java side.
 
 Scope notes for this port (stock Chaquopy 17.0.0):
-- The built-in J-modifiers of TsundereGram's Chaquopy fork (obj.JA/JGS/JIR/JS,
+- The built-in J-modifiers of exteraGram's Chaquopy fork (obj.JA/JGS/JIR/JS,
   ``from java import JNone``) are runtime-level features of THEIR fork and are
   OUT OF SCOPE here. Use the ``J()``/JavaHelper wrapper below instead.
 - jMVELmethod/jMVELoverride are accepted as aliases of jmethod/joverride, but
@@ -42,7 +42,7 @@ def _internal(name):
 
 
 try:
-    from app.tsunderegram.plugins import PluginServices
+    from app.exteraless.plugins import PluginServices
 except Exception:  # host interpreter (no Chaquopy) — generation paths raise
     PluginServices = None
 
@@ -400,7 +400,7 @@ def super():
 
 def _invoke_super(info, proxy, py_key, args):
     if PluginServices is None:
-        raise RuntimeError("class proxy requires the tsunderegram Android runtime")
+        raise RuntimeError("class proxy requires the exteraless Android runtime")
     return PluginServices.invokeSuper(info.class_key, proxy, py_key, _object_array(args))
 
 
@@ -524,7 +524,7 @@ def _ensure_java_class(info):
     if info.class_key is not None:
         return info.class_key
     if PluginServices is None:
-        raise RuntimeError("class proxy requires the tsunderegram Android runtime (Chaquopy)")
+        raise RuntimeError("class proxy requires the exteraless Android runtime (Chaquopy)")
     with info.lock:
         if info.class_key is not None:
             return info.class_key
@@ -708,7 +708,7 @@ def _log(message):
         return
     except Exception:
         pass
-    print(f"[tsunderegram:classes] {message}", file=sys.stderr)
+    print(f"[exteraless:classes] {message}", file=sys.stderr)
 
 
 def _return_defaults(info):

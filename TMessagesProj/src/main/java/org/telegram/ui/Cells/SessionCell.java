@@ -37,7 +37,6 @@ import androidx.core.content.ContextCompat;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
-import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
@@ -269,8 +268,8 @@ public class SessionCell extends FrameLayout {
 
             if (isTsundere) {
                 appName = "TsundereGram";
-            } else if (appName != null && (appName.contains("tsunderegram") || appName.contains("TsundereGram"))) {
-                appName = "TsundereGram";
+            } else if (appName != null && (appName.contains("exteraless") || appName.contains("exteraGram"))) {
+                appName = "exteraGram";
             }
             stringBuilder.append(appName != null ? appName : "");
             if (session.app_version != null && !session.app_version.isEmpty()) {
@@ -346,48 +345,7 @@ public class SessionCell extends FrameLayout {
         return createDrawable(sz, auth);
     }
 
-    private static android.graphics.Bitmap tsundereSessionBitmap;
-
-    /** Сеанс TsundereGram (имя приложения в любом регистре или текущее устройство). */
-    public static boolean isTsundereSession(TLRPC.TL_authorization session) {
-        if (session == null) {
-            return false;
-        }
-        final String app = session.app_name == null ? "" : session.app_name.toLowerCase();
-        final String ver = session.app_version == null ? "" : session.app_version.toLowerCase();
-        return app.contains("tsundere") || ver.contains("tsundere") || app.contains("tsunderegram") || (session.flags & 1) != 0;
-    }
-
-    /** Аватар сеанса TsundereGram: наша стрелка вместо зелёного андроида. */
-    private static CombinedDrawable createTsundereDrawable(int sz) {
-        try {
-            if (tsundereSessionBitmap == null) {
-                tsundereSessionBitmap = android.graphics.BitmapFactory.decodeResource(ApplicationLoader.applicationContext.getResources(), R.drawable.tsundere_arrow_avatar);
-            }
-            if (tsundereSessionBitmap == null) {
-                return null;
-            }
-            final androidx.core.graphics.drawable.RoundedBitmapDrawable icon =
-                    androidx.core.graphics.drawable.RoundedBitmapDrawableFactory.create(ApplicationLoader.applicationContext.getResources(), tsundereSessionBitmap);
-            icon.setCircular(true);
-            icon.setAntiAlias(true);
-            final Drawable bg = new CircleGradientDrawable(dp(sz), 0xFFD3ABE9, 0xFFC9A3E8);
-            final CombinedDrawable drawable = new CombinedDrawable(bg, icon);
-            drawable.setIconSize(dp(sz), dp(sz));
-            return drawable;
-        } catch (Throwable e) {
-            FileLog.e(e);
-            return null;
-        }
-    }
-
     public static CombinedDrawable createDrawable(int sz, TLRPC.TL_authorization session) {
-        if (isTsundereSession(session)) {
-            final CombinedDrawable tsundere = createTsundereDrawable(sz);
-            if (tsundere != null) {
-                return tsundere;
-            }
-        }
         String platform = session.platform.toLowerCase();
         if (platform.isEmpty()) {
             platform = session.system_version.toLowerCase();
@@ -432,9 +390,9 @@ public class SessionCell extends FrameLayout {
             colorKey = Theme.key_avatar_backgroundCyan;
             colorKey2 = Theme.key_avatar_background2Cyan;
         } else if (session.app_name.contains("Nagram X") || session.app_name.contains("NagramX")
-                || session.app_name.contains("tsunderegram") || session.app_name.contains("TsundereGram")
+                || session.app_name.contains("exteraless") || session.app_name.contains("TsundereGram")
                 || (session.flags & 1) != 0) {
-            iconId = R.drawable.tsunderegram_notification;
+            iconId = R.drawable.exteraless_notification;
             colorKey = Theme.key_avatar_backgroundBlue;
             colorKey2 = Theme.key_avatar_background2Blue;
         } else if (platform.contains("android")) {
@@ -484,12 +442,6 @@ public class SessionCell extends FrameLayout {
         CombinedDrawable drawable = new CombinedDrawable(bgDrawable, iconDrawable);
         if (platform != null && platform.contains("fragment")) {
             drawable.setIconSize((int) (iconDrawable.getIntrinsicWidth() / 44.0f * sz), (int) (iconDrawable.getIntrinsicHeight() / 44.0f * sz));
-        } else if (iconDrawable.getIntrinsicWidth() > 0 && Math.abs(iconDrawable.getIntrinsicWidth() - dp(sz)) > dp(2)) {
-            // TsundereGram: иконка из пакета другого размера — вписываем в круг, чтобы не вылезала за его края
-            final int full = dp(sz);
-            final boolean vector = iconDrawable.getIntrinsicWidth() <= dp(30);
-            final int side = vector ? (int) (full * 0.55f) : full;
-            drawable.setIconSize(side, side);
         }
         return drawable;
     }

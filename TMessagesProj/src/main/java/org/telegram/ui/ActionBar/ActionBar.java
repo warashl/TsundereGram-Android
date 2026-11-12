@@ -84,7 +84,7 @@ import me.vkryl.android.animator.BoolAnimator;
 import me.vkryl.android.animator.FactorAnimator;
 import me.vkryl.android.animator.ReplaceAnimator;
 
-import app.tsunderegram.appearance.AppearanceConfig;
+import app.exteraless.appearance.AppearanceConfig;
 import tw.nekomimi.nekogram.NekoConfig;
 import xyz.nextalone.nagram.NaConfig;
 
@@ -238,12 +238,12 @@ public class ActionBar extends FrameLayout implements FactorAnimator.Target, The
         glassDrawable = factory.create(this)
             .setColorProvider(colorProvider)
             .setPadding(dp(6));
-        final int glassAvatarSizeDp = app.tsunderegram.appearance.ChatHeaderUiHelper.getChatAvatarSizeDp();
-        glassAvatarGap = app.tsunderegram.appearance.ChatHeaderUiHelper.isMaterial3ChatHeaderStyle()
+        final int glassAvatarSizeDp = app.exteraless.appearance.ChatHeaderUiHelper.getChatAvatarSizeDp();
+        glassAvatarGap = app.exteraless.appearance.ChatHeaderUiHelper.isMaterial3ChatHeaderStyle()
             ? dp(3.33f)
-            : (dp(46) - app.tsunderegram.appearance.ChatHeaderUiHelper.getAvatarSizePx(glassAvatarSizeDp)) / 2f;
+            : (dp(46) - app.exteraless.appearance.ChatHeaderUiHelper.getAvatarSizePx(glassAvatarSizeDp)) / 2f;
         glassDrawableLeftRadius = Math.min(dp(23),
-            app.tsunderegram.appearance.ChatHeaderUiHelper.getChatAvatarRadius(glassAvatarSizeDp, isForum, false) + glassAvatarGap);
+            app.exteraless.appearance.ChatHeaderUiHelper.getChatAvatarRadius(glassAvatarSizeDp, isForum, false) + glassAvatarGap);
         glassAvatarRadius = glassDrawableLeftRadius;
         glassMenuAppliedOuterRadius = glassMenuAppliedInnerRadius = -1;
         glassDrawable.setRadius(glassDrawableLeftRadius, dp(23), dp(23), glassDrawableLeftRadius);
@@ -290,11 +290,11 @@ public class ActionBar extends FrameLayout implements FactorAnimator.Target, The
             return;
         }
         glassModeIsForum = isForum;
-        glassAvatarGap = app.tsunderegram.appearance.ChatHeaderUiHelper.isMaterial3ChatHeaderStyle()
+        glassAvatarGap = app.exteraless.appearance.ChatHeaderUiHelper.isMaterial3ChatHeaderStyle()
             ? dp(3.33f)
-            : (dp(46) - app.tsunderegram.appearance.ChatHeaderUiHelper.getAvatarSizePx(avatarSizeDp)) / 2f;
+            : (dp(46) - app.exteraless.appearance.ChatHeaderUiHelper.getAvatarSizePx(avatarSizeDp)) / 2f;
         final float radius = Math.min(dp(23),
-            app.tsunderegram.appearance.ChatHeaderUiHelper.getChatAvatarRadius(avatarSizeDp, isForum, hasStories) + glassAvatarGap);
+            app.exteraless.appearance.ChatHeaderUiHelper.getChatAvatarRadius(avatarSizeDp, isForum, hasStories) + glassAvatarGap);
         if (radius == glassDrawableLeftRadius) {
             return;
         }
@@ -1555,8 +1555,7 @@ public class ActionBar extends FrameLayout implements FactorAnimator.Target, The
 
         for (int i = 0; i < 2; i++) {
             if (titleTextView[0] != null && titleTextView[0].getVisibility() != GONE || subtitleTextView != null && subtitleTextView.getVisibility() != GONE) {
-                int titleMenuWidth = menu != null ? menu.getMeasuredWidth() - (isSearchFieldVisible ? 0 : menu.getClosingSearchFieldWidth()) : 0;
-                int availableWidth = isCentered() ? centeredTitleAvailableWidth(width) : width - titleMenuWidth - dp(16) - textLeft - titleRightMargin;
+                int availableWidth = isCentered() ? centeredTitleAvailableWidth(width) : width - (menu != null ? menu.getMeasuredWidth() : 0) - dp(16) - textLeft - titleRightMargin;
                 availableWidth = Math.max(availableWidth, 0);
 
                 if (((fromBottom && i == 0) || (!fromBottom && i == 1)) && overlayTitleAnimation && titleAnimationRunning) {
@@ -2795,9 +2794,9 @@ public class ActionBar extends FrameLayout implements FactorAnimator.Target, The
     }
 
     /**
-     * Центрировать ли заголовок. Порт {@code ActionBar.shouldCenterTitle()} TsundereGram
+     * Центрировать ли заголовок. Порт {@code ActionBar.shouldCenterTitle()} exteraGram
      * (12.9.0, строка 629): либо экран попросил явно ({@link #centerTitle()}), либо
-     * включена настройка TsundereGram.
+     * включена настройка exteraGram.
      *
      * Чаты сюда не попадают: там заголовок рисует ChatAvatarContainer, а не
      * titleTextView этого ActionBar. Отдельная центровка заголовка чата — фича
@@ -2808,13 +2807,13 @@ public class ActionBar extends FrameLayout implements FactorAnimator.Target, The
         if (forceDisableCenterTitle) {
             return false;
         }
-        return isCenterTitle || app.tsunderegram.appearance.AppearanceConfig.INSTANCE.centerTitle();
+        return isCenterTitle || app.exteraless.appearance.AppearanceConfig.INSTANCE.centerTitle();
     }
 
     private boolean forceDisableCenterTitle;
 
     /**
-     * Запретить центровку для конкретного ActionBar. У TsundereGram так делают
+     * Запретить центровку для конкретного ActionBar. У exteraGram так делают
      * AudioPlayerAlert и BottomSheetWithRecyclerListView: там заголовок прижат
      * влево по макету, и центровка его ломает.
      */

@@ -51,7 +51,7 @@ import org.telegram.ui.ChatActivity;
 import org.telegram.ui.Components.Premium.PremiumFeatureBottomSheet;
 import org.telegram.ui.PremiumPreviewFragment;
 
-import app.tsunderegram.chats.LinkedCustomEmoji;
+import app.exteraless.chats.LinkedCustomEmoji;
 
 public class EditTextEmoji extends FrameLayout implements NotificationCenter.NotificationCenterDelegate, SizeNotifierFrameLayout.SizeNotifierFrameLayoutDelegate {
 

@@ -34,6 +34,7 @@
     <string name="ProxyDisableNever">Nunca</string>
     <string name="ProxyDisableAlways">Siempre</string>
     <string name="ProxyDisableOnMobileData">Datos móviles</string>
+    <string name="OENowPlayingScrobbling">Scrobbling en curso</string>
     <string name="MainTabsHideCallsSettings">Ocultar pestaña Llamadas</string>
     <string name="MainTabsHideProfile">Ocultar pestaña de perfil</string>
     <string name="OEBotWebViewUpdate">Actualizar WebView</string>
@@ -49,8 +50,4 @@
     <string name="OEProfileJoinDateUnknown">La fecha de unión no está disponible</string>
     <string name="AppIconsSelect">Seleccionar</string>
     <string name="AppIconsKeep">Quedarme con este</string>
-    <!-- TsundereGram: restored after 13.1.1 merge -->
-    <string name="OENowPlayingScrobbling">Scrobbling en curso</string>
-    <!-- TsundereGram: upstream 13.1.1 strings lost in merge -->
-    <string name="QrLoginConfirm">Este código inicia sesión en tu cuenta desde un nuevo dispositivo. Permítelo solo si eres tú quien inicia sesión en tu propio dispositivo.</string>
 </resources>

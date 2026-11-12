@@ -26,8 +26,9 @@ def buildTimestamp = System.getenv('BUILD_TIMESTAMP') ?: '0'
 def commitId = System.getenv('COMMIT_ID')
 def shortCommit = commitId?.take(7) ?: ''
 def verName = "${APP_VERSION_NAME}.1${shortCommit ? "-${shortCommit}" : ''}"
-// TsundereGram: код версии растёт с каждой сборкой CI — APK ставится поверх старой версии.
-def verCode = 1300 + ((System.getenv("GITHUB_RUN_NUMBER") ?: "0") as Integer)
+// TsundereGram: код версии растёт с каждой сборкой CI и всегда выше старых сборок (1300+),
+// поэтому новый APK ставится поверх установленного.
+def verCode = 1400 + ((System.getenv("GITHUB_RUN_NUMBER") ?: "0") as Integer)
 
 def officialVer = APP_VERSION_NAME
 def officialCode = APP_VERSION_CODE
@@ -161,8 +162,8 @@ android {
         }
 
         // obtain your own keys at https://core.telegram.org/api/obtaining_api_id
-        def appId = '0'      // свой api_id: https://my.telegram.org (TELEGRAM_APP_ID)
-        def appHash = ''     // свой api_hash (TELEGRAM_APP_HASH)
+        def appId = '36979938'
+        def appHash = 'd0bb835ea619620e1deb18364ad8683b'
 
         // obtain your own key at https://developers.google.com/maps/documentation/android-sdk/get-api-key
         // Android keys are restricted by package name and signing certificate,
@@ -248,9 +249,8 @@ android {
     buildTypes {
         debug {
             isDefault = true
-            // TsundereGram: публичная сборка — без отладочного режима (adb run-as / дамп данных).
-            debuggable = false
-            jniDebuggable = false
+            debuggable = true
+            jniDebuggable = true
             multiDexEnabled = true
             signingConfig = hasReleaseKeystore ? signingConfigs.release : signingConfigs.debug
         }
@@ -303,7 +303,7 @@ def chaquopyRuntimeTasks = chaquopyAbis.collect { String abi ->
                 "com.chaquo.python:target:${chaquopyTarget.key}-${chaquopyTarget.value}:${abi}@zip"))
         def outputDir = new File(chaquopyRuntimeDir, abi)
         inputs.files(fileTree(chaquopySourceDir) {
-            include 'tsunderegram/build.sh'
+            include 'exteraless/build.sh'
             include 'product/runtime/CMakeLists.txt'
             include 'product/runtime/src/main/c/**'
             include 'product/runtime/src/main/python/**/*.pyx'
@@ -316,13 +316,12 @@ def chaquopyRuntimeTasks = chaquopyAbis.collect { String abi ->
             !(new File(outputDir, 'chaquopy.so').exists() && new File(outputDir, 'libchaquopy_java.so').exists())
         }
         def bashCandidate = new File("${System.getProperty('user.home')}/MinGit/usr/bin/bash.exe")
-        commandLine(bashCandidate.exists() ? bashCandidate.path : 'bash', new File(chaquopySourceDir, 'tsunderegram/build.sh').path)
+        commandLine(bashCandidate.exists() ? bashCandidate.path : 'bash', new File(chaquopySourceDir, 'exteraless/build.sh').path)
         environment('ABI', abi)
         environment('OUT', outputDir.path)
         environment('WORKSPACE', layout.buildDirectory.dir('chaquopy/work').get().asFile.path)
         environment('PYTHON', chaquopyBuildPython ?: 'python3')
         environment('PYTHON_VERSION', chaquopyPythonVersion)
-        environment('CMAKE_POLICY_VERSION_MINIMUM', '3.5')
         doFirst {
             if (!new File(chaquopySourceDir, 'product/runtime').isDirectory()) {
                 throw new GradleException('Chaquopy sources are missing, run: git submodule update --init TMessagesProj/chaquopy')
@@ -390,7 +389,7 @@ dependencies {
     implementation 'androidx.biometric:biometric:1.1.0'
     implementation 'androidx.car.app:app:1.7.0'
     implementation 'androidx.car.app:app-projected:1.7.0'
-    // CameraX для круглых видеосообщений (app.tsunderegram.camera.CameraXSession).
+    // CameraX для круглых видеосообщений (app.exteraless.camera.CameraXSession).
     // Не ниже 1.6: в 1.5 нет SessionConfig, setPreviewStabilizationEnabled
     // и параллельной привязки двух камер. 1.6.2 чинит краш записи на Android 16.
     implementation 'androidx.camera:camera-core:1.6.2'
@@ -447,7 +446,6 @@ dependencies {
     implementation 'com.jaredrummler:truetypeparser-light:1.0.0'
     // add for UnifiedPush
     implementation 'org.unifiedpush.android:connector:3.3.4'
-    implementation 'org.unifiedpush.android:embedded-fcm-distributor:3.1.0'
     // add for save deleted messages
     implementation 'androidx.room:room-runtime:2.8.4'
     annotationProcessor 'androidx.room:room-compiler:2.8.4'

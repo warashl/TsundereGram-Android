@@ -499,10 +499,10 @@ public class GroupCreateFinalActivity extends BaseFragment implements Notificati
                 super.invalidate(l, t, r, b);
             }
         };
-        avatarImage.setRoundRadius(app.tsunderegram.appearance.AppearanceConfig.getAvatarCorners(
+        avatarImage.setRoundRadius(app.exteraless.appearance.AppearanceConfig.getAvatarCorners(
                 dp(64), chatType == ChatObject.CHAT_TYPE_FORUM
-                        ? app.tsunderegram.appearance.AppearanceConfig.CORNER_TYPE_FORUM
-                        : app.tsunderegram.appearance.AppearanceConfig.CORNER_TYPE_DEFAULT));
+                        ? app.exteraless.appearance.AppearanceConfig.CORNER_TYPE_FORUM
+                        : app.exteraless.appearance.AppearanceConfig.CORNER_TYPE_DEFAULT));
         avatarImage.getImageReceiver().setAvatarCornersApplied(true);
         avatarDrawable.setInfo(5, null, null);
         avatarImage.setImageDrawable(avatarDrawable);

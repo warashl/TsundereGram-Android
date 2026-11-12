@@ -201,7 +201,7 @@ public class UniversalAdapter extends AdapterWithDiffUtils {
      * со строки под ним.
      */
     private int skipLeadingHeaders(int start, int end) {
-        if (!app.tsunderegram.appearance.AppearanceConfig.sectionsSeparatedHeaders()) return start;
+        if (!app.exteraless.appearance.AppearanceConfig.sectionsSeparatedHeaders()) return start;
         int position = start;
         while (position <= end && isHeader(getItemViewType(position))) {
             position++;
@@ -617,7 +617,7 @@ public class UniversalAdapter extends AdapterWithDiffUtils {
         UItem item = getItem(position);
         UItem nextItem = getItem(position + 1);
         if (item == null || nextItem == null || item.hideDivider) return false;
-        if (isHeader(nextItem.viewType) && app.tsunderegram.appearance.AppearanceConfig.sectionsSeparatedHeaders()) {
+        if (isHeader(nextItem.viewType) && app.exteraless.appearance.AppearanceConfig.sectionsSeparatedHeaders()) {
             return false;
         }
         return isShadow(nextItem.viewType) == isShadow(item.viewType);
@@ -738,20 +738,6 @@ public class UniversalAdapter extends AdapterWithDiffUtils {
                 }
                 cell.setDrawLoading(item.locked, 45, true);
                 cell.setEnabled(item.enabled, true);
-                if (!TextUtils.isEmpty(item.subtext)) {
-                    if (item.pad > 0) {
-                        cell.setOffsetFromImage(item.pad);
-                    }
-                    if (item.intValue > 0) {
-                        cell.heightDp = item.intValue;
-                    }
-                    cell.setSubtitle(item.subtext);
-                    cell.getImageView().setTranslationY(dp(2));
-                } else {
-                    cell.setSubtitle(null);
-                    cell.heightDp = 50;
-                    cell.getImageView().setTranslationY(0);
-                }
                 break;
             case VIEW_TYPE_CHECK:
             case VIEW_TYPE_CHECKRIPPLE:
@@ -760,7 +746,7 @@ public class UniversalAdapter extends AdapterWithDiffUtils {
                     checkCell.setChecked(item.checked);
                 }
                 checkCell.setEnabled(item.enabled, null);
-                // Иконка и подпись — как у TsundereGram: setIcon(0) обязателен, иначе
+                // Иконка и подпись — как у exteraGram: setIcon(0) обязателен, иначе
                 // переиспользованная ячейка сохранит иконку соседней строки.
                 checkCell.setIcon(item.iconResId);
                 if (TextUtils.isEmpty(item.textValue)) {
@@ -813,7 +799,7 @@ public class UniversalAdapter extends AdapterWithDiffUtils {
                     TextInfoPrivacyCell cell2 = (TextInfoPrivacyCell) holder.itemView;
                     if (TextUtils.isEmpty(item.text)) {
                         cell2.setFixedSize(viewType == VIEW_TYPE_LARGE_SHADOW ? 220
-                                : app.tsunderegram.appearance.M3ListItems.shadowHeight(nextItem != null && isHeader(nextItem.viewType), 12));
+                                : app.exteraless.appearance.M3ListItems.shadowHeight(nextItem != null && isHeader(nextItem.viewType), 12));
                         cell2.setText("");
                     } else {
                         cell2.setFixedSize(0);

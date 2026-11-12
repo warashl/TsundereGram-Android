@@ -63,7 +63,7 @@ import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import app.tsunderegram.appearance.AppearanceConfig;
+import app.exteraless.appearance.AppearanceConfig;
 
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
@@ -1356,6 +1356,10 @@ public class CacheControlActivity extends BaseFragment implements NotificationCe
         clearBookmarksItem.setTextColor(Theme.getColor(Theme.key_text_RedBold));
         clearBookmarksItem.setSelectorColor(Theme.multAlpha(Theme.getColor(Theme.key_text_RedRegular), .12f));
 
+        ActionBarMenuSubItem resetChatNameOverridesItem = otherItem.addSubItem(reset_chat_name_overrides_id, R.drawable.msg_delete, getString(R.string.ResetChatNameOverrides));
+        resetChatNameOverridesItem.setIconColor(Theme.getColor(Theme.key_text_RedRegular));
+        resetChatNameOverridesItem.setTextColor(Theme.getColor(Theme.key_text_RedBold));
+        resetChatNameOverridesItem.setSelectorColor(Theme.multAlpha(Theme.getColor(Theme.key_text_RedRegular), .12f));
         updateDatabaseItemSize();
 
         listAdapter = new ListAdapter(context);

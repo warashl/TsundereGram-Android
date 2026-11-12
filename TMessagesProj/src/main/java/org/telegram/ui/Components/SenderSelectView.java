@@ -99,7 +99,7 @@ public class SenderSelectView extends View {
 
         int alpha = (int) (menuProgress * 0xFF);
         backgroundPaint.setAlpha(alpha);
-        final float senderCorners = app.tsunderegram.appearance.AppearanceConfig.getAvatarCorners(getWidth());
+        final float senderCorners = app.exteraless.appearance.AppearanceConfig.getAvatarCorners(getWidth());
         canvas.drawRoundRect(0, 0, getWidth(), getHeight(), senderCorners, senderCorners, backgroundPaint);
 
         canvas.save();

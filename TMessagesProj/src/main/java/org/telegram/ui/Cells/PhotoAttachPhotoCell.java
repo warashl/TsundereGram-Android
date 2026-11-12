@@ -335,12 +335,12 @@ public class PhotoAttachPhotoCell extends FrameLayout {
                     videoPlayImageView.setVisibility(VISIBLE);
                     ((LayoutParams) videoTextView.getLayoutParams()).leftMargin = dp(13);
                     videoTextView.setText(AndroidUtilities.formatShortDuration(photoEntry.duration));
-                } else if (photoEntry.isHighQuality() && !app.tsunderegram.chats.ChatsConfig.alwaysSendInHD.Bool()) {
+                } else if (photoEntry.isHighQuality() && !app.exteraless.chats.ChatsConfig.alwaysSendInHD.Bool()) {
                     videoInfoContainer.setVisibility(VISIBLE);
                     videoPlayImageView.setVisibility(GONE);
                     ((LayoutParams) videoTextView.getLayoutParams()).leftMargin = dp(0);
                     videoTextView.setText(getString(R.string.ShortHighQuality));
-                } else if (photoEntry.isHighQuality() || !app.tsunderegram.chats.ChatsConfig.alwaysSendInHD.Bool()) {
+                } else if (photoEntry.isHighQuality() || !app.exteraless.chats.ChatsConfig.alwaysSendInHD.Bool()) {
                     videoPlayImageView.setVisibility(GONE);
                     videoInfoContainer.setVisibility(INVISIBLE);
                 } else {
@@ -534,12 +534,12 @@ public class PhotoAttachPhotoCell extends FrameLayout {
             videoPlayImageView.setVisibility(VISIBLE);
             ((LayoutParams) videoTextView.getLayoutParams()).leftMargin = dp(13);
             videoTextView.setText(AndroidUtilities.formatShortDuration(photoEntry.duration));
-        } else if (photoEntry.isHighQuality() && isChecked() && !app.tsunderegram.chats.ChatsConfig.alwaysSendInHD.Bool()) {
+        } else if (photoEntry.isHighQuality() && isChecked() && !app.exteraless.chats.ChatsConfig.alwaysSendInHD.Bool()) {
             videoInfoContainer.setVisibility(VISIBLE);
             videoPlayImageView.setVisibility(GONE);
             ((LayoutParams) videoTextView.getLayoutParams()).leftMargin = dp(0);
             videoTextView.setText(getString(R.string.ShortHighQuality));
-        } else if (photoEntry.isHighQuality() || !isChecked() || !app.tsunderegram.chats.ChatsConfig.alwaysSendInHD.Bool()) {
+        } else if (photoEntry.isHighQuality() || !isChecked() || !app.exteraless.chats.ChatsConfig.alwaysSendInHD.Bool()) {
             videoPlayImageView.setVisibility(GONE);
             videoInfoContainer.setVisibility(INVISIBLE);
         } else {
@@ -548,20 +548,19 @@ public class PhotoAttachPhotoCell extends FrameLayout {
             ((LayoutParams) videoTextView.getLayoutParams()).leftMargin = dp(0);
             videoTextView.setText(getString(R.string.ShortStandardQuality));
         }
-        final Drawable emptyPlaceholder = getEmptyPlaceholder();
         if (photoEntry.coverPath != null) {
-            imageView.setImage(photoEntry.coverPath, null, emptyPlaceholder);
+            imageView.setImage(photoEntry.coverPath, null, Theme.chat_attachEmptyDrawable);
         } else if (photoEntry.thumbPath != null) {
-            imageView.setImage(photoEntry.thumbPath, null, emptyPlaceholder);
+            imageView.setImage(photoEntry.thumbPath, null, Theme.chat_attachEmptyDrawable);
         } else if (photoEntry.path != null) {
             if (photoEntry.isVideo && !photoEntry.isLivePhoto()) {
-                imageView.setImage("vthumb://" + photoEntry.imageId + ":" + photoEntry.path, null, emptyPlaceholder);
+                imageView.setImage("vthumb://" + photoEntry.imageId + ":" + photoEntry.path, null, Theme.chat_attachEmptyDrawable);
             } else {
                 imageView.setOrientation(photoEntry.orientation, photoEntry.invert, true);
-                imageView.setImage("thumb://" + photoEntry.imageId + ":" + photoEntry.path, null, emptyPlaceholder);
+                imageView.setImage("thumb://" + photoEntry.imageId + ":" + photoEntry.path, null, Theme.chat_attachEmptyDrawable);
             }
         } else {
-            imageView.setImageDrawable(emptyPlaceholder);
+            imageView.setImageDrawable(Theme.chat_attachEmptyDrawable);
         }
         boolean showing = needCheckShow && PhotoViewer.isShowingImage(photoEntry.path);
         imageView.getImageReceiver().setVisible(!showing, true);
@@ -573,25 +572,12 @@ public class PhotoAttachPhotoCell extends FrameLayout {
         setStarsPrice(entry.starsAmount, selectedMultiple);
     }
 
-    private android.graphics.drawable.ColorDrawable emptyPlaceholderDrawable;
-
-    /** Нейтральная заглушка вместо большой белой иконки «картинка» при быстрой прокрутке галереи. */
-    private Drawable getEmptyPlaceholder() {
-        int color = Theme.multAlpha(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText, resourcesProvider), 0.07f);
-        if (emptyPlaceholderDrawable == null) {
-            emptyPlaceholderDrawable = new android.graphics.drawable.ColorDrawable(color);
-        } else {
-            emptyPlaceholderDrawable.setColor(color);
-        }
-        return emptyPlaceholderDrawable;
-    }
-
     public void setPhotoEntry(MediaController.SearchImage searchImage, boolean needCheckShow, boolean last) {
         pressed = false;
         searchEntry = searchImage;
         isLast = last;
 
-        Drawable thumb = zoomOnSelect ? getEmptyPlaceholder() : getResources().getDrawable(R.drawable.nophotos);
+        Drawable thumb = zoomOnSelect ? Theme.chat_attachEmptyDrawable : getResources().getDrawable(R.drawable.nophotos);
         if (searchImage.thumbPhotoSize != null) {
             imageView.setImage(ImageLocation.getForPhoto(searchImage.thumbPhotoSize, searchImage.photo), null, thumb, searchImage);
         } else if (searchImage.photoSize != null) {

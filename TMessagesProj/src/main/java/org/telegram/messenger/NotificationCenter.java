@@ -394,12 +394,12 @@ public class NotificationCenter {
     // custom
     public static final int updateLoginToken = totalEvents++;
 
-    // tsunderegram plugins
+    // exteraless plugins
     /** Плагин завис или отвис: слушатели перерисовывают его строку. */
     public static final int pluginIsNotResponding = totalEvents++;
     /** Реестр пунктов меню плагинов изменился: пересобрать подменю. */
     public static final int pluginMenuItemsUpdated = totalEvents++;
-    /** Состав плагинов изменился; имя из TsundereGram — на него ссылаются dex-модули. */
+    /** Состав плагинов изменился; имя из exteraGram — на него ссылаются dex-модули. */
     public static final int pluginsUpdated = totalEvents++;
 
     public static final int pluginSettingsRegistered = totalEvents++;
@@ -448,7 +448,7 @@ public class NotificationCenter {
 
     private int currentAccount;
     private int currentHeavyOperationFlags;
-    private static volatile NotificationCenter[] Instance = new NotificationCenter[UserConfig.MAX_INSTANCE_COUNT];
+    private static volatile NotificationCenter[] Instance = new NotificationCenter[UserConfig.MAX_ACCOUNT_COUNT];
     private static volatile NotificationCenter globalInstance;
 
     @UiThread
@@ -607,10 +607,6 @@ public class NotificationCenter {
     }
 
     public void postNotificationName(final int id, Object... args) {
-        if ((id == updateInterfaces || id == startAllHeavyOperations || id == stopAllHeavyOperations)
-                && args != null && args.length > 0 && args[0] instanceof Number && !(args[0] instanceof Integer)) {
-            args[0] = ((Number) args[0]).intValue();
-        }
         boolean allowDuringAnimation = id == startAllHeavyOperations || id == stopAllHeavyOperations || id == didReplacedPhotoInMemCache || id == closeChats || id == invalidateMotionBackground || id == needCheckSystemBarColors || id == messageReceivedByServer2;
         ArrayList<Integer> expiredIndices = null;
         if (!allowDuringAnimation && allowedNotifications.size() > 0) {

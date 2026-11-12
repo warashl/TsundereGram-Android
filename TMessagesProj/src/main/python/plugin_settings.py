@@ -1,4 +1,4 @@
-"""Хранилище настроек плагинов из SDK TsundereGram.
+"""Хранилище настроек плагинов из SDK exteraGram.
 
 У нас настройки живут на стороне Java (SharedPreferences на плагин), а `BasePlugin`
 ходит в них через `PythonBridge`. Плагины каталога при этом ждут отдельный модуль
@@ -14,11 +14,11 @@ import json as _json
 import threading as _threading
 
 try:
-    from app.tsunderegram.plugins import PythonBridge as _bridge
+    from app.exteraless.plugins import PythonBridge as _bridge
 except Exception:
     try:
         from extera_utils.plugin_loader import engine_java_class as _engine_class
-        _bridge = _engine_class("app.tsunderegram.plugins.PythonBridge")
+        _bridge = _engine_class("app.exteraless.plugins.PythonBridge")
     except Exception:
         _bridge = None
 
@@ -36,47 +36,6 @@ def _decode(raw, default=None):
         return default
 
 
-_TRUE_WORDS = ("true", "1", "yes", "on")
-_FALSE_WORDS = ("false", "0", "no", "off", "")
-
-
-def coerce_value(value, default):
-    if value is None or default is None:
-        return value
-    if isinstance(default, bool):
-        if isinstance(value, bool):
-            return value
-        if isinstance(value, str):
-            word = value.strip().lower()
-            if word in _TRUE_WORDS:
-                return True
-            if word in _FALSE_WORDS:
-                return False
-            return default
-        if isinstance(value, (int, float)):
-            return bool(value)
-        return default
-    if isinstance(value, str) and isinstance(default, (int, float)):
-        try:
-            return type(default)(value.strip())
-        except ValueError:
-            return default
-    return value
-
-
-def decode_values(raw):
-    data = _decode(raw, {})
-    if not isinstance(data, dict):
-        return {}
-    return {key: _decode(value, value) if isinstance(value, str) else value
-            for key, value in data.items()}
-
-
-def encode_values(values):
-    return {str(key): _json.dumps(value, ensure_ascii=False)
-            for key, value in dict(values).items()}
-
-
 def _load_plugin(plugin_id):
     if _bridge is None:
         return {}
@@ -84,7 +43,10 @@ def _load_plugin(plugin_id):
         raw = _bridge.exportSettings(plugin_id)
     except Exception:
         return {}
-    return decode_values(raw)
+    data = _decode(raw, {})
+    if not isinstance(data, dict):
+        return {}
+    return {key: _decode(value, value) for key, value in data.items()}
 
 
 def _snapshot(values):
@@ -105,7 +67,7 @@ def _cached(plugin_id):
 
 def get_setting(plugin_id, key, default=None):
     with _lock:
-        return coerce_value(_cached(plugin_id).get(key, default), default)
+        return _cached(plugin_id).get(key, default)
 
 
 def set_setting(plugin_id, key, value, reload_settings=False):

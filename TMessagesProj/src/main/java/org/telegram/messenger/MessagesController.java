@@ -151,12 +151,12 @@ import tw.nekomimi.nekogram.utils.AlertUtil;
 import xyz.nextalone.nagram.NaConfig;
 import xyz.nextalone.nagram.helper.LocalPremiumStatusHelper;
 
-import com.tsunderegram.privacy.AyuConstants;
-import com.tsunderegram.privacy.messages.AyuSavePreferences;
-import com.tsunderegram.privacy.messages.AyuMessagesController;
-import com.tsunderegram.privacy.utils.AyuGhostUtils;
-import com.tsunderegram.privacy.utils.AyuState;
-import com.tsunderegram.privacy.utils.LastSeenHelper;
+import com.radolyn.ayugram.AyuConstants;
+import com.radolyn.ayugram.messages.AyuSavePreferences;
+import com.radolyn.ayugram.messages.AyuMessagesController;
+import com.radolyn.ayugram.utils.AyuGhostUtils;
+import com.radolyn.ayugram.utils.AyuState;
+import com.radolyn.ayugram.utils.LastSeenHelper;
 
 public class MessagesController extends BaseController implements NotificationCenter.NotificationCenterDelegate {
 
@@ -801,23 +801,20 @@ public class MessagesController extends BaseController implements NotificationCe
     public boolean folderTags;
 
     public void getNextReactionMention(long dialogId, long topicId, int count, Consumer<Integer> callback) {
-        getNextReactionMentionInternal(dialogId, topicId, count, true, (messageId, readLocally) -> callback.accept(messageId));
-    }
-
-    public void getNextReactionMention(long dialogId, long topicId, int count, Utilities.Callback2<Integer, Boolean> callback) {
         getNextReactionMentionInternal(dialogId, topicId, count, true, callback);
     }
 
     public void getNextPollVotesMention(long dialogId, long topicId, int count, Consumer<Integer> callback) {
-        getNextReactionMentionInternal(dialogId, topicId, count, false, (messageId, readLocally) -> callback.accept(messageId));
+        getNextReactionMentionInternal(dialogId, topicId, count, false, callback);
     }
 
-    private void getNextReactionMentionInternal(long dialogId, long topicId, int count, final boolean isReactions, Utilities.Callback2<Integer, Boolean> callback) {
+    private void getNextReactionMentionInternal(long dialogId, long topicId, int count, final boolean isReactions, Consumer<Integer> callback) {
         final String tableMentionsForDialogs = isReactions ? "reaction_mentions" : "poll_votes_mentions";
         final String tableMentionsForTopics = isReactions ? "reaction_mentions_topics" : "poll_votes_mentions_topics";
         final boolean isVotes = !isReactions;
 
         final MessagesStorage messagesStorage = getMessagesStorage();
+        final int expectedCount = getUnreadContentCount(dialogId, topicId, isReactions);
         messagesStorage.getStorageQueue().postRunnable(() -> {
             boolean needRequest = true;
             try {
@@ -835,13 +832,13 @@ public class MessagesController extends BaseController implements NotificationCe
                 cursor.dispose();
                 if (messageId != 0) {
                     if (isReactions) {
-                        markMessageReactionsAsRead(dialogId, topicId, messageId);
+                        getMessagesStorage().markMessageReactionsAsRead(dialogId, topicId, messageId);
                     }
                     if (isVotes) {
                         getMessagesStorage().markMessagePollVotesAsRead(dialogId, topicId, messageId);
                     }
                     int finalMessageId = messageId;
-                    AndroidUtilities.runOnUIThread(() -> callback.run(finalMessageId, true));
+                    AndroidUtilities.runOnUIThread(() -> callback.accept(finalMessageId));
                 }
 
             } catch (SQLiteException e) {
@@ -851,7 +848,7 @@ public class MessagesController extends BaseController implements NotificationCe
                 final TLMethod<TLRPC.messages_Messages> request;
                 if (isReactions) {
                     if (ReactionFilter.shouldFilter(currentAccount, dialogId)) {
-                        ReactionFilter.requestNextReactionMention(this, currentAccount, dialogId, topicId, 0, id -> callback.run(id, false));
+                        ReactionFilter.requestNextReactionMention(this, currentAccount, dialogId, topicId, 0, callback);
                         return;
                     }
                     TLRPC.TL_messages_getUnreadReactions req = new TLRPC.TL_messages_getUnreadReactions();
@@ -870,13 +867,27 @@ public class MessagesController extends BaseController implements NotificationCe
                     req.add_offset = count - 1;
                     request = req;
                 }
+                final boolean canApplyServerCount = topicId == 0 || isReactions && isMonoForum(dialogId);
                 getConnectionsManager().sendRequestTyped(request, AndroidUtilities::runOnUIThread, (res, error) -> {
                     int messageId = 0;
                     if (error == null && res != null && res.messages != null && !res.messages.isEmpty()) {
                         messageId = res.messages.get(0).id;
                     }
+                    if (error == null && res != null && res.messages != null && canApplyServerCount) {
+                        if (messageId != 0) {
+                            int serverCount = Math.max(res.count, res.messages.size());
+                            int current = getUnreadContentCount(dialogId, topicId, isReactions);
+                            if (current > 0 && current == expectedCount && serverCount < current) {
+                                setUnreadContentCount(dialogId, topicId, serverCount, isReactions, true);
+                            }
+                        } else if (count > 1) {
+                            // add_offset != 0, so we can't trust server count. rerun with count = 1 (i.e. add_offset = 0)
+                            getNextReactionMentionInternal(dialogId, topicId, 1, isReactions, callback);
+                            return;
+                        }
+                    }
                     int finalMessageId = messageId;
-                    AndroidUtilities.runOnUIThread(() -> callback.run(finalMessageId, false));
+                    AndroidUtilities.runOnUIThread(() -> callback.accept(finalMessageId));
                 });
             }
         });
@@ -1614,10 +1625,6 @@ public class MessagesController extends BaseController implements NotificationCe
             getNotificationCenter().addObserver(messagesController, NotificationCenter.updateMessageMedia);
         });
         addSupportUser();
-        if (currentAccount == 0) {
-            // локальные имена убраны: один раз стираем оставшиеся переопределения
-            Utilities.globalQueue.postRunnable(LocalNameHelper::dropRemovedOverridesOnce);
-        }
         if (currentAccount == 0) {
             notificationsPreferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
             mainPreferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
@@ -6206,17 +6213,6 @@ public class MessagesController extends BaseController implements NotificationCe
                         }
                     }
                     AndroidUtilities.runOnUIThread(() -> {
-                        if (wallPaper == null) {
-                            // TsundereGram: сервер не принял файл — не оставляем вечную загрузку
-                            finishWallpaperUpload(uploadingWallpaperFinal);
-                            if (error != null) {
-                                final org.telegram.ui.Components.BulletinFactory bf = org.telegram.ui.Components.BulletinFactory.global();
-                                if (bf != null) {
-                                    bf.createErrorBulletin("Не удалось загрузить обои: " + error.text).show();
-                                }
-                            }
-                            return;
-                        }
                         if (uploadingWallpaper != null && uploadingWallpaperInfo.requestIds != null && wallPaper != null) {
                             wallPaper.settings = settings;
                             wallPaper.flags |= 4;
@@ -6628,10 +6624,6 @@ public class MessagesController extends BaseController implements NotificationCe
         loadingChannelAdmins.clear();
         users.clear();
         objectsByUsernames.clear();
-        // its cache points at users of the previous session
-        userNameResolver = null;
-        cachedIsUserContactBlocked.clear();
-        loadingIsUserContactBlocked.clear();
         chats.clear();
         dialogMessage.clear();
         deletedHistory.clear();
@@ -6951,6 +6943,21 @@ public class MessagesController extends BaseController implements NotificationCe
             oldUser.fromMessageId = user.fromMessageId;
         }
 
+        // user name override start
+        String overrideName = userOverrideNameCache.computeIfAbsent(user.id, k -> {
+            String fetchedName = LocalNameHelper.getUserNameOverride(k);
+            return (fetchedName != null) ? fetchedName : "";
+        });
+        if (!overrideName.isEmpty()) {
+            user.first_name = overrideName;
+            user.last_name = "";
+            if (oldUser != null) {
+                oldUser.first_name = overrideName;
+                oldUser.last_name = "";
+            }
+        }
+        // user name override end
+
         if (user.min) {
             if (oldUser != null) {
                 if (!fromCache) {
@@ -7085,6 +7092,21 @@ public class MessagesController extends BaseController implements NotificationCe
             oldChat.fromMessageDialogId = chat.fromMessageDialogId;
             oldChat.fromMessageId = chat.fromMessageId;
         }
+
+        // chat name override start
+        if (ChatObject.isChannel(chat)) {
+            String overrideName = chatOverrideNameCache.computeIfAbsent(chat.id, k -> {
+                String fetchedName = LocalNameHelper.getChatNameOverride(k);
+                return (fetchedName != null) ? fetchedName : "";
+            });
+            if (!overrideName.isEmpty()) {
+                chat.title = overrideName;
+                if (oldChat != null) {
+                    oldChat.title = overrideName;
+                }
+            }
+        }
+        // chat name override end
 
         if (chat.min) {
             if (oldChat != null) {
@@ -7893,7 +7915,6 @@ public class MessagesController extends BaseController implements NotificationCe
                         }
                     }
                     fullUsers.put(user.id, userFull);
-                    final boolean contactBlockedChanged = syncUserContactBlocked(user.id, userFull);
                     getTranslateController().updateDialogFull(user.id);
                     StarsController.getInstance(currentAccount).invalidateProfileGifts(userFull);
                     loadingFullUsers.remove(user.id);
@@ -7914,9 +7935,6 @@ public class MessagesController extends BaseController implements NotificationCe
                         getNotificationCenter().postNotificationName(NotificationCenter.botInfoDidLoad, userFull.bot_info, classGuid);
                     }
                     getNotificationCenter().postNotificationName(NotificationCenter.userInfoDidLoad, user.id, userFull);
-                    if (contactBlockedChanged) {
-                        getNotificationCenter().postNotificationName(NotificationCenter.userIsPremiumBlockedUpadted);
-                    }
 
                     TLRPC.Dialog dialog = dialogs_dict.get(user.id);
                     if (dialog != null) {
@@ -9278,21 +9296,10 @@ public class MessagesController extends BaseController implements NotificationCe
         });
     }
 
-    /** TsundereGram: загрузка обоев завершена — сбрасываем «текущую», иначе повторная установка того же файла
-     *  молча выходила (файл считался ещё загружающимся) и плашка в чате висела на 0 %. */
-    public void finishWallpaperUpload(String path) {
-        if (path != null && uploadingWallpaper != null && uploadingWallpaper.equals(path)) {
-            uploadingWallpaper = null;
-            uploadingWallpaperInfo = null;
-            getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, 0);
-        }
-    }
-
     public void saveWallpaperToServer(File path, Theme.OverrideWallpaperInfo info, boolean install, long taskId) {
         if (uploadingWallpaper != null) {
             File finalPath = new File(ApplicationLoader.getFilesDirFixed(), info.originalFileName);
-            final boolean stillUploading = uploadingWallpaperInfo != null && uploadingWallpaperInfo.uploadingProgress < 1f && uploadingWallpaperInfo.requestIds == null;
-            if (stillUploading && path != null && (path.getAbsolutePath().equals(uploadingWallpaper) || path.equals(finalPath))) {
+            if (path != null && (path.getAbsolutePath().equals(uploadingWallpaper) || path.equals(finalPath))) {
                 uploadingWallpaperInfo = info;
                 return;
             }
@@ -9488,7 +9495,7 @@ public class MessagesController extends BaseController implements NotificationCe
             return;
         }
 
-        // --- TsundereGram hook
+        // --- AyuGram hook
         int ayuDeletedMessagesCount = 0;
         if (!scheduled && NaConfig.INSTANCE.getEnableSaveDeletedMessages().Bool()) {
             var ayuMessagesController = AyuMessagesController.getInstance();
@@ -9547,9 +9554,6 @@ public class MessagesController extends BaseController implements NotificationCe
                 var userId = UserConfig.getInstance(currentAccount).clientUserId;
                 ArrayList<Integer> permittedForAyuDeletion = new ArrayList<>();
                 for (var msgId : messages) {
-                    if (!AyuState.isDeleteKept(dialogId, msgId) && !AyuState.isDeletePermitted(dialogId, msgId)) {
-                        AyuState.permitDeleteMessage(dialogId, msgId);
-                    }
                     if (AyuState.isDeletePermitted(dialogId, msgId)) {
                         permittedForAyuDeletion.add(msgId);
                     }
@@ -9561,7 +9565,7 @@ public class MessagesController extends BaseController implements NotificationCe
                 }
             }
         }
-        // --- TsundereGram hook
+        // --- AyuGram hook
 
         ArrayList<Integer> toSend = null;
         long channelId;
@@ -10322,12 +10326,12 @@ public class MessagesController extends BaseController implements NotificationCe
     protected void deleteDialog(long did, int first, int onlyHistory, int max_id, boolean revoke, TLRPC.InputPeer peer, long taskId) {
         if (onlyHistory == 3 && NaConfig.INSTANCE.getEnableSaveDeletedMessages().Bool()) {
             if (first == 1) {
-                com.tsunderegram.privacy.messages.AyuDeletedDialogs.onDialogEmptied(currentAccount, did);
+                com.radolyn.ayugram.messages.AyuDeletedDialogs.onDialogEmptied(currentAccount, did);
             }
             return;
         }
         if (first == 1 && (onlyHistory == 0 || onlyHistory == 1)) {
-            com.tsunderegram.privacy.messages.AyuDeletedDialogs.forget(currentAccount, did);
+            com.radolyn.ayugram.messages.AyuDeletedDialogs.forget(currentAccount, did);
         }
         if (onlyHistory == 2) {
             if (did == getUserConfig().getClientUserId()) {
@@ -11469,12 +11473,11 @@ public class MessagesController extends BaseController implements NotificationCe
                 Integer threadId = threadEntry.getKey();
                 ArrayList<PrintingUser> arr = threadEntry.getValue();
                 // ignoreBlocked start
-                if (AyuFilter.shouldHideSenders()) {
-                    boolean hideBlocked = NekoConfig.ignoreBlocked.Bool();
+                if (NekoConfig.ignoreBlocked.Bool()) {
                     LongSparseIntArray blockePeersCopy = blockePeers.clone();
                     ArrayList<PrintingUser> filteredArr = new ArrayList<>();
                     for (PrintingUser pu : arr) {
-                        if ((!hideBlocked || blockePeersCopy.indexOfKey(pu.userId) < 0) && !AyuFilter.isCustomFilteredPeer(pu.userId)) {
+                        if (blockePeersCopy.indexOfKey(pu.userId) < 0 && !AyuFilter.isCustomFilteredPeer(pu.userId)) {
                             filteredArr.add(pu);
                         }
                     }
@@ -13633,10 +13636,6 @@ public class MessagesController extends BaseController implements NotificationCe
                         dialogsEndReached.put(folderId, false);
                         serverDialogsEndReached.put(folderId, false);
                     } else if (dialogsLoadOffset[UserConfig.i_dialogsLoadOffsetId] == Integer.MAX_VALUE) {
-                        // nothing to load, otherwise sortDialogs hides every new dialog of an empty account
-                        if (folderId == 0) {
-                            dialogsLoadedTillDate = Integer.MIN_VALUE;
-                        }
                         dialogsEndReached.put(folderId, true);
                         serverDialogsEndReached.put(folderId, true);
                     } else {
@@ -14091,7 +14090,7 @@ public class MessagesController extends BaseController implements NotificationCe
                 }
                 loadUnreadDialogs();
                 if (loadType == DIALOGS_LOAD_TYPE_CACHE && folderId == 0) {
-                    com.tsunderegram.privacy.messages.AyuDeletedDialogs.restore(currentAccount);
+                    com.radolyn.ayugram.messages.AyuDeletedDialogs.restore(currentAccount);
                 }
                 if (dialogsRes.dialogs != null) {
                     for (int i = 0; i < dialogsRes.dialogs.size(); i++) {
@@ -14768,45 +14767,6 @@ public class MessagesController extends BaseController implements NotificationCe
         }
     }
 
-    private final ConcurrentHashMap<String, Integer> pendingReactionReads = new ConcurrentHashMap<>();
-
-    public void markMessageReactionsAsRead(long dialogId, long topicId, int messageId) {
-        getMessagesStorage().markMessageReactionsAsRead(dialogId, topicId, messageId);
-        if (messageId <= 0 || DialogObject.isEncryptedDialog(dialogId)) {
-            return;
-        }
-        final TLObject request;
-        TLRPC.Chat chat = DialogObject.isChatDialog(dialogId) ? getChat(-dialogId) : null;
-        if (ChatObject.isChannel(chat)) {
-            TLRPC.TL_channels_readMessageContents req = new TLRPC.TL_channels_readMessageContents();
-            req.channel = getInputChannel(chat);
-            req.id.add(messageId);
-            request = req;
-        } else {
-            TLRPC.TL_messages_readMessageContents req = new TLRPC.TL_messages_readMessageContents();
-            req.id.add(messageId);
-            request = req;
-        }
-        final String key = dialogId + "_" + messageId;
-        pendingReactionReads.merge(key, 1, Integer::sum);
-        getConnectionsManager().sendRequest(request, (response, error) -> {
-            pendingReactionReads.computeIfPresent(key, (k, v) -> v > 1 ? v - 1 : null);
-            if (response instanceof TLRPC.TL_messages_affectedMessages) {
-                TLRPC.TL_messages_affectedMessages res = (TLRPC.TL_messages_affectedMessages) response;
-                processNewDifferenceParams(-1, res.pts, -1, res.pts_count);
-            }
-        });
-    }
-
-    public void ignorePendingReadReactions(long dialogId, int messageId, TLRPC.MessageReactions reactions) {
-        if (reactions == null || reactions.recent_reactions == null || !pendingReactionReads.containsKey(dialogId + "_" + messageId)) {
-            return;
-        }
-        for (int i = 0; i < reactions.recent_reactions.size(); i++) {
-            reactions.recent_reactions.get(i).unread = false;
-        }
-    }
-
     public long createDeleteShowOnceTask(long dialogId, int mid) {
         NativeByteBuffer data = null;
         try {
@@ -15040,15 +15000,6 @@ public class MessagesController extends BaseController implements NotificationCe
                     value = 0;
                 }
                 dialogs_read_inbox_max.put(dialogId, Math.max(value, maxPositiveId));
-                if (threadId == 0) {
-                    // TsundereGram: граница локального прочтения — для уведомлений в режиме призрака
-                    int localMax = maxPositiveId;
-                    if (localMax == Integer.MAX_VALUE) {
-                        TLRPC.Dialog d = dialogs_dict.get(dialogId);
-                        localMax = d != null ? d.top_message : 0;
-                    }
-                    app.tsunderegram.notifications.TsunLocalRead.mark(currentAccount, dialogId, localMax);
-                }
 
                 getMessagesStorage().processPendingRead(dialogId, maxPositiveId, maxNegativeId, scheduledCount);
                 getMessagesStorage().getStorageQueue().postRunnable(() -> AndroidUtilities.runOnUIThread(() -> {
@@ -15898,21 +15849,10 @@ public class MessagesController extends BaseController implements NotificationCe
         }, ConnectionsManager.RequestFlagInvokeAfter);
     }
 
-    private final app.tsunderegram.privacy.BotStartDeduplicator botPrivacyStarts = new app.tsunderegram.privacy.BotStartDeduplicator();
-
     public void sendBotStart(final TLRPC.User user, String botHash) {
-        sendBotStart(user, botHash, false);
-    }
-
-    public void sendBotStart(final TLRPC.User user, String botHash, boolean fromInlineSwitch) {
-        // Inline switch-to-PM must return to the originating account's inline query.
-        if (!fromInlineSwitch && user != null && app.tsunderegram.privacy.BotAccountRouter.guardSend(currentAccount, user.id, () -> sendBotStart(user, botHash))) return;
         if (user == null) {
             return;
         }
-        final long botPrivacyIdentity = getUserConfig().getClientUserId();
-        final boolean botPrivacyDedupe = !fromInlineSwitch && app.tsunderegram.privacy.BotAccountRouter.enabled();
-        if (botPrivacyDedupe && !botPrivacyStarts.begin(botPrivacyIdentity, user.id, botHash)) return;
         TLRPC.TL_messages_startBot req = new TLRPC.TL_messages_startBot();
         req.bot = getInputUser(user);
         req.peer = getInputPeer(user.id);
@@ -15920,7 +15860,6 @@ public class MessagesController extends BaseController implements NotificationCe
         req.random_id = Utilities.random.nextLong();
         getConnectionsManager().sendRequest(req, (response, error) -> {
             if (error != null) {
-                if (botPrivacyDedupe) botPrivacyStarts.failed(botPrivacyIdentity, user.id, botHash);
                 return;
             }
             processUpdates((TLRPC.Updates) response, false);
@@ -16729,7 +16668,6 @@ public class MessagesController extends BaseController implements NotificationCe
             }
             if (updateState == 0) {
                 processUpdates(updates, true);
-                channelPts = channelsPts.get(channelId);
                 anyProceed = true;
                 if (a >= updatesQueue.size()) break;
                 updatesQueue.remove(a);
@@ -18274,11 +18212,11 @@ public class MessagesController extends BaseController implements NotificationCe
 
     // must be run from Utilities.stageQueue
     public void processUpdates(final TLRPC.Updates originalUpdates, boolean fromQueue) {
-        // tsunderegram plugins: on_updates_hook (CANCEL = контейнер не обрабатывается)
-        app.tsunderegram.plugins.HookResult hookResult = app.tsunderegram.plugins.PluginsController.getInstance().hasAnyUpdatesContainerHooks()
-                ? app.tsunderegram.plugins.PluginsController.getInstance()
-                        .executeOnUpdatesHook(currentAccount, app.tsunderegram.plugins.PluginsController.hookName(originalUpdates), originalUpdates)
-                : app.tsunderegram.plugins.HookResult.DEFAULT;
+        // exteraless plugins: on_updates_hook (CANCEL = контейнер не обрабатывается)
+        app.exteraless.plugins.HookResult hookResult = app.exteraless.plugins.PluginsController.getInstance().hasAnyUpdatesContainerHooks()
+                ? app.exteraless.plugins.PluginsController.getInstance()
+                        .executeOnUpdatesHook(currentAccount, app.exteraless.plugins.PluginsController.hookName(originalUpdates), originalUpdates)
+                : app.exteraless.plugins.HookResult.DEFAULT;
         if (hookResult.isCancel()) {
             return;
         }
@@ -18855,16 +18793,16 @@ public class MessagesController extends BaseController implements NotificationCe
             }
             return true;
         }
-        // tsunderegram plugins: on_update_hook (CANCEL = апдейт выкидывается из обработки).
+        // exteraless plugins: on_update_hook (CANCEL = апдейт выкидывается из обработки).
         // Список принадлежит вызывающему (res.other_updates, updates.updates) и в
         // некоторых ветках обрабатывается повторно, поэтому фильтруем в копию,
         // а не мутируем чужое.
-        if (app.tsunderegram.plugins.PluginsController.getInstance().hasAnyUpdateHooks()) {
+        if (app.exteraless.plugins.PluginsController.getInstance().hasAnyUpdateHooks()) {
             ArrayList<TLRPC.Update> allowed = null;
             int updateIndex = 0;
             for (TLRPC.Update u : updates) {
-                app.tsunderegram.plugins.HookResult updateResult = app.tsunderegram.plugins.PluginsController.getInstance()
-                        .executeOnUpdateHook(currentAccount, app.tsunderegram.plugins.PluginsController.hookName(u), u);
+                app.exteraless.plugins.HookResult updateResult = app.exteraless.plugins.PluginsController.getInstance()
+                        .executeOnUpdateHook(currentAccount, app.exteraless.plugins.PluginsController.hookName(u), u);
                 TLRPC.Update replacement = updateResult.replacement(TLRPC.Update.class);
                 if (allowed == null && (updateResult.isCancel() || (replacement != null && replacement != u))) {
                     allowed = new ArrayList<>(updates.size());
@@ -19658,11 +19596,8 @@ public class MessagesController extends BaseController implements NotificationCe
             } else if (baseUpdate instanceof TL_update.TL_updateChatParticipantDelete) {
                 TL_update.TL_updateChatParticipantDelete update = (TL_update.TL_updateChatParticipantDelete) baseUpdate;
                 getMessagesStorage().updateChatInfo(update.chat_id, update.user_id, 1, 0, update.version);
-            } else if (baseUpdate instanceof TL_update.TL_updateDcOptions) {
+            } else if (baseUpdate instanceof TL_update.TL_updateDcOptions || baseUpdate instanceof TL_update.TL_updateConfig) {
                 getConnectionsManager().updateDcSettings();
-            } else if (baseUpdate instanceof TL_update.TL_updateConfig) {
-                getConnectionsManager().updateDcSettings();
-                loadAppConfig(true);
             } else if (baseUpdate instanceof TL_update.TL_updateEncryption) {
                 getSecretChatHelper().processUpdateEncryption((TL_update.TL_updateEncryption) baseUpdate, usersDict);
             } else if (baseUpdate instanceof TL_update.TL_updatePeerBlocked) {
@@ -19990,7 +19925,6 @@ public class MessagesController extends BaseController implements NotificationCe
                     }
                 });
 
-                ignorePendingReadReactions(message.dialog_id, message.id, message.reactions);
                 boolean isDialogCreated = createdDialogIds.contains(message.dialog_id);
                 MessageObject obj = new MessageObject(currentAccount, message, usersDict, chatsDict, isDialogCreated, isDialogCreated);
                 getTranslateController().invalidateTranslation(obj);
@@ -20059,18 +19993,35 @@ public class MessagesController extends BaseController implements NotificationCe
                 TL_update.TL_updateMessageReactions update = (TL_update.TL_updateMessageReactions) baseUpdate;
                 long dialogId = MessageObject.getPeerId(update.peer);
 
-                ignorePendingReadReactions(dialogId, update.msg_id, update.reactions);
+                getMessagesStorage().updateMessageReactions(dialogId, update.msg_id, update.reactions);
                 if (NaConfig.INSTANCE.getSaveLocalLastSeen().Bool()) {
                     LastSeenHelper.saveLastSeenFromMessageReactions(update.reactions, getUserConfig().getClientUserId());
                 }
 
-                // openExtera: уведомление о реакции на своё сообщение без серверного push (In-App и т.п.).
-                // Раньше брали recent_reactions[0] без проверки unread: уведомляли о чужих реакциях на чужие
-                // сообщения и повторяли одно и то же на каждое обновление счётчиков, а настоящая новая
-                // реакция часто терялась среди дублей.
-                if (update.updateUnreadState || ApplicationLoader.mainInterfacePaused || !ApplicationLoader.isScreenOn) {
-                    InAppReactionNotifier.onReactionsUpdate(currentAccount, dialogId, update.msg_id, update.top_msg_id, update.peer, update.reactions);
+        if (update.reactions != null && !update.reactions.recent_reactions.isEmpty()) {
+            try {
+                TLRPC.MessagePeerReaction recent = update.reactions.recent_reactions.get(0);
+                long reactorId = MessageObject.getPeerId(recent.peer_id);
+                if (reactorId != getUserConfig().getClientUserId() && (update.updateUnreadState || org.telegram.messenger.ApplicationLoader.mainInterfacePaused || !org.telegram.messenger.ApplicationLoader.isScreenOn)) {
+                    TLRPC.User reactor = getUser(reactorId);
+                    String reactorName = reactor != null ? UserObject.getUserName(reactor) : "";
+                    String emoji = (recent.reaction instanceof TLRPC.TL_reactionEmoji) ? ((TLRPC.TL_reactionEmoji) recent.reaction).emoticon : "❤️";
+                    TLRPC.TL_message fakeMsg = new TLRPC.TL_message();
+                    fakeMsg.id = update.msg_id;
+                    fakeMsg.dialog_id = dialogId;
+                    fakeMsg.date = (int) (System.currentTimeMillis() / 1000);
+                    fakeMsg.message = emoji + " на Ваше сообщение";
+                    fakeMsg.flags |= 256;
+                    fakeMsg.from_id = recent.peer_id;
+                    fakeMsg.peer_id = update.peer;
+                    MessageObject msgObj = new MessageObject(currentAccount, fakeMsg, fakeMsg.message, reactorName, null, false, false, false, false);
+                    msgObj.isReactionPush = true;
+                    ArrayList<MessageObject> pushList = new ArrayList<>();
+                    pushList.add(msgObj);
+                    getNotificationsController().processNewMessages(pushList, true, true, null);
                 }
+            } catch (Throwable ignored) {}
+        }
                 if (update.updateUnreadState) {
                     SparseBooleanArray sparseBooleanArray = new SparseBooleanArray();
                     sparseBooleanArray.put(update.msg_id, ReactionFilter.hasUnreadReactions(currentAccount, dialogId, update.reactions));
@@ -20080,7 +20031,6 @@ public class MessagesController extends BaseController implements NotificationCe
                     }
                     checkUnreadReactions(dialogId, topicId, sparseBooleanArray);
                 }
-                getMessagesStorage().updateMessageReactions(dialogId, update.msg_id, update.reactions);
                 if (updatesOnMainThread == null) {
                     updatesOnMainThread = new ArrayList<>();
                 }
@@ -20232,7 +20182,7 @@ public class MessagesController extends BaseController implements NotificationCe
             }
         }
 
-        // --- TsundereGram request hook
+        // --- AyuGram request hook
         if (NaConfig.INSTANCE.getEnableSaveDeletedMessages().Bool() && deletedMessages != null) {
             final androidx.collection.LongSparseArray<ArrayList<Integer>> deletedForNotification = deletedMessages.clone();
             AndroidUtilities.runOnUIThread(() -> {
@@ -20284,7 +20234,7 @@ public class MessagesController extends BaseController implements NotificationCe
                 }
             });
         }
-        // --- TsundereGram request hook
+        // --- AyuGram request hook
 
         if (messages != null) {
             for (int a = 0, size = messages.size(); a < size; a++) {
@@ -21759,7 +21709,7 @@ public class MessagesController extends BaseController implements NotificationCe
         if (webPages != null) {
             getMessagesStorage().putWebPages(webPages);
         }
-        com.tsunderegram.privacy.messages.AyuSpyController.onUpdatesRead(currentAccount, markAsReadMessagesOutbox, markAsReadEncrypted, markContentAsReadMessages, markContentAsReadMessagesDate, date);
+        com.radolyn.ayugram.messages.AyuSpyController.onUpdatesRead(currentAccount, markAsReadMessagesOutbox, markAsReadEncrypted, markContentAsReadMessages, markContentAsReadMessagesDate, date);
         if (markAsReadMessagesInbox != null || markAsReadMessagesOutbox != null || markAsReadEncrypted != null || markContentAsReadMessages != null || stillUnreadMessagesCount != null) {
             if (markAsReadMessagesInbox != null || markAsReadMessagesOutbox != null || markContentAsReadMessages != null || stillUnreadMessagesCount != null) {
                 getMessagesStorage().updateDialogsWithReadMessages(markAsReadMessagesInbox, markAsReadMessagesOutbox, markContentAsReadMessages, stillUnreadMessagesCount, true);
@@ -21851,6 +21801,60 @@ public class MessagesController extends BaseController implements NotificationCe
         checkUnreadReactionsInternal(dialogId, topicId, unreadPollVotes, false);
     }
 
+    private final LongSparseArray<ArrayList<Integer>> pendingContentReadAcks = new LongSparseArray<>();
+
+    public void onMessageUnreadContentRead(long dialogId, long topicId, int messageId, boolean isReactions) {
+        AndroidUtilities.runOnUIThread(() -> {
+            int current = getUnreadContentCount(dialogId, topicId, isReactions);
+            if (current == 1) {
+                if (isReactions) {
+                    markReactionsAsRead(dialogId, topicId);
+                } else {
+                    markPollVotesAsRead(dialogId, topicId);
+                }
+            } else if (current > 1) {
+                setUnreadContentCount(dialogId, topicId, current - 1, isReactions, false);
+            }
+            if (messageId <= 0 || DialogObject.isEncryptedDialog(dialogId)) {
+                return;
+            }
+            ArrayList<Integer> ids = pendingContentReadAcks.get(dialogId);
+            if (ids == null) {
+                ids = new ArrayList<>();
+                pendingContentReadAcks.put(dialogId, ids);
+                AndroidUtilities.runOnUIThread(() -> {
+                    ArrayList<Integer> pending = pendingContentReadAcks.get(dialogId);
+                    pendingContentReadAcks.remove(dialogId);
+                    if (pending == null) {
+                        return;
+                    }
+                    TLRPC.Chat chat = DialogObject.isChatDialog(dialogId) ? getChat(-dialogId) : null;
+                    if (ChatObject.isChannel(chat)) {
+                        TLRPC.TL_channels_readMessageContents req = new TLRPC.TL_channels_readMessageContents();
+                        req.channel = getInputChannel(chat);
+                        if (req.channel == null) {
+                            return;
+                        }
+                        req.id.addAll(pending);
+                        getConnectionsManager().sendRequest(req, null);
+                    } else {
+                        TLRPC.TL_messages_readMessageContents req = new TLRPC.TL_messages_readMessageContents();
+                        req.id.addAll(pending);
+                        getConnectionsManager().sendRequest(req, (response, error) -> {
+                            if (error == null) {
+                                TLRPC.TL_messages_affectedMessages res = (TLRPC.TL_messages_affectedMessages) response;
+                                processNewDifferenceParams(-1, res.pts, -1, res.pts_count);
+                            }
+                        });
+                    }
+                }, 300);
+            }
+            if (!ids.contains(messageId)) {
+                ids.add(messageId);
+            }
+        });
+    }
+
     private void checkUnreadReactionsInternal(long dialogId, long topicId, SparseBooleanArray unreadReactions, boolean isReactions) {
         final String tableMentionsForDialogs = isReactions ? "reaction_mentions" : "poll_votes_mentions";
         final String tableMentionsForTopics = isReactions ? "reaction_mentions_topics" : "poll_votes_mentions_topics";
@@ -21895,12 +21899,9 @@ public class MessagesController extends BaseController implements NotificationCe
                         newUnreadCount += hasUnreadReaction ? 1 : -1;
                         changed = true;
                     }
-                } else if (!ReactionFilter.shouldFilter(currentAccount, dialogId) || hasUnreadReaction) {
-                    if (!isReactions || needReactionsReloadForUnknownRow(dialogId, topicId, messageId, hasUnreadReaction)) {
+                } else {
+                    if (!ReactionFilter.shouldFilter(currentAccount, dialogId) || hasUnreadReaction) {
                         needReload = true;
-                    } else if (hasUnreadReaction) {
-                        newUnreadCount++;
-                        changed = true;
                     }
                 }
                 if (hasUnreadReaction) {
@@ -21938,14 +21939,6 @@ public class MessagesController extends BaseController implements NotificationCe
                 checkUnreadPollVotesInternal2(dialogId, topicId, needReload, changed, newUnreadCount, newUnreadMessages);
             }
         });
-    }
-
-    private boolean needReactionsReloadForUnknownRow(long dialogId, long topicId, int messageId, boolean hasUnreadReaction) {
-        if (hasUnreadReaction) {
-            Boolean storedUnread = getMessagesStorage().hasStoredUnreadReactionsSync(dialogId, topicId, messageId);
-            return storedUnread == null || storedUnread;
-        }
-        return getMessagesStorage().getUnreadReactionsCountSync(dialogId, topicId) != 0;
     }
 
     private void checkUnreadReactionsInternal2(long dialogId, long topicId, boolean needReload, boolean changed, int newUnreadCount, ArrayList<Integer> newUnreadMessages) {
@@ -22118,6 +22111,46 @@ public class MessagesController extends BaseController implements NotificationCe
 
     public boolean isDialogMuted(long dialogId) {
         return isDialogMuted(dialogId, 0, null);
+    }
+
+    private int getUnreadContentCount(long dialogId, long topicId, boolean isReactions) {
+        if (topicId == 0) {
+            TLRPC.Dialog dialog = dialogs_dict.get(dialogId);
+            if (dialog == null) {
+                return -1;
+            }
+            return isReactions ? dialog.unread_reactions_count : dialog.unread_poll_votes_count;
+        }
+        TLRPC.TL_forumTopic topic = getTopicsController().findTopic(-dialogId, topicId);
+        if (topic == null) {
+            return -1;
+        }
+        return isReactions ? topic.unread_reactions_count : topic.unread_poll_votes_count;
+    }
+
+    private void setUnreadContentCount(long dialogId, long topicId, int count, boolean isReactions, boolean notifyChat) {
+        if (topicId == 0) {
+            TLRPC.Dialog dialog = dialogs_dict.get(dialogId);
+            if (isReactions) {
+                dialog.unread_reactions_count = count;
+            } else {
+                dialog.unread_poll_votes_count = count;
+            }
+        } else if (isReactions) {
+            getTopicsController().updateReactionsUnread(dialogId, topicId, count, false);
+        } else {
+            getTopicsController().updatePollVotesUnread(dialogId, topicId, count, false);
+        }
+        if (isReactions) {
+            getMessagesStorage().updateUnreadReactionsCount(dialogId, topicId, count);
+        } else {
+            getMessagesStorage().updateUnreadPollVotesCount(dialogId, topicId, count);
+        }
+        if (notifyChat) {
+            getNotificationCenter().postNotificationName(isReactions ? NotificationCenter.dialogsUnreadReactionsCounterChanged : NotificationCenter.dialogsUnreadPollVotesCounterChanged, dialogId, topicId, count, null);
+        } else {
+            getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, UPDATE_MASK_REACTIONS_READ);
+        }
     }
 
     public boolean isDialogMuted(long dialogId, long topicId) {
@@ -24863,24 +24896,6 @@ public class MessagesController extends BaseController implements NotificationCe
         AndroidUtilities.cancelRunOnUIThread(requestIsUserContactBlockedRunnable);
         AndroidUtilities.runOnUIThread(requestIsUserContactBlockedRunnable, 60);
         return null;
-    }
-
-    // the full user is fresher than a requirement cached earlier, e.g. after importing a no paid messages token
-    private boolean syncUserContactBlocked(long userId, TLRPC.UserFull userFull) {
-        final TL_account.RequirementToContact cached = cachedIsUserContactBlocked.get(userId);
-        if (cached == null) {
-            return false;
-        }
-        final TL_account.RequirementToContact r = UserObject.getRequirementToContact(userFull);
-        if (UserObject.eq(cached, r)) {
-            return false;
-        }
-        if (r == null) {
-            cachedIsUserContactBlocked.remove(userId);
-        } else {
-            cachedIsUserContactBlocked.put(userId, r);
-        }
-        return true;
     }
 
     public void invalidateUserPremiumBlocked(long userId, int classGuid) {

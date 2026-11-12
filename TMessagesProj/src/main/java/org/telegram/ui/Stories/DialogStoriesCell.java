@@ -101,7 +101,7 @@ import java.util.Objects;
 import me.vkryl.android.animator.BoolAnimator;
 import me.vkryl.android.animator.FactorAnimator;
 import me.vkryl.android.animator.ReplaceAnimator;
-import app.tsunderegram.appearance.AppearanceConfig;
+import app.exteraless.appearance.AppearanceConfig;
 import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.helpers.TypefaceHelper;
 import tw.nekomimi.nekogram.ui.components.AnimatedTitleView;

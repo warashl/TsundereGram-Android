@@ -1,10 +1,10 @@
 package org.telegram.ui;
 
 import tw.nekomimi.nekogram.utils.ShareUtil;
-import app.tsunderegram.debug.EnergyProfiler;
-import app.tsunderegram.debug.JankProfiler;
-import app.tsunderegram.debug.PluginToggleTrace;
-import app.tsunderegram.settings.OpenExteraSettingsActivity;
+import app.exteraless.debug.EnergyProfiler;
+import app.exteraless.debug.JankProfiler;
+import app.exteraless.debug.PluginToggleTrace;
+import app.exteraless.settings.OpenExteraSettingsActivity;
 
 import static org.telegram.messenger.AndroidUtilities.dp;
 import static org.telegram.messenger.AndroidUtilities.lerp;
@@ -154,7 +154,6 @@ import org.telegram.ui.Stories.recorder.DualCameraView;
 import org.telegram.ui.TON.TONIntroActivity;
 import org.telegram.ui.bots.BotBiometry;
 import org.telegram.ui.bots.BotDownloads;
-import org.telegram.ui.QrShare.QrShareActivity;
 import org.telegram.ui.bots.BotLocation;
 import org.telegram.ui.bots.BotWebViewSheet;
 import org.telegram.ui.bots.SetupEmojiStatusSheet;
@@ -251,7 +250,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             hasMainTabs = arguments.getBoolean("hasMainTabs", false);
         }
 
-        additionNavigationBarHeight = hasMainTabs ? dp(app.tsunderegram.appearance.MainTabsUiHelper.getTabsViewHeightDp()) : 0;
+        additionNavigationBarHeight = hasMainTabs ? dp(app.exteraless.appearance.MainTabsUiHelper.getTabsViewHeightDp()) : 0;
         return super.onFragmentCreate();
     }
 
@@ -259,11 +258,6 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
     public void onResume() {
         super.onResume();
         Bulletin.Delegate delegate = new Bulletin.Delegate() {
-            @Override
-            public int getTopOffset(int tag) {
-                return AndroidUtilities.statusBarHeight + ActionBar.getCurrentActionBarHeight();
-            }
-
             @Override
             public int getBottomOffset(int tag) {
                 return navigationBarHeight + additionNavigationBarHeight;
@@ -278,8 +272,6 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             if (listView != null) {
                 listView.adapter.update(animated);
             }
-        } else if (listView != null && listView.adapter != null) {
-            listView.adapter.notifyDataSetChanged();
         }
     }
 
@@ -298,7 +290,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
 
     @Override
     public View createView(Context context) {
-        additionNavigationBarHeight = hasMainTabs ? dp(app.tsunderegram.appearance.MainTabsUiHelper.getTabsViewHeightDp()) : 0;
+        additionNavigationBarHeight = hasMainTabs ? dp(app.exteraless.appearance.MainTabsUiHelper.getTabsViewHeightDp()) : 0;
 
         contentView = new SizeNotifierFrameLayout(context) {
             @Override
@@ -362,24 +354,14 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         };
 
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
-        leftButtonIsBack = true; // the view may be rebuilt (theme, language): checkUi_menuItems swaps it to QR again
         actionBar.setAllowOverlayTitle(true);
         actionBar.setUseContainerForTitles();
         actionBar.setTitle(getString(R.string.Settings));
-        actionBar.setAdditionalTextLeft(-dp(4));
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
                 if (id == -1) {
-                    if (hasMainTabs) {
-                        // no back on the main tab: the left button opens the QR code (with the search open, the action bar closes it instead)
-                        final Bundle args = new Bundle();
-                        args.putLong("user_id", getUserConfig().getClientUserId());
-                        args.putBoolean(QrShareActivity.ARG_IMMEDIATE, true);
-                        presentFragment(new QrShareActivity(args));
-                    } else {
-                        finishFragment();
-                    }
+                    finishFragment();
                 } else if (id == 2) {
                     presentSettingFragment(new LogoutActivity());
                 }
@@ -713,7 +695,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
 
     private ArrayList<Integer> accountNumbers = new ArrayList<>();
 
-    // TsundereGram 12.9.0, SettingsActivity.java:984-987 — число активных сессий
+    // exteraGram 12.9.0, SettingsActivity.java:984-987 — число активных сессий
     // показывается значением справа от строки «Devices».
     private String getDevicesCount() {
         final int count = getMessagesController().lastKnownSessionsCount;
@@ -798,12 +780,12 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         // Настройки NagramX по умолчанию спрятаны: у форка свои экраны, а второй
         // набор тех же настроек рядом только путает. Строку включают на экране
         // «Other» (GeneralConfig.showNagramSettings).
-        if (app.tsunderegram.general.GeneralConfig.showNagramSettings()) {
+        if (app.exteraless.general.GeneralConfig.showNagramSettings()) {
             items.add(SettingCell.Factory.of(100, 0xFF3CCFFF, 0xFF007AFF, R.drawable.filled_profile_settings, getString(R.string.NekoSettings)));
         }
-        // Как в TsundereGram 12.9.0 (SettingsActivity.java:899): знак приложения вместо
+        // Как в exteraGram 12.9.0 (SettingsActivity.java:899): знак приложения вместо
         // шестерёнки, акцент фирменного цвета на обе точки градиента.
-        items.add(SettingCell.Factory.of(-1, 0, 0, R.drawable.tsunderegram_icon, getString(R.string.OpenExteraPreferences), getString(R.string.OpenExteraInfo)));
+        items.add(SettingCell.Factory.of(-1, 0, 0, R.drawable.exteraless_icon, getString(R.string.OpenExteraPreferences), getString(R.string.OpenExteraInfo)));
         items.add(UItem.asShadow(null));
         final boolean walletAbove = getConnectionsManager().getCurrentTime() - 1791538462 < 4 * 7 * 24 * 60 * 60;
         if (walletAbove && getMessagesController().config.walletAvailable.get()) {
@@ -1029,10 +1011,6 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             }
             case -1: {
                 presentFragment(new OpenExteraSettingsActivity());
-                break;
-            }
-            case 26: {
-                presentFragment(new AudioRecorderSettingsActivity());
                 break;
             }
         }
@@ -1382,7 +1360,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
 
             // Строка «Настройки TsundereGram» показывает аву приложения целиком, без
             // плашки и без перекраски иконки (M3/Monet красят её в один цвет).
-            final boolean avatarIcon = icon == R.drawable.tsunderegram_icon;
+            final boolean avatarIcon = icon == R.drawable.exteraless_icon;
             if (avatarIcon) {
                 hasBackground = false;
                 iconLayout.setBackground(null);
@@ -1423,7 +1401,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         private static android.graphics.drawable.Drawable createTsundereAvatarDrawable(Context context) {
             try {
                 if (tsundereAvatarBitmap == null) {
-                    final android.graphics.Bitmap src = android.graphics.BitmapFactory.decodeResource(context.getResources(), R.drawable.tsunderegram_icon);
+                    final android.graphics.Bitmap src = android.graphics.BitmapFactory.decodeResource(context.getResources(), R.drawable.exteraless_icon);
                     if (src != null) {
                         final int size = dp(36);
                         tsundereAvatarBitmap = android.graphics.Bitmap.createScaledBitmap(src, size, size, true);
@@ -1432,8 +1410,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 if (tsundereAvatarBitmap != null) {
                     final androidx.core.graphics.drawable.RoundedBitmapDrawable rounded =
                             androidx.core.graphics.drawable.RoundedBitmapDrawableFactory.create(context.getResources(), tsundereAvatarBitmap);
-                    // Скруглённый квадрат, как иконка на баннере TsundereGram (а не круг)
-                    rounded.setCornerRadius(tsundereAvatarBitmap.getWidth() * 0.22f);
+                    rounded.setCircular(true);
                     return rounded;
                 }
             } catch (Throwable t) {
@@ -1450,11 +1427,11 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 Theme.ResourcesProvider resourcesProvider
         ) {
             final boolean dark = resourcesProvider != null ? resourcesProvider.isDark() : Theme.isCurrentThemeDark();
-            final boolean m3 = app.tsunderegram.appearance.M3ListItems.enabled();
+            final boolean m3 = app.exteraless.appearance.M3ListItems.enabled();
             iconBackground.setCircle(m3);
             if (m3) {
-                iconBackground.setMonetColor(app.tsunderegram.appearance.M3ListItems.tonalBackground(iconColorTop, iconColorBottom));
-                iconView.setColorFilter(app.tsunderegram.appearance.M3ListItems.tonalForeground(iconColorTop, iconColorBottom), PorterDuff.Mode.SRC_IN);
+                iconBackground.setMonetColor(app.exteraless.appearance.M3ListItems.tonalBackground(iconColorTop, iconColorBottom));
+                iconView.setColorFilter(app.exteraless.appearance.M3ListItems.tonalForeground(iconColorTop, iconColorBottom), PorterDuff.Mode.SRC_IN);
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && Theme.getActiveTheme().isMonet()) {
                 iconBackground.setMonetColor(MonetHelper.getColor(dark ? "a1_200" : "a1_600"));
                 iconView.setColorFilter(MonetHelper.getColor(dark ? "a1_800" : "a1_100"), PorterDuff.Mode.SRC_IN);
@@ -1529,8 +1506,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                     canvas.drawCircle(bounds.exactCenterX(), bounds.exactCenterY(), Math.min(bounds.width(), bounds.height()) / 2f, paint);
                     return;
                 }
-                // Скруглённый квадрат: тот же радиус (22% стороны), что у иконки TsundereGram
-                final float r = Math.min(getBounds().width(), getBounds().height()) * 0.22f;
+                final float r = dp(10);
                 AndroidUtilities.rectTmp.set(getBounds());
                 matrix.reset();
                 matrix.postTranslate(AndroidUtilities.rectTmp.left, AndroidUtilities.rectTmp.top);
@@ -1592,10 +1568,10 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 item.id = id;
                 item.iconResId = icon;
                 item.text = title;
-                if (app.tsunderegram.appearance.M3ListItems.enabled()) {
+                if (app.exteraless.appearance.M3ListItems.enabled()) {
                     item.subtext = subtitle;
                 }
-                // Подпись намеренно отбрасывается — так же, как в TsundereGram 12.9.0
+                // Подпись намеренно отбрасывается — так же, как в exteraGram 12.9.0
                 // (SettingsActivity.java:539-560: subtext не присваивается вовсе).
                 // Из-за этого twoLines остаётся false и строка меряется в dp(50), а не dp(60).
                 // Параметр оставлен в сигнатуре, чтобы не трогать 11 мест вызова.
@@ -1919,7 +1895,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 getMessagesStorage().clearSentMedia();
                 SharedConfig.setNoSoundHintShowed(false);
                 SharedPreferences.Editor editor = MessagesController.getGlobalMainSettings().edit();
-                editor.remove("archivehint").remove("proximityhint").remove("archivehint_l").remove("searchpostsnew").remove("speedhint").remove("gifhint").remove("reminderhint").remove("soundHint").remove("themehint").remove("bganimationhint").remove("filterhint").remove("n_0").remove("storyprvhint").remove("storyhint").remove("storyhint2").remove("storydualhint").remove("storysvddualhint").remove("stories_camera").remove("dualcam").remove("dualmatrix").remove("dual_available").remove("archivehint").remove("askNotificationsAfter").remove("askNotificationsDuration").remove("viewoncehint").remove("voicepausehint").remove("taptostorysoundhint").remove("nothanos").remove("voiceoncehint").remove("savedhint").remove("savedsearchhint").remove("savedsearchtaghint").remove("newppsms").remove("monetizationadshint").remove("seekSpeedHintShowed").remove("unsupport_video/av01").remove("statusgiftpage").remove("multistorieshint").remove("trimvoicehint").remove("taptostoryhighlighthint").remove("proxycheckstatusip").remove("callmiconstart").remove("showchattagsinfo").remove("language_showed3").remove("aihintshown").remove("savedmsgschatshint").remove("walletcardstickerhint").apply();
+                editor.remove("archivehint").remove("proximityhint").remove("archivehint_l").remove("searchpostsnew").remove("speedhint").remove("gifhint").remove("reminderhint").remove("soundHint").remove("themehint").remove("bganimationhint").remove("filterhint").remove("n_0").remove("storyprvhint").remove("storyhint").remove("storyhint2").remove("storydualhint").remove("storysvddualhint").remove("stories_camera").remove("dualcam").remove("dualmatrix").remove("dual_available").remove("archivehint").remove("askNotificationsAfter").remove("askNotificationsDuration").remove("viewoncehint").remove("voicepausehint").remove("taptostorysoundhint").remove("nothanos").remove("voiceoncehint").remove("savedhint").remove("savedsearchhint").remove("savedsearchtaghint").remove("newppsms").remove("monetizationadshint").remove("seekSpeedHintShowed").remove("unsupport_video/av01").remove("statusgiftpage").remove("multistorieshint").remove("trimvoicehint").remove("taptostoryhighlighthint").remove("proxycheckstatusip").remove("callmiconstart").remove("showchattagsinfo").remove("language_showed3").remove("aihintshown").remove("savedmsgschatshint").apply();
                 HintsController.resetAll();
                 SharedPrefsHelper.cleanupAccount(currentAccount);
                 MessagesController.getEmojiSettings(currentAccount).edit().remove("featured_hidden").remove("emoji_featured_hidden").commit();
@@ -2458,30 +2434,9 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         }
     }
 
-    private boolean leftButtonIsBack = true;
-
     private void checkUi_menuItems() {
-        final float searchVisible = animatorSearchPageVisible.getFloatValue();
-        FragmentFloatingButton.setAnimatedVisibility(otherItem, 1f - searchVisible);
-        if (!hasMainTabs) {
-            FragmentFloatingButton.setAnimatedVisibility(actionBar.getBackButton(), 1f);
-            return;
-        }
-        // the main tab has no back: the left button is the QR code, turning into back while the search is open
-        // (shrinks away and grows back with the other icon; stays visible, so the title does not move)
-        final ImageView button = actionBar.getBackButton();
-        if (button == null) return;
-        final boolean back = searchVisible > 0.5f;
-        if (back != leftButtonIsBack) {
-            leftButtonIsBack = back;
-            button.setImageResource(back ? R.drawable.ic_ab_back : R.drawable.outline_header_qr_24);
-            button.setContentDescription(getString(back ? R.string.AccDescrGoBack : R.string.QrCode));
-        }
-        final float f = Math.abs(searchVisible * 2f - 1f);
-        button.setVisibility(View.VISIBLE);
-        button.setAlpha(f);
-        button.setScaleX(lerp(0.4f, 1f, f));
-        button.setScaleY(lerp(0.4f, 1f, f));
+        FragmentFloatingButton.setAnimatedVisibility(otherItem, 1f - animatorSearchPageVisible.getFloatValue());
+        FragmentFloatingButton.setAnimatedVisibility(actionBar.getBackButton(), lerp(hasMainTabs ? 0f : 1f, 1f, animatorSearchPageVisible.getFloatValue()));
     }
 
 
@@ -2509,7 +2464,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         final int additionalList = dp(48);
 
         iBlur3PositionActionBar.set(0, -additionalList, fragmentView.getMeasuredWidth(), actionBar.getMeasuredHeight() + additionalList);
-        app.tsunderegram.appearance.MainTabsUiHelper.setBlurBounds(iBlur3PositionMainTabs, fragmentView, navigationBarHeight);
+        app.exteraless.appearance.MainTabsUiHelper.setBlurBounds(iBlur3PositionMainTabs, fragmentView, navigationBarHeight);
         iBlur3PositionMainTabs.inset(0, LiteMode.isEnabled(LiteMode.FLAG_LIQUID_GLASS) ? 0 : -dp(48));
 
         scrollableViewNoiseSuppressor.setupRenderNodes(iBlur3Positions, hasMainTabs ? 2 : 1);

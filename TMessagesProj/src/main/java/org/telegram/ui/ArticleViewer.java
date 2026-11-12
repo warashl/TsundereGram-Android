@@ -8,7 +8,7 @@
 
 package org.telegram.ui;
 
-import app.tsunderegram.utils.AppUtils;
+import app.exteraless.utils.AppUtils;
 
 import static org.telegram.messenger.AndroidUtilities.dp;
 import static org.telegram.messenger.AndroidUtilities.lerp;
@@ -1985,7 +1985,7 @@ public class ArticleViewer extends IArticleViewer implements NotificationCenter.
             int count = webPage.cached_page.blocks.size();
             for (int a = 0; a < count; a++) {
                 TL_iv.PageBlock block = webPage.cached_page.blocks.get(a);
-                if (app.tsunderegram.appearance.AiFeaturesHelper.shouldHideIvBlock(block)) {
+                if (app.exteraless.appearance.AiFeaturesHelper.shouldHideIvBlock(block)) {
                     continue;
                 }
                 if (a == 0) {
@@ -9750,7 +9750,15 @@ public class ArticleViewer extends IArticleViewer implements NotificationCenter.
             tableLayout.setStriped(currentBlock.striped);
             tableLayout.setRtl(adapter != null && adapter.isRtl);
 
-            int maxCols = TableLayout.sanitizeSpans(currentBlock.rows);
+            int maxCols = 0;
+
+            if (!currentBlock.rows.isEmpty()) {
+                TL_iv.pageTableRow row = currentBlock.rows.get(0);
+                for (int c = 0, size2 = row.cells.size(); c < size2; c++) {
+                    TL_iv.pageTableCell cell = row.cells.get(c);
+                    maxCols += (cell.colspan != 0 ? cell.colspan : 1);
+                }
+            }
 
             for (int r = 0, size = currentBlock.rows.size(); r < size; r++) {
                 TL_iv.pageTableRow row = currentBlock.rows.get(r);

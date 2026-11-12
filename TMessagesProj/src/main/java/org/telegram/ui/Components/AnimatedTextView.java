@@ -117,11 +117,8 @@ public class AnimatedTextView extends View {
                 if (shadowed) {
                     textPaint.setShadowLayer(shadowRadius, shadowDx, shadowDy, shadowColor);
                 }
-                // Явные границы слоя: saveLayerAlpha(null) берёт клип вью, и у шрифтов
-                // с длинными выносными элементами (g, у, @) срезались хвосты букв.
-                final float layerPad = textPaint.getTextSize();
                 final int saveCount = drawAlpha < 255
-                        ? canvas.saveLayerAlpha(-layerPad, -layerPad, layout.getWidth() + layerPad, layout.getHeight() + layerPad, drawAlpha, Canvas.ALL_SAVE_FLAG) : -1;
+                        ? canvas.saveLayerAlpha(null, drawAlpha, Canvas.ALL_SAVE_FLAG) : -1;
                 layout.draw(canvas);
                 AnimatedEmojiSpan.drawAnimatedEmojis(canvas, layout, emoji, 0, null, 0, 0, 0, 1f, emojiColorFilter);
                 if (saveCount != -1) {
@@ -662,7 +659,7 @@ public class AnimatedTextView extends View {
 
         private StaticLayout makeLayout(CharSequence textPart, int width) {
             if (width <= 0) {
-                width = Math.max(1, Math.min(AndroidUtilities.displaySize.x, AndroidUtilities.displaySize.y));
+                width = Math.min(AndroidUtilities.displaySize.x, AndroidUtilities.displaySize.y);
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 return StaticLayout.Builder.obtain(textPart, 0, textPart.length(), textPaint, width)

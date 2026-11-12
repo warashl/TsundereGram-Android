@@ -219,8 +219,6 @@ public class StarParticlesView extends View {
         public boolean useBlur = false;
         public boolean forceMaxAlpha = false;
         public boolean roundEffect = true;
-        /** Golden glitter: an outward burst with drag and a little upward drift, twinkle, a smooth ease-out fade. */
-        public boolean goldGlitter;
         public int type = -1;
         public Theme.ResourcesProvider resourcesProvider;
         public int colorKey = Theme.key_premiumStartSmallStarsColor;
@@ -546,8 +544,6 @@ public class StarParticlesView extends View {
             private int starIndex;
             private int alpha;
             private float randomRotate;
-            private long born; // goldGlitter: the particle's birth (its life fraction)
-            private float twinkle; // goldGlitter: twinkle phase
             float inProgress;
             float flipProgress;
 
@@ -599,18 +595,10 @@ public class StarParticlesView extends View {
                     } else {
                         paint = Drawable.this.paint;
                     }
-                    float gold = 1f;
-                    if (goldGlitter) {
-                        // ease-out to exactly 0 over the whole life (no pop) × a soft twinkle
-                        final float life = Utilities.clamp((time - born) / (float) Math.max(1, lifeTime - born), 1f, 0f);
-                        final float fade = (1f - life) * (1f - life) * (3f - 2f * (1f - life));
-                        gold = fade * (0.72f + 0.28f * (float) Math.sin(time * 0.011f + twinkle));
-                        outProgress = 0f;
-                    }
-                    paint.setAlpha((int) (this.alpha * (1f - outProgress) * alpha * gold));
+                    paint.setAlpha((int) (this.alpha * (1f - outProgress) * alpha));
                     final Bitmap bitmap = stars[starIndex];
                     if (useScale) {
-                        final float s = scale * (1f - outProgress) * alpha * inProgress * (goldGlitter ? (0.75f + 0.25f * gold) : 1f);
+                        final float s = scale * (1f - outProgress) * alpha * inProgress;
                         canvas.scale(s, s);
                     }
                     canvas.drawBitmap(bitmap, -(bitmap.getWidth() >> 1), -(bitmap.getHeight() >> 1), paint);
@@ -622,12 +610,6 @@ public class StarParticlesView extends View {
                         speed *= 4 * Math.min(speedScale, 3.5f);
                     } else {
                         speed *= speedScale;
-                    }
-                    if (goldGlitter) {
-                        // drag: fast at birth, settling as it ages; and a gentle upward drift
-                        final float lf = Utilities.clamp((time - born) / (float) Math.max(1, lifeTime - born), 1f, 0f);
-                        speed *= 2.2f * (1f - lf) * (1f - lf) + 0.15f;
-                        y -= dp(5) * (dt / 1000f);
                     }
                     x += vecX * speed;
                     y += vecY * speed;
@@ -651,8 +633,6 @@ public class StarParticlesView extends View {
                     starIndex = Math.abs(Utilities.fastRandom.nextInt() % stars.length);
                 }
                 lifeTime = time + minLifeTime + Utilities.fastRandom.nextInt(randLifeTime * (flip[starIndex] ? 3 : 1));
-                born = time;
-                twinkle = Utilities.fastRandom.nextFloat() * 6.28f;
                 randomRotate = 0;
                 if (useScale) {
                     scale = .4f + .6f * Utilities.fastRandom.nextFloat();

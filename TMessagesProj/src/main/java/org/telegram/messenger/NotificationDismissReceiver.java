@@ -24,8 +24,6 @@ public class NotificationDismissReceiver extends BroadcastReceiver {
             return;
         }
         long dialogId = intent.getLongExtra("dialogId", 0);
-        // TsundereGram: уведомление о сообщениях смахнули — сервис снова показывает свой текст
-        NotificationsService.recheckMessagePreview();
         int date = intent.getIntExtra("messageDate", 0);
         if (intent.hasExtra("story") && intent.getBooleanExtra("story", false)) {
             NotificationsController.getInstance(currentAccount).processIgnoreStories();

@@ -57,14 +57,7 @@ public class TextStyleSpan extends MetricAffectingSpan {
         }
 
         public void applyStyle(TextPaint p) {
-            Typeface typeface = null;
-            if (!header && (flags & (FLAG_STYLE_MONO | FLAG_STYLE_CODE)) == 0 && (flags & (FLAG_STYLE_BOLD | FLAG_STYLE_ITALIC)) != 0) {
-                // TsundereGram: жирный и курсив берём из того же шрифта, которым набран текст
-                typeface = org.telegram.tsunderestyle.theme.TsundereStyleFonts.styledFor(p.getTypeface(), (flags & FLAG_STYLE_BOLD) != 0, (flags & FLAG_STYLE_ITALIC) != 0);
-            }
-            if (typeface == null) {
-                typeface = getTypeface();
-            }
+            Typeface typeface = getTypeface();
             if (typeface != null) {
                 p.setTypeface(typeface);
             }

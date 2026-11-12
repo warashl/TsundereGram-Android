@@ -22,7 +22,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import app.tsunderegram.drawer.DrawerContainer;
+import app.exteraless.drawer.DrawerContainer;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.BuildVars;
@@ -35,8 +35,8 @@ public class DrawerLayoutContainer extends FrameLayout {
     private boolean inLayout;
 
     /**
-     * Своя шторка TsundereGram. null, пока выключена настройка navigationDrawer —
-     * тогда контейнер ведёт себя ровно как раньше (TsundereGram:
+     * Своя шторка exteraGram. null, пока выключена настройка navigationDrawer —
+     * тогда контейнер ведёт себя ровно как раньше (exteraGram:
      * {@code org/telegram/ui/ActionBar/DrawerLayoutContainer.java:32,136,276}).
      */
     private DrawerContainer drawerContainer;

@@ -710,8 +710,8 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 			hasMainTabs = arguments.getBoolean("hasMainTabs", false);
 		}
 
-		additionNavigationBarHeight = hasMainTabs ? dp(app.tsunderegram.appearance.MainTabsUiHelper.getTabsViewHeightDp()) : 0;
-		additionFloatingButtonOffset = hasMainTabs ? dp(app.tsunderegram.appearance.MainTabsUiHelper.getTabsFabOffsetDp()) : 0;
+		additionNavigationBarHeight = hasMainTabs ? dp(app.exteraless.appearance.MainTabsUiHelper.getTabsViewHeightDp()) : 0;
+		additionFloatingButtonOffset = hasMainTabs ? dp(app.exteraless.appearance.MainTabsUiHelper.getTabsFabOffsetDp()) : 0;
 
 		return true;
 	}
@@ -730,8 +730,8 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 	@SuppressLint("UseCompatLoadingForDrawables")
     @Override
 	public View createView(Context context) {
-		additionNavigationBarHeight = hasMainTabs ? dp(app.tsunderegram.appearance.MainTabsUiHelper.getTabsViewHeightDp()) : 0;
-		additionFloatingButtonOffset = hasMainTabs ? dp(app.tsunderegram.appearance.MainTabsUiHelper.getTabsFabOffsetDp()) : 0;
+		additionNavigationBarHeight = hasMainTabs ? dp(app.exteraless.appearance.MainTabsUiHelper.getTabsViewHeightDp()) : 0;
+		additionFloatingButtonOffset = hasMainTabs ? dp(app.exteraless.appearance.MainTabsUiHelper.getTabsFabOffsetDp()) : 0;
 
 		if (!hasMainTabs) {
 			actionBar.setBackButtonDrawable(new BackDrawable(false));
@@ -2103,7 +2103,7 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 		final int additionalList = dp(48) + (int) topPanelLayout.getAnimatedHeightWithPadding(dp(7));
 
 		iBlur3PositionActionBar.set(0, -additionalList, fragmentView.getMeasuredWidth(), actionBar.getMeasuredHeight() + additionalList);
-		app.tsunderegram.appearance.MainTabsUiHelper.setBlurBounds(iBlur3PositionMainTabs, fragmentView, navigationBarHeight);
+		app.exteraless.appearance.MainTabsUiHelper.setBlurBounds(iBlur3PositionMainTabs, fragmentView, navigationBarHeight);
 		iBlur3PositionMainTabs.inset(0, LiteMode.isEnabled(LiteMode.FLAG_LIQUID_GLASS) ? 0 : -dp(48));
 
 		scrollableViewNoiseSuppressor.setupRenderNodes(iBlur3Positions, hasMainTabs ? 2 : 1);

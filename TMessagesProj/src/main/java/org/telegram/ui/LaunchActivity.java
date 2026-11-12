@@ -194,7 +194,6 @@ import org.telegram.ui.Components.FloatingDebug.FloatingDebugController;
 import org.telegram.ui.Components.FolderBottomSheet;
 import org.telegram.ui.Components.Forum.ForumUtilities;
 import org.telegram.ui.Components.GroupCallPip;
-import org.telegram.ui.Components.InstantCameraView;
 import org.telegram.ui.Components.JoinGroupAlert;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.PasscodeView;
@@ -274,8 +273,8 @@ import tw.nekomimi.nekogram.helpers.SettingsHelper;
 import tw.nekomimi.nekogram.helpers.remote.EmojiHelper;
 import tw.nekomimi.nekogram.helpers.remote.PagePreviewRulesHelper;
 import tw.nekomimi.nekogram.helpers.remote.UpdateHelper;
-import app.tsunderegram.chats.UserLookup;
-import app.tsunderegram.settings.OpenExteraSettingsActivity;
+import app.exteraless.chats.UserLookup;
+import app.exteraless.settings.OpenExteraSettingsActivity;
 import tw.nekomimi.nekogram.utils.AlertUtil;
 import tw.nekomimi.nekogram.utils.AndroidUtil;
 import tw.nekomimi.nekogram.utils.ProxyUtil;
@@ -477,11 +476,11 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         getWindow().setBackgroundDrawable(new ActivityWindowEmptyBackgroundDrawable());
         getWindow().setFormat(PixelFormat.OPAQUE);
 
-        flagSecureReason = new FlagSecureReason(getWindow(), () -> SharedConfig.passcodeHash.length() > 0 && !SharedConfig.allowScreenCapture, true);
+        flagSecureReason = new FlagSecureReason(getWindow(), () -> SharedConfig.passcodeHash.length() > 0 && !SharedConfig.allowScreenCapture);
         flagSecureReason.attach();
 
         super.onCreate(savedInstanceState);
-        app.tsunderegram.general.GeneralHelper.applyContentCapture(this);
+        app.exteraless.general.GeneralHelper.applyContentCapture(this);
         if (Build.VERSION.SDK_INT >= 24) {
             AndroidUtilities.isInMultiwindow = isInMultiWindowMode();
         }
@@ -1322,9 +1321,9 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         if (drawerLayoutContainer == null) {
             return;
         }
-        if (app.tsunderegram.appearance.AppearanceConfig.navigationDrawer()) {
+        if (app.exteraless.appearance.AppearanceConfig.navigationDrawer()) {
             if (drawerLayoutContainer.getDrawerContainer() == null) {
-                drawerLayoutContainer.setDrawerContainer(new app.tsunderegram.drawer.DrawerContainer(this));
+                drawerLayoutContainer.setDrawerContainer(new app.exteraless.drawer.DrawerContainer(this));
             }
         } else if (drawerLayoutContainer.getDrawerContainer() != null) {
             drawerLayoutContainer.setDrawerContainer(null);
@@ -1598,21 +1597,21 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         return handleIntent(intent, isNew, restore, fromPassword, null, true, false);
     }
 
-    // tsunderegram plugins: обёртка маршрутизации интентов с before/after-хендлерами плагинов.
+    // exteraless plugins: обёртка маршрутизации интентов с before/after-хендлерами плагинов.
     // before, вернувший true, глотает интент (оригинальная обработка не выполняется);
     // after зовётся всегда (finally) после оригинальной обработки.
     private boolean handleIntent(Intent intent, boolean isNew, boolean restore, boolean fromPassword, Browser.Progress progress, boolean rebuildFragments, boolean openedTelegram) {
-        if (intent != null && app.tsunderegram.plugins.PluginsController.getInstance().isEngineEnabled()
-                && app.tsunderegram.plugins.intents.IntentsDispatcher.hasHandlers()) {
-            java.util.Map<String, Object> pluginContext = app.tsunderegram.plugins.intents.IntentsDispatcher.buildIntentContext(
+        if (intent != null && app.exteraless.plugins.PluginsController.getInstance().isEngineEnabled()
+                && app.exteraless.plugins.intents.IntentsDispatcher.hasHandlers()) {
+            java.util.Map<String, Object> pluginContext = app.exteraless.plugins.intents.IntentsDispatcher.buildIntentContext(
                     intent, intent.getIntExtra("currentAccount", UserConfig.selectedAccount), true);
-            if (app.tsunderegram.plugins.intents.IntentsDispatcher.dispatchBefore(pluginContext)) {
+            if (app.exteraless.plugins.intents.IntentsDispatcher.dispatchBefore(pluginContext)) {
                 return true;
             }
             try {
                 return handleIntentInternal(intent, isNew, restore, fromPassword, progress, rebuildFragments, openedTelegram);
             } finally {
-                app.tsunderegram.plugins.intents.IntentsDispatcher.dispatchAfter(pluginContext);
+                app.exteraless.plugins.intents.IntentsDispatcher.dispatchAfter(pluginContext);
             }
         }
         return handleIntentInternal(intent, isNew, restore, fromPassword, progress, rebuildFragments, openedTelegram);
@@ -1799,7 +1798,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                             } else if ((text.startsWith("http://") || text.startsWith("https://")) && !TextUtils.isEmpty(subject)) {
                                 text = subject + "\n" + text;
                             }
-                            sendingText = app.tsunderegram.links.LinkCleaner.cleanString(text);
+                            sendingText = app.exteraless.links.LinkCleaner.cleanString(text);
                         } else if (!TextUtils.isEmpty(subject)) {
                             sendingText = subject;
                         }
@@ -1988,9 +1987,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                             continue;
                                         }
                                     }
-                                    if (!BuildVars.NO_SCOPED_STORAGE) {
-                                        path = MediaController.copyFileToCache(uri, "file");
-                                    }
                                     if (path != null) {
                                         if (path.startsWith("file:")) {
                                             path = path.replace("file://", "");
@@ -2023,9 +2019,9 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 } else if (Intent.ACTION_VIEW.equals(intent.getAction())) {
                     Uri data = intent.getData();
 
-                    // tsunderegram plugins: файл плагина, открытый снаружи (тап в чате,
+                    // exteraless plugins: файл плагина, открытый снаружи (тап в чате,
                     // файловый менеджер). Проверка по расширению, до разбора ссылок.
-                    if (app.tsunderegram.plugins.PluginInstallHelper.handleViewIntent(this, data)) {
+                    if (app.exteraless.plugins.PluginInstallHelper.handleViewIntent(this, data)) {
                         return true;
                     }
 
@@ -2071,7 +2067,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                         String theme = null;
                         String code = null;
                         String contactToken = null;
-                        String noPaidMessagesToken = null;
                         String folderSlug = null;
                         String chatLinkSlug = null;
                         TLRPC.TL_wallPaper wallPaper = null;
@@ -2120,9 +2115,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                         String path = data.getPath();
                                         if (path != null && path.length() > 1) {
                                             path = path.substring(1);
-                                            if (app.tsunderegram.plugins.PluginsController.isSettingsLink(path, data)) {
-                                                app.tsunderegram.plugins.PluginsController.openSettingsLink(data);
-                                            } else if (path.startsWith("$")) {
+                                            if (path.startsWith("$")) {
                                                 inputInvoiceSlug = path.substring(1);
                                             } else if (path.startsWith("invoice/")) {
                                                 inputInvoiceSlug = path.substring(path.indexOf('/') + 1);
@@ -2226,7 +2219,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                                 if (AndroidUtilities.isNumeric(group)) {
                                                     username = group;
                                                     group = null;
-                                                    noPaidMessagesToken = data.getQueryParameter("free");
                                                 }
                                                 text = data.getQueryParameter("text");
                                             } else if (path.startsWith("addstickers/")) {
@@ -2327,7 +2319,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                                 }
                                             } else if (path.startsWith("contact/")) {
                                                 contactToken = path.substring(8);
-                                                noPaidMessagesToken = data.getQueryParameter("free");
                                             } else if (path.startsWith("folder/")) {
                                                 folderSlug = path.substring(7);
                                             } else if (path.startsWith("addlist/")) {
@@ -2342,7 +2333,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                                 }
                                                 if (segments.size() > 0) {
                                                     username = segments.get(0);
-                                                    noPaidMessagesToken = data.getQueryParameter("free");
                                                     if (segments.size() >= 3 && "c".equals(segments.get(1))) {
                                                         try {
                                                             giftCollectionId = Integer.parseInt(segments.get(2));
@@ -2445,7 +2435,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                 case "tg": {
                                     String url = data.toString();
                                     if (url.startsWith("tg:premium_offer") || url.startsWith("tg://premium_offer")) {
-                                        String finalUrl = url.replace("tg:premium_offer", "tg://premium_offer");
+                                        String finalUrl = url;
                                         AndroidUtilities.runOnUIThread(() -> {
                                         if (!actionBarLayout.getFragmentStack().isEmpty()) {
                                             BaseFragment fragment = actionBarLayout.getFragmentStack().get(0);
@@ -2471,7 +2461,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                         botAppMaybe = data.getQueryParameter("appname");
                                         startApp = data.getQueryParameter("startapp");
                                         openProfile = data.getBooleanQueryParameter("profile", false);
-                                        noPaidMessagesToken = data.getQueryParameter("free");
                                         if ("telegrampassport".equals(username)) {
                                             username = null;
                                             auth = new HashMap<>();
@@ -2558,7 +2547,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                         url = url.replace("tg:contact", "tg://contact");
                                         data = Uri.parse(url);
                                         contactToken = data.getQueryParameter("token");
-                                        noPaidMessagesToken = data.getQueryParameter("free");
                                     } else if (url.startsWith("tg:privatepost") || url.startsWith("tg://privatepost")) {
                                         url = url.replace("tg:privatepost", "tg://telegram.org").replace("tg://privatepost", "tg://telegram.org");
                                         data = Uri.parse(url);
@@ -2930,11 +2918,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                         presentFragment(new StarsIntroActivity());
                                         return pushOpened;
                                     } else if (url.startsWith("tg:send_gift") || url.startsWith("tg://send_gift")) {
-                                        String toParam = data.getQueryParameter("to");
-                                        if (toParam != null && toParam.startsWith("@")) {
-                                            toParam = toParam.substring(1);
-                                        }
-                                        final String to = toParam;
+                                        final String to = data.getQueryParameter("to");
                                         if (TextUtils.isEmpty(to)) {
                                             if (progress != null) {
                                                 progress.end();
@@ -2975,7 +2959,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                                 progress.end();
                                             }
 
-                                            final TLObject obj = peerId == null ? null : MessagesController.getInstance(currentAccount).getUserOrChat(peerId);
+                                            final TLObject obj = MessagesController.getInstance(currentAccount).getUserOrChat(peerId);
                                             if (obj == null) {
                                                 BaseFragment lastFragment = LaunchActivity.getLastFragment();
                                                 if (lastFragment != null) {
@@ -3048,13 +3032,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                 if (message != null && message.startsWith("@")) {
                                     message = " " + message;
                                 }
-                                if (username != null && !TextUtils.isEmpty(noPaidMessagesToken)) {
-                                    openNoPaidMessagesLink(intentAccount[0], username, noPaidMessagesToken, progress);
-                                } else if (contactToken != null && !TextUtils.isEmpty(noPaidMessagesToken)) {
-                                    openNoPaidMessagesContactLink(intentAccount[0], contactToken, noPaidMessagesToken, progress);
-                                } else {
-                                    runLinkRequest(intentAccount[0], username, group, sticker, emoji, botUser, botChat, botChannel, botChatAdminParams, message, contactToken, folderSlug, text, hasUrl, messageId, channelId, threadId, commentId, game, auth, lang, unsupportedUrl, code, login, wallPaper, inputInvoiceSlug, uniqueGiftSlug, theme, voicechat, videochat, livestream, 0, videoTimestamp, setAsAttachBot, attachMenuBotToOpen, attachMenuBotChoose, botAppMaybe, startApp, progress, forceNotInternalForApps, storyId, liveStory, storyAlbumId, giftCollectionId, auctionSlug, stargiftPreviewSlug, isBoost, chatLinkSlug, botCompact, botFullscreen, openedTelegram, openProfile, forceRequest, referrer, taskId, openDirect, optionId);
-                                }
+                                runLinkRequest(intentAccount[0], username, group, sticker, emoji, botUser, botChat, botChannel, botChatAdminParams, message, contactToken, folderSlug, text, hasUrl, messageId, channelId, threadId, commentId, game, auth, lang, unsupportedUrl, code, login, wallPaper, inputInvoiceSlug, uniqueGiftSlug, theme, voicechat, videochat, livestream, 0, videoTimestamp, setAsAttachBot, attachMenuBotToOpen, attachMenuBotChoose, botAppMaybe, startApp, progress, forceNotInternalForApps, storyId, liveStory, storyAlbumId, giftCollectionId, auctionSlug, stargiftPreviewSlug, isBoost, chatLinkSlug, botCompact, botFullscreen, openedTelegram, openProfile, forceRequest, referrer, taskId, openDirect, optionId);
                             } else {
                                 try (Cursor cursor = getContentResolver().query(intent.getData(), null, null, null, null)) {
                                     if (cursor != null) {
@@ -3133,7 +3111,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                         if (push_msg_id == 0) {
                             push_msg_id = intent.getIntExtra("message_id", 0);
                         }
-                        dismissPlayerSheets();
                         if (storyId != -1) {
                             NotificationCenter.getInstance(intentAccount[0]).postNotificationName(NotificationCenter.closeChats);
                             push_chat_id = chatId;
@@ -3296,7 +3273,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             } else if (showPlayer) {
                 if (!actionBarLayout.getFragmentStack().isEmpty()) {
                     BaseFragment fragment = actionBarLayout.getFragmentStack().get(0);
-                    fragment.showDialog(app.tsunderegram.player.Md3Player.create(this, null));
+                    fragment.showDialog(app.exteraless.player.Md3Player.create(this, null));
                 }
                 pushOpened = false;
             } else if (showLocations) {
@@ -4156,99 +4133,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         }
     }
 
-    /** A link from a QR code that removes the message fee: the token is imported, then the chat is opened. */
-    private void openNoPaidMessagesLink(final int account, final String username, final String token, final Browser.Progress progress) {
-        if (progress != null) {
-            progress.init();
-        }
-        final MessagesController messagesController = MessagesController.getInstance(account);
-        messagesController.getUserNameResolver().resolve(username, null, peerId -> {
-            final TLRPC.User user = peerId != null && peerId > 0 && peerId != Long.MAX_VALUE ? messagesController.getUser(peerId) : null;
-            if (user == null || UserObject.isUserSelf(user)) {
-                if (progress != null) {
-                    progress.end();
-                }
-                if (user != null) {
-                    openNoPaidMessagesChat(account, user.id, null);
-                } else {
-                    final BaseFragment fragment = getLastFragment();
-                    if (fragment != null) {
-                        BulletinFactory.of(fragment).createErrorBulletin(LocaleController.getString(R.string.NoUsernameFound)).show();
-                    }
-                }
-                return;
-            }
-            importNoPaidMessagesToken(account, user, token, progress);
-        });
-    }
-
-    /** t.me/contact/…?free=… (tg://contact?token=…&free=…): the user of the contact token, then the free token. */
-    private void openNoPaidMessagesContactLink(final int account, final String contactToken, final String token, final Browser.Progress progress) {
-        if (progress != null) {
-            progress.init();
-        }
-        final MessagesController messagesController = MessagesController.getInstance(account);
-        final TLRPC.TL_contacts_importContactToken req = new TLRPC.TL_contacts_importContactToken();
-        req.token = contactToken;
-        ConnectionsManager.getInstance(account).sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
-            if (!(response instanceof TLRPC.User)) {
-                if (progress != null) {
-                    progress.end();
-                }
-                FileLog.e("cant import contact token, err=" + (error == null ? null : error.text)); // (no token in the log)
-                final BaseFragment fragment = getLastFragment();
-                if (fragment != null) {
-                    BulletinFactory.of(fragment).createErrorBulletin(LocaleController.getString(R.string.NoUsernameFound)).show();
-                }
-                return;
-            }
-            final TLRPC.User user = (TLRPC.User) response;
-            messagesController.putUser(user, false);
-            if (UserObject.isUserSelf(user)) {
-                if (progress != null) {
-                    progress.end();
-                }
-                openNoPaidMessagesChat(account, user.id, null);
-                return;
-            }
-            importNoPaidMessagesToken(account, user, token, progress);
-        }));
-    }
-
-    private void importNoPaidMessagesToken(final int account, final TLRPC.User user, final String token, final Browser.Progress progress) {
-        final MessagesController messagesController = MessagesController.getInstance(account);
-        final TLRPC.TL_contacts_importNoPaidMessagesToken req = new TLRPC.TL_contacts_importNoPaidMessagesToken();
-        req.user_id = messagesController.getInputUser(user);
-        req.token = token;
-        ConnectionsManager.getInstance(account).sendRequestTyped(req, AndroidUtilities::runOnUIThread, (res, err) -> {
-            if (progress != null) {
-                progress.end();
-            }
-            if (res != null) {
-                messagesController.putUser(res, false);
-                // the price of messages comes with the full user
-                messagesController.loadFullUser(res, 0, true);
-            }
-            openNoPaidMessagesChat(account, user.id, err);
-        });
-    }
-
-    private void openNoPaidMessagesChat(int account, long userId, @Nullable TLRPC.TL_error error) {
-        final Bundle args = new Bundle();
-        args.putLong("user_id", userId);
-        final ChatActivity chatActivity = new ChatActivity(args);
-        presentFragment(chatActivity);
-        final TLRPC.User user = MessagesController.getInstance(account).getUser(userId); // the link's account
-        AndroidUtilities.runOnUIThread(() -> {
-            if (error != null) {
-                // e.g. a temporary code that has already expired
-                BulletinFactory.of(chatActivity).showForError(error);
-            } else if (user != null && !UserObject.isUserSelf(user)) {
-                BulletinFactory.of(chatActivity).createSimpleBulletin(R.raw.contact_check, AndroidUtilities.replaceTags(LocaleController.formatString(R.string.NoPaidMessagesTokenImported, UserObject.getFirstName(user)))).show();
-            }
-        }, 300);
-    }
-
     private void runLinkRequest(
         final int intentAccount,
         final String username,
@@ -4549,35 +4433,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             if (progress != null) {
                 progress.init();
             }
-            app.tsunderegram.privacy.BotAccountRouter.enabled();
-            final long botPrivacyIdentity = UserConfig.getInstance(intentAccount).getClientUserId();
-            final int botPrivacyActive = UserConfig.selectedAccount;
-            final long botPrivacySetting = app.tsunderegram.general.GeneralConfig.botPrivacyUserId.Long();
-            final boolean botPrivacyAlwaysAsk = app.tsunderegram.general.GeneralConfig.botPrivacyAlwaysAsk.Bool();
             MessagesController.getInstance(intentAccount).getUserNameResolver().resolve(username, referrer, (peerId) -> {
-                if (app.tsunderegram.privacy.BotAccountRouter.enabled() &&
-                        (botPrivacyIdentity != UserConfig.getInstance(intentAccount).getClientUserId() ||
-                         botPrivacyActive != UserConfig.selectedAccount ||
-                         botPrivacySetting != app.tsunderegram.general.GeneralConfig.botPrivacyUserId.Long() ||
-                         botPrivacyAlwaysAsk != app.tsunderegram.general.GeneralConfig.botPrivacyAlwaysAsk.Bool())) {
-                    dismissLoading.run();
-                    return;
-                }
-                if (peerId != null && peerId > 0 && state != 2 && game == null && auth == null &&
-                        botChat == null && botChannel == null && setAsAttachBot == null && attachMenuBotToOpen == null &&
-                        storyId == 0 && !liveStory && storyAlbumId == 0 && messageId == null &&
-                        app.tsunderegram.privacy.BotAccountRouter.enabled()) {
-                    TLRPC.User bot = MessagesController.getInstance(intentAccount).getUser(peerId);
-                    if (bot != null && bot.bot) {
-                        dismissLoading.run();
-                        app.tsunderegram.privacy.BotAccountRouter.resolve(this, bot, intentAccount, false, account -> {
-                            if (account != UserConfig.selectedAccount) switchToAccount(account, true);
-                            app.tsunderegram.privacy.BotAccountRouter.allowNextOpen(account, bot.id);
-                            runLinkRequest(account, username, group, sticker, emoji, botUser, botChat, botChannel, botChatAdminParams, message, contactToken, folderSlug, text, hasUrl, messageId, channelId, threadId, commentId, game, auth, lang, unsupportedUrl, code, loginToken, wallPaper, inputInvoiceSlug, uniqueGiftSlug, theme, voicechat, videochat, livestream, 2, videoTimestamp, setAsAttachBot, attachMenuBotToOpen, attachMenuBotChoose, botAppMaybe, botAppStartParam, progress, forceNotInternalForApps, storyId, liveStory, storyAlbumId, giftCollectionId, auctionSlug, stargiftPreviewSlug, isBoost, chatLinkSlug, botCompact, botFullscreen, openedTelegram, openProfile, forceRequest, referrer, taskId, openDirect, pollOptionId);
-                        });
-                        return;
-                    }
-                }
                 if (peerId != null && peerId == Long.MAX_VALUE) {
                     try {
                         dismissLoading.run();
@@ -5072,9 +4928,8 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                             }
                             BaseFragment lastFragment = !mainFragmentsStack.isEmpty() && voicechat == null ? mainFragmentsStack.get(mainFragmentsStack.size() - 1) : null;
                             if (lastFragment == null || MessagesController.getInstance(intentAccount).checkCanOpenChat(args, lastFragment)) {
-                                final boolean sameDialogId = lastFragment instanceof ChatActivity && lastFragment.getCurrentAccount() == intentAccount && ((ChatActivity) lastFragment).getDialogId() == dialog_id;
+                                final boolean sameDialogId = lastFragment instanceof ChatActivity && ((ChatActivity) lastFragment).getDialogId() == dialog_id;
                                 if (isBot && sameDialogId) {
-                                    minimizeBotWebViews(lastFragment, dialog_id);
                                     ((ChatActivity) lastFragment).setBotUser(botUser);
                                 } else if (attachMenuBotToOpen != null && sameDialogId) {
                                     ((ChatActivity) lastFragment).openAttachBotLayout(attachMenuBotToOpen);
@@ -6329,7 +6184,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             if (progress != null) {
                 progress.end();
             }
-            app.tsunderegram.updater.GitHubUpdater.check(force || progress != null);
+            app.exteraless.updater.GitHubUpdater.check(force || progress != null);
             return;
         }
        /*if (!ApplicationLoader.isStandaloneBuild() && !ApplicationLoader.isBetaBuild()) {
@@ -6601,7 +6456,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         } else {
             boolean notify = dialogsFragment == null || dialogsFragment.notify || _notify;
             int scheduleDate = _scheduleDate != 0 ? _scheduleDate : dialogsFragment == null ? 0 : dialogsFragment.scheduleDate;
-            final boolean forceDocument = dialogsFragment != null && dialogsFragment.forceDocument;
             final ChatActivity fragment;
             if (dids.size() <= 1) {
                 final long did = dids.get(0).dialogId;
@@ -6764,7 +6618,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                 photoPathsArray.get(0).caption = m[0].toString();
                                 sendingText = null;
                             }
-                            SendMessagesHelper.prepareSendingMedia(accountInstance, photoPathsArray, did, replyToMsg, replyToMsg, null, null, forceDocument, photoPathsArray.size() > 1, null, notify, scheduleDate, scheduleRepeatPeriod, 0, false, null, null, 0, false, 0, 0, null);
+                            SendMessagesHelper.prepareSendingMedia(accountInstance, photoPathsArray, did, replyToMsg, replyToMsg, null, null, false, photoPathsArray.size() > 1, null, notify, scheduleDate, scheduleRepeatPeriod, 0, false, null, null, 0, false, 0, 0, null);
                         }
                     } else {
                         if (videoPath != null) {
@@ -6783,7 +6637,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                 photoPathsArray.get(0).caption = m[0].toString();
                                 sendingText = null;
                             }
-                            SendMessagesHelper.prepareSendingMedia(accountInstance, photoPathsArray, did, replyToMsg, replyToMsg, null, null, forceDocument, photoPathsArray.size() > 1, null, notify, scheduleDate, scheduleRepeatPeriod, 0, false, null, null, 0, false, 0, 0, null);
+                            SendMessagesHelper.prepareSendingMedia(accountInstance, photoPathsArray, did, replyToMsg, replyToMsg, null, null, false, photoPathsArray.size() > 1, null, notify, scheduleDate, scheduleRepeatPeriod, 0, false, null, null, 0, false, 0, 0, null);
                         }
                     }
                     if (documentsPathsArray != null || documentsUrisArray != null) {
@@ -7101,12 +6955,12 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     @Override
     protected void onPause() {
         // Пауза голосовых и кружков при сворачивании приложения.
-        // TsundereGram зовёт это из didReceivedNotification по stopAllHeavyOperations(4096);
+        // exteraGram зовёт это из didReceivedNotification по stopAllHeavyOperations(4096);
         // у нас такой ветки нет, а onPause наступает ровно в тот же момент.
         MediaController.getInstance().pauseInBackgroundIfNeeded();
         super.onPause();
         isResumed = false;
-        app.tsunderegram.plugins.PluginsController.getInstance().executeOnAppEvent(app.tsunderegram.plugins.PluginsConstants.EVENT_APP_PAUSE);
+        app.exteraless.plugins.PluginsController.getInstance().executeOnAppEvent(app.exteraless.plugins.PluginsConstants.EVENT_APP_PAUSE);
         pipActivityHandler.onPause();
         NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.stopAllHeavyOperations, 4096);
         ApplicationLoader.mainInterfacePaused = true;
@@ -7232,8 +7086,8 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
 
     @Override
     protected void onDestroy() {
-        app.tsunderegram.icons.picker.IconPickerController.onDestroy();
-        app.tsunderegram.plugins.PluginsController.getInstance().executeOnAppEvent(app.tsunderegram.plugins.PluginsConstants.EVENT_APP_STOP);
+        app.exteraless.icons.picker.IconPickerController.onDestroy();
+        app.exteraless.plugins.PluginsController.getInstance().executeOnAppEvent(app.exteraless.plugins.PluginsConstants.EVENT_APP_STOP);
         GramWalletStorageAuth.onActivityDestroyed(this);
         isActive = false;
         activeInstanceCount--;
@@ -7355,11 +7209,9 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     protected void onResume() {
         super.onResume();
         isResumed = true;
-        // TsundereGram: вернулись в приложение — подтягиваем свежие градиенты и бейджи
-        com.tsunderegram.messenger.badges.BadgesController.INSTANCE.checkRefreshRemoteBadges(false);
-        app.tsunderegram.plugins.PluginsController.getInstance().executeOnAppEvent(app.tsunderegram.plugins.PluginsConstants.EVENT_APP_RESUME);
-        app.tsunderegram.plugins.PluginDenialNotice.flush();
-        app.tsunderegram.crash.CrashReportDialog.showIfPending(this);
+        app.exteraless.plugins.PluginsController.getInstance().executeOnAppEvent(app.exteraless.plugins.PluginsConstants.EVENT_APP_RESUME);
+        app.exteraless.plugins.PluginDenialNotice.flush();
+        app.exteraless.crash.CrashReportDialog.showIfPending(this);
         pipActivityHandler.onResume();
         if (onResumeStaticCallback != null) {
             onResumeStaticCallback.run();
@@ -7414,7 +7266,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             }
         }
 
-        if (app.tsunderegram.OpenExteraConfig.hasProxyDisableConditions()) {
+        if (app.exteraless.OpenExteraConfig.hasProxyDisableConditions()) {
             ProxyUtil.registerNetworkCallback();
         }
 
@@ -7517,17 +7369,9 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         }
     }
 
-    private final OrientationController orientationController = new OrientationController(this);
-
-    /** The orientation is changed only through requests to this controller. */
-    public OrientationController getOrientationController() {
-        return orientationController;
-    }
-
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         AndroidUtilities.checkDisplaySize(this, newConfig);
-        orientationController.update();
         AndroidUtilities.setPreferredMaxRefreshRate(getWindow());
         super.onConfigurationChanged(newConfig);
         pipActivityHandler.onConfigurationChanged(newConfig);
@@ -7562,7 +7406,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     @Override
     public void onMultiWindowModeChanged(boolean isInMultiWindowMode) {
         AndroidUtilities.isInMultiwindow = isInMultiWindowMode;
-        orientationController.update();
         checkLayout();
         super.onMultiWindowModeChanged(isInMultiWindowMode);
     }
@@ -8738,7 +8581,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     }
 
     public boolean onBackPressed(boolean invoked) {
-        if (app.tsunderegram.icons.picker.IconPickerController.onBackPressed(invoked)) {
+        if (app.exteraless.icons.picker.IconPickerController.onBackPressed(invoked)) {
             return false;
         }
         if (FloatingDebugController.onBackPressed(invoked)) {
@@ -8855,17 +8698,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 return true;
             }
         }
-        if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP || event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN) {
-            BaseFragment baseFragment = getLastFragment();
-            if (baseFragment instanceof ChatActivity) {
-                ChatActivity chatActivity = (ChatActivity) baseFragment;
-                InstantCameraView instantCameraView = chatActivity.getInstantCameraView();
-                if (instantCameraView != null && instantCameraView.isCameraReady()) {
-                    instantCameraView.onKeyDown(keyCode, event);
-                    return true;
-                }
-            }
-        }
         if (event.getAction() == KeyEvent.ACTION_DOWN && (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP || event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN)) {
             if (VoIPService.getSharedInstance() != null) {
                 if (Build.VERSION.SDK_INT >= 32) {
@@ -8878,7 +8710,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                         showVoiceChatTooltip(mute ? UndoView.ACTION_VOIP_SOUND_MUTED : UndoView.ACTION_VOIP_SOUND_UNMUTED);
                     }
                 }
-            } else if (app.tsunderegram.chats.ChatsConfig.INSTANCE.unmuteWithVolumeButtons()
+            } else if (app.exteraless.chats.ChatsConfig.INSTANCE.unmuteWithVolumeButtons()
                     && !mainFragmentsStack.isEmpty() && (!PhotoViewer.hasInstance() || !PhotoViewer.getInstance().isVisible()) && event.getRepeatCount() == 0) {
                 BaseFragment fragment = mainFragmentsStack.get(mainFragmentsStack.size() - 1);
                 if (fragment instanceof ChatActivity && !BaseFragment.hasSheets(fragment)) {
@@ -8929,7 +8761,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
 
     @Override
     public boolean needPresentFragment(INavigationLayout layout, INavigationLayout.NavigationParams params) {
-        if (app.tsunderegram.privacy.BotAccountRouter.interceptChat(this, layout, params)) return false;
         BaseFragment fragment = params.fragment;
         boolean removeLast = params.removeLast;
         boolean forceWithoutAnimation = params.noAnimation;
@@ -9232,29 +9063,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         }
     }
 
-    private static void minimizeBotWebViews(BaseFragment fragment, long botId) {
-        final ArrayList<BaseFragment.AttachedSheet> sheets = new ArrayList<>();
-        if (fragment.sheetsStack != null) {
-            sheets.addAll(fragment.sheetsStack);
-        }
-        if (fragment.getParentLayout() instanceof ActionBarLayout) {
-            final BaseFragment sheetFragment = ((ActionBarLayout) fragment.getParentLayout()).getSheetFragment(false);
-            if (sheetFragment != null && sheetFragment != fragment && sheetFragment.sheetsStack != null) {
-                sheets.addAll(sheetFragment.sheetsStack);
-            }
-        }
-        for (BaseFragment.AttachedSheet sheet : sheets) {
-            if (sheet instanceof BotWebViewAttachedSheet && sheet.isShown() && ((BotWebViewAttachedSheet) sheet).getBotId() == botId) {
-                ((BotWebViewAttachedSheet) sheet).dismiss(true, null);
-            }
-        }
-        for (BotWebViewSheet sheet : new ArrayList<>(BotWebViewSheet.activeSheets)) {
-            if (sheet.getBotId() == botId) {
-                sheet.dismiss(true, null);
-            }
-        }
-    }
-
     public BottomSheetTabs getBottomSheetTabs() {
         if (rightActionBarLayout != null && rightActionBarLayout.getBottomSheetTabs() != null) {
             return rightActionBarLayout.getBottomSheetTabs();
@@ -9535,15 +9343,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 lastFragment.getOrCreateStoryViewer().instantClose();
                 lastFragment.getOrCreateStoryViewer().open(this, null, peerIds, 0, null, null, placeProvider, false);
             }
-        }
-    }
-
-    private static void dismissPlayerSheets() {
-        if (app.tsunderegram.player.PlayerSheet.instance != null) {
-            app.tsunderegram.player.PlayerSheet.instance.dismissImmediately();
-        }
-        if (AudioPlayerAlert.instance != null) {
-            AudioPlayerAlert.instance.dismiss();
         }
     }
 

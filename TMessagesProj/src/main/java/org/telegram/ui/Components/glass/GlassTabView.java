@@ -48,8 +48,8 @@ import org.telegram.ui.Components.RLottieImageView;
 import org.telegram.ui.Components.ScaleStateListAnimator;
 import org.telegram.ui.MainTabsLayout;
 
-import app.tsunderegram.appearance.MainTabsUiHelper;
-import app.tsunderegram.components.ChatActivityEnterViewStaticIconView;
+import app.exteraless.appearance.MainTabsUiHelper;
+import app.exteraless.components.ChatActivityEnterViewStaticIconView;
 
 import me.vkryl.android.AnimatorUtils;
 import me.vkryl.android.animator.BoolAnimator;
@@ -264,10 +264,10 @@ public class GlassTabView extends FrameLayout implements MainTabsLayout.Tab, Fac
     private float ogBounce = 1f;
 
     private void ogPlayBounce() {
-        if (!org.telegram.tsunderestyle.ui.TsundereStyleInterface.tabBounce()) {
+        if (!org.telegram.othergram.ui.OtherGramInterface.tabBounce()) {
             return;
         }
-        org.telegram.tsunderestyle.ui.TsundereStyleInterface.tick(this);
+        org.telegram.othergram.ui.OtherGramInterface.tick(this);
         if (ogBounceAnimator != null) {
             ogBounceAnimator.cancel();
         }
@@ -291,7 +291,7 @@ public class GlassTabView extends FrameLayout implements MainTabsLayout.Tab, Fac
     @Override
     protected boolean drawChild(@androidx.annotation.NonNull Canvas canvas, android.view.View child, long drawingTime) {
         if (ogBounce < 1f && (child == imageView || child == backupImageView)) {
-            final float scale = 0.72f + 0.28f * org.telegram.tsunderestyle.ui.TsundereStyleInterface.spring(ogBounce);
+            final float scale = 0.72f + 0.28f * org.telegram.othergram.ui.OtherGramInterface.spring(ogBounce);
             final float hop = -org.telegram.messenger.AndroidUtilities.dp(4) * (float) Math.sin(Math.PI * Math.min(1f, ogBounce * 1.6f)) * (1f - ogBounce);
             final float cx = child.getX() + child.getWidth() / 2f;
             final float cy = child.getY() + child.getHeight() / 2f;
@@ -316,9 +316,9 @@ public class GlassTabView extends FrameLayout implements MainTabsLayout.Tab, Fac
         }
         checkPlayAnimation(animated);
 
-        // TsundereGram: выбранная вкладка рисовалась системным Roboto ExtraBold и выпадала
-        // из пользовательского шрифта — теперь у всех вкладок один и тот же шрифт приложения.
-        textView.setTypeface(AndroidUtilities.bold());
+        textView.setTypeface(!selected || mainTabMaterial3
+                ? AndroidUtilities.bold()
+                : AndroidUtilities.getTypeface(AndroidUtilities.TYPEFACE_ROBOTO_EXTRA_BOLD));
     }
 
     public boolean isTabSelected() {

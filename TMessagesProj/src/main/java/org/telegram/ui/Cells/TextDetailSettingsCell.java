@@ -71,10 +71,10 @@ public class TextDetailSettingsCell extends FrameLayout {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         if (!multiline) {
-            final float shift = app.tsunderegram.appearance.M3ListItems.enabled() ? AndroidUtilities.dp(4) : 0;
+            final float shift = app.exteraless.appearance.M3ListItems.enabled() ? AndroidUtilities.dp(4) : 0;
             textView.setTranslationY(shift);
             valueTextView.setTranslationY(shift);
-            super.onMeasure(MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(app.tsunderegram.appearance.M3ListItems.detailRowHeight(64)) + (needDivider ? 1 : 0), MeasureSpec.EXACTLY));
+            super.onMeasure(MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(app.exteraless.appearance.M3ListItems.detailRowHeight(64)) + (needDivider ? 1 : 0), MeasureSpec.EXACTLY));
         } else {
             super.onMeasure(MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
         }

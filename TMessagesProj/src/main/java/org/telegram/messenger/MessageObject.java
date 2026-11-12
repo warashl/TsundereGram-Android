@@ -102,7 +102,6 @@ import org.telegram.ui.Stars.StarsController;
 import org.telegram.ui.Stars.StarsIntroActivity;
 import org.telegram.ui.Stories.StoriesController;
 import org.telegram.ui.Wallet.GramWallet;
-import org.telegram.ui.iv.RichTextStyle;
 import org.telegram.ui.community.CommunityUtils;
 import org.telegram.ui.web.BotWebViewContainer;
 import org.telegram.utils.code.highlight.CodeHighlighting;
@@ -136,7 +135,7 @@ import xyz.nextalone.nagram.NaConfig;
 import tw.nekomimi.nekogram.helpers.MessageHelper;
 import tw.nekomimi.nekogram.syntaxhighlight.SyntaxHighlight;
 
-import app.tsunderegram.chats.LinkedCustomEmoji;
+import app.exteraless.chats.LinkedCustomEmoji;
 
 public class MessageObject {
     private static final int MESSAGE_ID_RESERVED_BITS_MASK = 0x70000000;
@@ -730,19 +729,19 @@ public class MessageObject {
      * openExtera: реакции скрыты для типа чата, которому принадлежит сообщение
      * (ChatsConfig.hideReactionsInChannels / InGroups / InPrivate).
      *
-     * В TsundereGram 12.9.0) разбивка по типам живёт только в
+     * В exteraGram (exteraGram 12.9.0) разбивка по типам живёт только в
      * ChatActivity.disabledReactions() и гасит панель реакций; отрисовку реакций
-     * в ячейке гасим здесь — сделано по смыслу, с TsundereGram не сверено.
+     * в ячейке гасим здесь — сделано по смыслу, с exteraGram не сверено.
      * Результат кэшируется: тип чата у сообщения не меняется.
      */
     private int oeChatKind; // 0 — не считали, 1 — личка, 2 — канал, 3 — группа
 
     private boolean oeReactionsHiddenForDialog() {
         try {
-            app.tsunderegram.chats.ChatsConfig.ensureLoaded();
-            final boolean inChannels = app.tsunderegram.chats.ChatsConfig.hideReactionsInChannels.Bool();
-            final boolean inGroups = app.tsunderegram.chats.ChatsConfig.hideReactionsInGroups.Bool();
-            final boolean inPrivate = app.tsunderegram.chats.ChatsConfig.hideReactionsInPrivate.Bool();
+            app.exteraless.chats.ChatsConfig.ensureLoaded();
+            final boolean inChannels = app.exteraless.chats.ChatsConfig.hideReactionsInChannels.Bool();
+            final boolean inGroups = app.exteraless.chats.ChatsConfig.hideReactionsInGroups.Bool();
+            final boolean inPrivate = app.exteraless.chats.ChatsConfig.hideReactionsInPrivate.Bool();
             if (!inChannels && !inGroups && !inPrivate) {
                 return false;
             }
@@ -1454,8 +1453,8 @@ public class MessageObject {
             calculatedForWideChannelPosts = wideChannelPost;
             if (wideChannelPost) {
                 maxSizeWidth = groupedMediaViewportWidth > 0
-                        ? app.tsunderegram.chats.WideChannelPostLayout.groupedMediaContentSpanCount(groupedMediaViewportWidth)
-                        : app.tsunderegram.chats.WideChannelPostLayout.groupedMediaContentSpanCount();
+                        ? app.exteraless.chats.WideChannelPostLayout.groupedMediaContentSpanCount(groupedMediaViewportWidth)
+                        : app.exteraless.chats.WideChannelPostLayout.groupedMediaContentSpanCount();
             } else {
                 maxSizeWidth = 800;
             }
@@ -1880,8 +1879,8 @@ public class MessageObject {
             int expectedSpanCount;
             if (wideChannelPost) {
                 expectedSpanCount = groupedMediaViewportWidth > 0
-                        ? app.tsunderegram.chats.WideChannelPostLayout.groupedMediaContentSpanCount(groupedMediaViewportWidth)
-                        : app.tsunderegram.chats.WideChannelPostLayout.groupedMediaContentSpanCount();
+                        ? app.exteraless.chats.WideChannelPostLayout.groupedMediaContentSpanCount(groupedMediaViewportWidth)
+                        : app.exteraless.chats.WideChannelPostLayout.groupedMediaContentSpanCount();
             } else {
                 expectedSpanCount = 800;
             }
@@ -5992,19 +5991,6 @@ public class MessageObject {
                     } else {
                         messageText = replaceWithLink(formatPluralStringComma("PaidMessagesPriceUpdated", (int) action.stars), "un1", fromObject);
                     }
-                } else if (messageOwner.action instanceof TLRPC.TL_messageActionNoPaidMessagesTokenUsed) {
-                    // sent by the one who used a free messaging link (QR code) of the other
-                    if (isOutOwner()) {
-                        final TLRPC.User user;
-                        if (messageOwner.saved_peer_id != null) {
-                            user = getUser(users, sUsers, DialogObject.getPeerDialogId(messageOwner.saved_peer_id));
-                        } else {
-                            user = getUser(users, sUsers, DialogObject.getPeerDialogId(messageOwner.peer_id));
-                        }
-                        messageText = replaceWithLink(getString(R.string.NoPaidMessagesTokenUsedOut), "un1", user);
-                    } else {
-                        messageText = replaceWithLink(getString(R.string.NoPaidMessagesTokenUsed), "un1", fromObject);
-                    }
                 } else if (messageOwner.action instanceof TLRPC.TL_messageActionPaidMessagesRefunded) {
                     final TLRPC.TL_messageActionPaidMessagesRefunded action = (TLRPC.TL_messageActionPaidMessagesRefunded) messageOwner.action;
                     if (isOutOwner()) {
@@ -6656,15 +6642,6 @@ public class MessageObject {
                     return out;
                 }
             }
-        } else if (text instanceof TL_iv.textCustomEmoji) {
-            final TL_iv.textCustomEmoji customEmoji = (TL_iv.textCustomEmoji) text;
-            out.append(TextUtils.isEmpty(customEmoji.alt) ? "😀" : customEmoji.alt);
-            out.setSpan(new AnimatedEmojiSpan(customEmoji.document_id, null), start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        } else if (text instanceof TL_iv.textDiff) {
-            final TL_iv.textDiff diff = (TL_iv.textDiff) text;
-            formatRichText(RichTextStyle.isEmpty(diff.text) ? diff.old_text : diff.text, isOut, photoViewer, maxLength, out, flags);
-        } else if (text.text != null) {
-            formatRichText(text.text, isOut, photoViewer, maxLength, out, flags);
         }
         if (out.length() > start && flags != 0) {
             final TextStyleSpan.TextStyleRun run = new TextStyleSpan.TextStyleRun();
@@ -8642,7 +8619,7 @@ public class MessageObject {
                     && (run.flags & (TextStyleSpan.FLAG_STYLE_BOLD | TextStyleSpan.FLAG_STYLE_ITALIC)) != 0) {
                 Typeface linkTypeface = run.getTypeface();
                 if (linkTypeface != null) {
-                    spannable.setSpan(new app.tsunderegram.chats.LinkTypefaceSpan(linkTypeface), run.start, run.end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    spannable.setSpan(new app.exteraless.chats.LinkTypefaceSpan(linkTypeface), run.start, run.end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 }
             }
             if (!setRun && (run.flags & TextStyleSpan.FLAG_STYLE_SPOILER) != 0) {
@@ -8793,7 +8770,7 @@ public class MessageObject {
             int leadingInset = sideMenuEnabled
                     ? dp(64)
                     : needDrawAvatarInternal && !isOutOwner() && !messageOwner.isThreadMessage ? dp(52) : 0;
-            maxWidth = app.tsunderegram.chats.WideChannelPostLayout.messageTextWidth(
+            maxWidth = app.exteraless.chats.WideChannelPostLayout.messageTextWidth(
                     generatedWithMinSize, leadingInset);
         } else if (hasCode && !isSaved) {
             maxWidth = generatedWithMinSize - dp(45 + 15);
@@ -10172,7 +10149,7 @@ public class MessageObject {
 
     public boolean hasWideChannelPostHeader() {
         final boolean inFeed = searchType == 4;
-        if (!(inFeed ? app.tsunderegram.chats.ChatsConfig.wideFeedPosts() : app.tsunderegram.chats.ChatsConfig.wideChannelPosts())
+        if (!(inFeed ? app.exteraless.chats.ChatsConfig.wideFeedPosts() : app.exteraless.chats.ChatsConfig.wideChannelPosts())
                 || messageOwner == null
                 || messageOwner.action != null
                 || messageOwner.peer_id == null
@@ -11797,8 +11774,8 @@ public class MessageObject {
                 if (attribute.voice) {
                     return null;
                 } else {
-                    String performer = attribute.performer;
-                    String title = attribute.title;
+                    String performer = app.exteraless.nowplaying.ZeroWidthCodec.stripToString(attribute.performer);
+                    String title = app.exteraless.nowplaying.ZeroWidthCodec.stripToString(attribute.title);
                     if (!TextUtils.isEmpty(performer)) {
                         for (int a = 0; a < excludeWords.length; a++) {
                             performer = performer.replace(excludeWords[a], " ");

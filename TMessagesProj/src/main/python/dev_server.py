@@ -1,4 +1,4 @@
-"""TCP/JSON development server on 127.0.0.1:42690 — tsunderegram plugin SDK.
+"""TCP/JSON development server on 127.0.0.1:42690 — exteraless plugin SDK.
 
 Protocol (PLUGINS-API.md §8.2): line-delimited UTF-8 JSON objects; ``"@"``
 is the command name, ``"#"`` the client request id echoed back in the
@@ -62,12 +62,12 @@ def _log(message):
         log(f"[dev_server] {message}")
     except Exception:
         import sys
-        print(f"[tsunderegram:dev_server] {message}", file=sys.stderr)
+        print(f"[exteraless:dev_server] {message}", file=sys.stderr)
 
 
 def _controller():
     from java import jclass
-    return jclass("app.tsunderegram.plugins.PluginsController").getInstance()
+    return jclass("app.exteraless.plugins.PluginsController").getInstance()
 
 
 def _incoming_plugins_dir() -> str:
@@ -154,7 +154,7 @@ def _cmd_write_plugin(request):
     from java import dynamic_proxy, jclass
 
     InstallCallback = jclass(
-        "app.tsunderegram.plugins.PluginsController$InstallCallback")
+        "app.exteraless.plugins.PluginsController$InstallCallback")
     File = jclass("java.io.File")
     done = threading.Event()
     outcome = {}

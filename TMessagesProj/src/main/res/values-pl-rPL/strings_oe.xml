@@ -34,6 +34,7 @@
     <string name="ProxyDisableNever">Nigdy</string>
     <string name="ProxyDisableAlways">Zawsze</string>
     <string name="ProxyDisableOnMobileData">Dane komórkowe</string>
+    <string name="OENowPlayingScrobbling">Trwa scrobblowanie</string>
     <string name="MainTabsHideCallsSettings">Ukryj kartę Połączenia</string>
     <string name="MainTabsHideProfile">Ukryj kartę profilu</string>
     <string name="OEBotWebViewUpdate">Zaktualizuj WebView</string>
@@ -49,8 +50,4 @@
     <string name="OEProfileJoinDateUnknown">Data dołączenia jest niedostępna</string>
     <string name="AppIconsSelect">Wybierz</string>
     <string name="AppIconsKeep">Zostaw tę</string>
-    <!-- TsundereGram: restored after 13.1.1 merge -->
-    <string name="OENowPlayingScrobbling">Trwa scrobblowanie</string>
-    <!-- TsundereGram: upstream 13.1.1 strings lost in merge -->
-    <string name="QrLoginConfirm">Ten kod loguje nowe urządzenie do Twojego konta. Zezwól tylko wtedy, gdy sam logujesz się na własnym urządzeniu.</string>
 </resources>

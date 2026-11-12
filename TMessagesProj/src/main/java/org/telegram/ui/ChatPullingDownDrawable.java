@@ -509,7 +509,7 @@ public class ChatPullingDownDrawable implements NotificationCenter.NotificationC
         } else {
             int oldAlpha1 = getThemedPaint(Theme.key_paint_chatActionBackground).getAlpha();
             getThemedPaint(Theme.key_paint_chatActionBackground).setAlpha((int) (oldAlpha1 * alpha));
-            final float avatarCorners = app.tsunderegram.appearance.AppearanceConfig.getAvatarCorners(AndroidUtilities.rectTmp.width());
+            final float avatarCorners = app.exteraless.appearance.AppearanceConfig.getAvatarCorners(AndroidUtilities.rectTmp.width());
             canvas.drawRoundRect(AndroidUtilities.rectTmp, avatarCorners, avatarCorners, getThemedPaint(Theme.key_paint_chatActionBackground));
             getThemedPaint(Theme.key_paint_chatActionBackground).setAlpha(oldAlpha1);
             if (hasGradientService()) {

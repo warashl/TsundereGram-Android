@@ -1012,7 +1012,6 @@ public class TranslateController extends BaseController {
     private final HashMap<Long, ArrayList<PendingTranslation>> pendingTranscriptionsTranslations = new HashMap<>();
 
     private final HashSet<Integer> loadingSummarizations = new HashSet<>();
-    private long lastSummaryErrorBulletinTime;
 
     private void pushToSummarize(
         MessageObject message,
@@ -1023,24 +1022,6 @@ public class TranslateController extends BaseController {
         if (loadingSummarizations.contains(id)) return;
 
         loadingSummarizations.add(id);
-
-        if (app.tsunderegram.ai.TelegramAiReplacement.replacesSummaries(currentAccount)) {
-            final String targetLanguage = language != null ? language : message.messageOwner.summary_from_language;
-            app.tsunderegram.ai.TelegramAiReplacement.summarize(message.messageOwner.message, targetLanguage, text -> {
-                loadingSummarizations.remove(id);
-                callback.run(text);
-            }, (code, error) -> {
-                final BaseFragment lastFragment = LaunchActivity.getSafeLastFragment();
-                final long now = System.currentTimeMillis();
-                if (lastFragment != null && now - lastSummaryErrorBulletinTime > 5000) {
-                    lastSummaryErrorBulletinTime = now;
-                    com.tsunderegram.messenger.ai.AiController.showErrorBulletin(lastFragment, code);
-                }
-                loadingSummarizations.remove(id);
-                callback.run(null);
-            });
-            return;
-        }
 
         final TLRPC.TL_messages_summarizeText req = new TLRPC.TL_messages_summarizeText();
         req.peer = MessagesController.getInstance(currentAccount).getInputPeer(message.getDialogId());

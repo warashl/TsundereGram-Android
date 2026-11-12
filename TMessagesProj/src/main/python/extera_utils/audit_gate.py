@@ -32,9 +32,9 @@ Java-сторону. ``Class.forName("java.lang.Runtime")`` + ``getMethod`` +
 ``invoke`` отработал в том же тесте и породил ровно ноль событий сверх
 импорта ``java.lang``: Chaquopy отдаёт живые Java-объекты, а дальше всё
 происходит в JVM, где Python-аудита нет. Это чинится только на Java-стороне
-(``app.tsunderegram.plugins.PluginRuntime`` + хуки на стоках) и всё равно не
+(``app.exteraless.plugins.PluginRuntime`` + хуки на стоках) и всё равно не
 держит плагин с разрешением ``hooks`` — он снимает наши хуки. См.
-см. уровни доступа в app.tsunderegram.plugins.PluginPermissions.
+см. уровни доступа в app.exteraless.plugins.PluginPermissions.
 """
 
 import os
@@ -420,7 +420,7 @@ def _hook(event, args, _watched=None, _loader_ref=None):
 
 
 #: Метка «это наш отказ, его нельзя глотать».
-_DENIAL_MARK = "_tsunderegram_denial"
+_DENIAL_MARK = "_exteraless_denial"
 
 
 def _denial(error):
@@ -696,53 +696,10 @@ def _write_targets(event, args):
     return targets
 
 
-_extraction = (None, None, ())
-
-
-def _capture_extraction() -> None:
-    global _extraction
-    try:
-        importer = sys.modules["java.android.importer"]
-        zips = []
-        for finder in list(sys.path_importer_cache.values()):
-            if isinstance(finder, importer.AssetFinder):
-                for archive in finder.zip_files:
-                    if not any(archive is known for known in zips):
-                        zips.append(archive)
-        _extraction = (os.path.realpath(importer.ASSET_PREFIX),
-                       importer.AssetZipFile.extract_if_changed.__code__,
-                       tuple(zips))
-    except Exception:
-        _extraction = (None, None, ())
-
-
-def _runtime_extraction(path: str, loader) -> bool:
-    root, code, zips = _extraction
-    if root is None:
-        return False
-    try:
-        target = os.path.realpath(path)
-    except Exception:
-        return False
-    if not _within(target, root):
-        return False
-    frame = sys._getframe(1)
-    while frame is not None:
-        if frame.f_code is code:
-            archive = frame.f_locals.get("self")
-            return any(archive is known for known in zips)
-        if loader._owner_of_frame(frame) is not None:
-            return False
-        frame = frame.f_back
-    return False
-
-
 def _check_protected_write(event, args, plugin_id, loader) -> None:
     for path in _write_targets(event, args):
         reason = _protected_reason(plugin_id, path)
         if reason is None:
-            continue
-        if _runtime_extraction(path, loader):
             continue
         if getattr(loader._context_state, "engine_write", False) \
                 or loader.has_permission(loader.PERM_HOOKS, plugin_id):
@@ -772,7 +729,6 @@ def install(loader_module) -> bool:
     _loader = loader_module
     if _installed:
         return True
-    _capture_extraction()
     try:
         bound_watched = _WATCHED
         bound_hook = _hook
@@ -782,6 +738,6 @@ def install(loader_module) -> bool:
             and bound_hook(event, args, bound_watched, bound_loader))
         _installed = True
     except Exception as e:  # интерпретатор без PEP 578 — работаем на врапперах
-        print(f"[tsunderegram:audit_gate] install failed: {e}", file=sys.stderr)
+        print(f"[exteraless:audit_gate] install failed: {e}", file=sys.stderr)
         return False
     return True

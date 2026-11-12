@@ -4133,7 +4133,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 		}
 		stopForeground(true);
 		stopRinging();
-		app.tsunderegram.glyph.GlyphController.getInstance().onIncomingCallStopped();
+		app.exteraless.glyph.GlyphController.getInstance().onIncomingCallStopped();
 		if (currentAccount >= 0) {
 			if (ApplicationLoader.mainInterfacePaused || !ApplicationLoader.isScreenOn) {
 				MessagesController.getInstance(currentAccount).ignoreSetOnline = false;
@@ -4803,9 +4803,9 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 		}
 		currentState = state;
 		if (state == STATE_WAITING_INCOMING && !isOutgoing) {
-			app.tsunderegram.glyph.GlyphController.getInstance().onIncomingCallStarted();
+			app.exteraless.glyph.GlyphController.getInstance().onIncomingCallStarted();
 		} else if (state == STATE_ESTABLISHED || state == STATE_ENDED || state == STATE_FAILED || state == STATE_HANGING_UP) {
-			app.tsunderegram.glyph.GlyphController.getInstance().onIncomingCallStopped();
+			app.exteraless.glyph.GlyphController.getInstance().onIncomingCallStopped();
 		}
 		if (currentState == STATE_ESTABLISHED) {
 			destroyConverting();

@@ -7,7 +7,7 @@ import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.web.WebInstantView;
 
-import com.tsunderegram.privacy.utils.AyuFileLocation;
+import com.radolyn.ayugram.utils.AyuFileLocation;
 
 public class ImageLocation {
 

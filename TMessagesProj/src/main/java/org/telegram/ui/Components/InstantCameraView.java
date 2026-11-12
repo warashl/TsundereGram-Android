@@ -193,16 +193,16 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
     private TextureView textureView;
     private BackupImageView textureOverlayView;
     /**
-     * Чем снимаем кружок. TsundereGram держит здесь трёхпозиционный CameraType
+     * Чем снимаем кружок. exteraGram держит здесь трёхпозиционный CameraType
      * (InstantCameraView.java:1235); у нас системный вариант остаётся за
      * SharedConfig, как было, а два других выбираются явно в настройках.
      */
-    private final int cameraType = app.tsunderegram.chats.ChatsConfig.cameraType();
-    private final boolean useCameraX = cameraType == app.tsunderegram.chats.ChatsConfig.CAMERA_TYPE_CAMERA_X;
+    private final int cameraType = app.exteraless.chats.ChatsConfig.cameraType();
+    private final boolean useCameraX = cameraType == app.exteraless.chats.ChatsConfig.CAMERA_TYPE_CAMERA_X;
     private final boolean useCamera2 = !useCameraX
-            && (cameraType == app.tsunderegram.chats.ChatsConfig.CAMERA_TYPE_CAMERA_2
-                || cameraType == app.tsunderegram.chats.ChatsConfig.CAMERA_TYPE_TELEGRAM
-                || cameraType == app.tsunderegram.chats.ChatsConfig.CAMERA_TYPE_SYSTEM
+            && (cameraType == app.exteraless.chats.ChatsConfig.CAMERA_TYPE_CAMERA_2
+                || cameraType == app.exteraless.chats.ChatsConfig.CAMERA_TYPE_TELEGRAM
+                || cameraType == app.exteraless.chats.ChatsConfig.CAMERA_TYPE_SYSTEM
                 || SharedConfig.isUsingCamera2(currentAccount));
     /** Зум у Camera2 и CameraX — кратность (min..max), у Camera1 — доля 0..1. */
     private final boolean useRatioZoom = useCamera2 || useCameraX;
@@ -210,8 +210,8 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
     private boolean bothCameras;
     private Camera2Session[] camera2Sessions = new Camera2Session[2];
     private Camera2Session camera2SessionCurrent;
-    private volatile app.tsunderegram.camera.CameraXSession cameraXSession;
-    private app.tsunderegram.camera.CameraXSession.CameraLifecycle camLifecycle;
+    private volatile app.exteraless.camera.CameraXSession cameraXSession;
+    private app.exteraless.camera.CameraXSession.CameraLifecycle camLifecycle;
     private boolean needDrawFlickerStub;
     private volatile long legacyCameraSwitchStartedNs;
     private volatile int legacyCameraSwitchSequence;
@@ -228,10 +228,6 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
         } else {
             return cameraSession != null && cameraSession.isInitied();
         }
-    }
-
-    public boolean isCameraReady() {
-        return cameraReady && isCameraSessionInitiated() && cameraThread != null;
     }
 
     private float panTranslationY;
@@ -298,7 +294,7 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
     private final LinearLayout buttonsLayout;
     private final int buttonsSizePx;
     private final ZoomControlView zoomControlView;
-    private final app.tsunderegram.camera.InstantCameraZoomSlider zoomSlider;
+    private final app.exteraless.camera.InstantCameraZoomSlider zoomSlider;
     private float lockedZoom;
 
 
@@ -332,9 +328,9 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
         flashViews = new FlashViews(getContext(), null, this, null);
         // Тёплость и яркость фронтальной вспышки берём из настроек, а не константой.
         // ensureLoaded — на случай раннего вызова до init().
-        app.tsunderegram.chats.ChatsConfig.ensureLoaded();
-        flashViews.setWarmth(app.tsunderegram.chats.ChatsConfig.flashWarmth());
-        flashViews.setIntensity(app.tsunderegram.chats.ChatsConfig.flashIntensity());
+        app.exteraless.chats.ChatsConfig.ensureLoaded();
+        flashViews.setWarmth(app.exteraless.chats.ChatsConfig.flashWarmth());
+        flashViews.setIntensity(app.exteraless.chats.ChatsConfig.flashIntensity());
         addView(flashViews.backgroundView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.FILL));
 
         cameraContainer = new InstantViewCameraContainer(context) {
@@ -368,7 +364,7 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
         zoomControlView.setVisibility(GONE);
         addView(zoomControlView, new LayoutParams(LayoutHelper.MATCH_PARENT, dp(50), Gravity.CENTER));
 
-        zoomSlider = new app.tsunderegram.camera.InstantCameraZoomSlider(context, resourcesProvider);
+        zoomSlider = new app.exteraless.camera.InstantCameraZoomSlider(context, resourcesProvider);
         zoomSlider.setOpenAlpha(0f);
         zoomSlider.setOnCameraZoomChangeListener(this::onZoomSliderChanged);
         addView(zoomSlider, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER));
@@ -484,9 +480,9 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
             flashOptions = ItemOptions.makeOptions(this, resourcesProvider, flashButton)
                 .addView(
                     new SliderView(getContext(), SliderView.TYPE_WARMTH)
-                        .setValue(app.tsunderegram.chats.ChatsConfig.flashWarmth())
+                        .setValue(app.exteraless.chats.ChatsConfig.flashWarmth())
                         .setOnValueChange(value -> {
-                            app.tsunderegram.chats.ChatsConfig.flashWarmth.setConfigInt(Math.round(value * 100));
+                            app.exteraless.chats.ChatsConfig.flashWarmth.setConfigInt(Math.round(value * 100));
                             flashViews.setWarmth(value);
                         })
                 )
@@ -495,9 +491,9 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
                     // нижняя граница яркости у кружка 0.5f, а не.65f как в сторис
                     new SliderView(getContext(), SliderView.TYPE_INTENSITY)
                         .setMinMax(.5f, 1f)
-                        .setValue(app.tsunderegram.chats.ChatsConfig.flashIntensity())
+                        .setValue(app.exteraless.chats.ChatsConfig.flashIntensity())
                         .setOnValueChange(value -> {
-                            app.tsunderegram.chats.ChatsConfig.flashIntensity.setConfigInt(Math.round(value * 100));
+                            app.exteraless.chats.ChatsConfig.flashIntensity.setConfigInt(Math.round(value * 100));
                             flashViews.setIntensity(value);
                         })
                 )
@@ -583,11 +579,8 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
                 cameraXSession.setTorchEnabled(flashing && recording);
             }
         } else if (useCamera2) {
-            final boolean torch = flashing && !isFrontface && recording;
-            for (Camera2Session session : camera2Sessions) {
-                if (session != null) {
-                    session.setFlash(torch && session == camera2SessionCurrent);
-                }
+            if (camera2Sessions[!initialCameraFront ? 0 : 1] != null) {
+                camera2Sessions[!initialCameraFront ? 0 : 1].setFlash(flashing && !isFrontface && recording);
             }
         } else {
             if (cameraSession != null) {
@@ -855,7 +848,7 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
         if (useCameraX && camLifecycle == null) {
             // CameraX привязывается к чужому жизненному циклу, а у кружка своей
             // Activity нет — держим собственный.
-            camLifecycle = new app.tsunderegram.camera.CameraXSession.CameraLifecycle();
+            camLifecycle = new app.exteraless.camera.CameraXSession.CameraLifecycle();
         }
 
         if (switchCameraDrawable == null) {
@@ -932,12 +925,12 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
         }
 
         if (useCameraX) {
-            bothCameras = app.tsunderegram.camera.CameraXSession.isRoundDualAvailable(getContext());
+            bothCameras = app.exteraless.camera.CameraXSession.isRoundDualAvailable(getContext());
             surfaceIndex = (!bothCameras || isFrontface) ? 0 : 1;
             // Размер превью CameraX сообщает уже после привязки, а GL-потоку он нужен
             // сразу — до первого кадра ставим квадрат по размеру кружка.
             if (previewSize[0] == null) {
-                final int side = com.tsunderegram.messenger.utils.system.SystemUtils
+                final int side = com.exteragram.messenger.utils.system.SystemUtils
                         .getRoundVideoResolution();
                 previewSize[0] = new Size(side, side);
             }
@@ -949,7 +942,7 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
             if (bothCameras) {
                 for (int a = 0; a < 2; ++a) {
                     if (camera2Sessions[a] == null) {
-                        camera2Sessions[a] = Camera2Session.create(a == (isFrontface ? 0 : 1), com.tsunderegram.messenger.utils.system.SystemUtils.getRoundVideoResolution(), com.tsunderegram.messenger.utils.system.SystemUtils.getRoundVideoResolution());
+                        camera2Sessions[a] = Camera2Session.create(a == (isFrontface ? 0 : 1), com.exteragram.messenger.utils.system.SystemUtils.getRoundVideoResolution(), com.exteragram.messenger.utils.system.SystemUtils.getRoundVideoResolution());
                         if (camera2Sessions[a] != null) {
                             camera2Sessions[a].setRecordingVideo(true);
                             previewSize[a] = new Size(camera2Sessions[a].getPreviewWidth(), camera2Sessions[a].getPreviewHeight());
@@ -969,7 +962,7 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
                 }
                 if (camera2SessionCurrent == null) return;
             } else {
-                camera2SessionCurrent = camera2Sessions[isFrontface ? 0 : 1] = Camera2Session.create(isFrontface, com.tsunderegram.messenger.utils.system.SystemUtils.getRoundVideoResolution(), com.tsunderegram.messenger.utils.system.SystemUtils.getRoundVideoResolution());
+                camera2SessionCurrent = camera2Sessions[isFrontface ? 0 : 1] = Camera2Session.create(isFrontface, com.exteragram.messenger.utils.system.SystemUtils.getRoundVideoResolution(), com.exteragram.messenger.utils.system.SystemUtils.getRoundVideoResolution());
                 if (camera2SessionCurrent == null) return;
                 camera2SessionCurrent.setRecordingVideo(true);
                 previewSize[0] = new Size(camera2SessionCurrent.getPreviewWidth(), camera2SessionCurrent.getPreviewHeight());
@@ -1045,30 +1038,8 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
         return cameraContainer;
     }
 
-    private AnimatorSet zoomHideAnimator;
-
-    /** TsundereGram: мгновенно (за 120 мс) скрывает ползунок и шкалу зума при отправке/отмене кружка. */
-    private void hideZoomControlsNow() {
-        if (zoomHideAnimator != null) {
-            zoomHideAnimator.cancel();
-        }
-        if (zoomSlider == null || zoomControlView == null) {
-            return;
-        }
-        zoomHideAnimator = new AnimatorSet();
-        zoomHideAnimator.playTogether(
-                ObjectAnimator.ofFloat(zoomControlView, View.ALPHA, 0.0f),
-                ObjectAnimator.ofFloat(zoomSlider, app.tsunderegram.camera.InstantCameraZoomSlider.OPEN_ALPHA, 0.0f));
-        zoomHideAnimator.setDuration(120);
-        zoomHideAnimator.start();
-    }
-
     public void startAnimation(boolean open, boolean fromPaused) {
         dispatchAnimationState(open, fromPaused);
-        if (open && zoomHideAnimator != null) {
-            zoomHideAnimator.cancel();
-            zoomHideAnimator = null;
-        }
         if (animatorSet != null) {
             animatorSet.removeAllListeners();
             animatorSet.cancel();
@@ -1102,7 +1073,7 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
         animatorSet.playTogether(
                 ObjectAnimator.ofFloat(buttonsLayout, View.ALPHA, open ? 1.0f : 0.0f),
                 ObjectAnimator.ofFloat(zoomControlView, View.ALPHA, open ? 1.0f : 0.0f),
-                ObjectAnimator.ofFloat(zoomSlider, app.tsunderegram.camera.InstantCameraZoomSlider.OPEN_ALPHA, open ? 1.0f : 0.0f),
+                ObjectAnimator.ofFloat(zoomSlider, app.exteraless.camera.InstantCameraZoomSlider.OPEN_ALPHA, open ? 1.0f : 0.0f),
                 ObjectAnimator.ofFloat(muteImageView, View.ALPHA, 0.0f),
                 ObjectAnimator.ofInt(paint, AnimationProperties.PAINT_ALPHA, open ? 255 : 0),
                 ObjectAnimator.ofFloat(cameraContainer, View.ALPHA, open ? 1.0f : 0.0f),
@@ -1178,7 +1149,6 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
         if (textureView == null) {
             return;
         }
-        hideZoomControlsNow(); // TsundereGram: ползунок зума прячем сразу, а не после кодирования видео
         stopProgressTimer();
         if (videoPlayer != null) {
             videoPlayer.releasePlayer(true);
@@ -1283,7 +1253,6 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
 
     public void cancel(boolean byGesture) {
         stopProgressTimer();
-        hideZoomControlsNow();
         if (videoPlayer != null) {
             videoPlayer.releasePlayer(true);
             videoPlayer = null;
@@ -1364,11 +1333,10 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
         }
         cancelZoomAnimations();
         zoomSlider.beginCameraSwitch();
-        resetZoomOnCameraSwitch();
         final boolean dual = cameraXSession != null && cameraXSession.isDualMode();
         isFrontface = !isFrontface;
-        app.tsunderegram.chats.ChatsConfig.ensureLoaded();
-        if (app.tsunderegram.chats.ChatsConfig.rememberLastUsedCamera.Bool()
+        app.exteraless.chats.ChatsConfig.ensureLoaded();
+        if (app.exteraless.chats.ChatsConfig.rememberLastUsedCamera.Bool()
                 && NaConfig.INSTANCE.getCameraInVideoMessages().Int() != 2) {
             NaConfig.INSTANCE.getCameraInVideoMessages().setConfigInt(isFrontface ? 0 : 1);
         }
@@ -1395,7 +1363,7 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
     }
 
     private void releaseCameraXSession() {
-        final app.tsunderegram.camera.CameraXSession session = cameraXSession;
+        final app.exteraless.camera.CameraXSession session = cameraXSession;
         if (session == null) {
             return;
         }
@@ -1435,16 +1403,15 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
             }
         }
         isFrontface = !isFrontface;
-        // TsundereGram 12.9.0, InstantCameraView.java:2597-2600: «запоминать последнюю камеру»
+        // exteraGram 12.9.0, InstantCameraView.java:2597-2600: «запоминать последнюю камеру»
         // дописывает выбор в ту же настройку, из которой камера берётся при старте записи
         // (см. :801 выше). Режим «спрашивать» (2) не трогаем — запоминать в нём нечего.
-        app.tsunderegram.chats.ChatsConfig.ensureLoaded();
-        if (app.tsunderegram.chats.ChatsConfig.rememberLastUsedCamera.Bool()
+        app.exteraless.chats.ChatsConfig.ensureLoaded();
+        if (app.exteraless.chats.ChatsConfig.rememberLastUsedCamera.Bool()
                 && NaConfig.INSTANCE.getCameraInVideoMessages().Int() != 2) {
             NaConfig.INSTANCE.getCameraInVideoMessages().setConfigInt(isFrontface ? 0 : 1);
         }
         updateFlash();
-        resetZoomOnCameraSwitch();
         if (useCamera2) {
             if (bothCameras) {
                 camera2SessionCurrent = camera2Sessions[isFrontface == initialCameraFront ? 0 : 1];
@@ -1457,7 +1424,7 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
                     camera2SessionCurrent = null;
                     camera2Sessions[isFrontface ? 1 : 0] = null;
                 }
-                camera2SessionCurrent = camera2Sessions[isFrontface ? 0 : 1] = Camera2Session.create(isFrontface, com.tsunderegram.messenger.utils.system.SystemUtils.getRoundVideoResolution(), com.tsunderegram.messenger.utils.system.SystemUtils.getRoundVideoResolution());
+                camera2SessionCurrent = camera2Sessions[isFrontface ? 0 : 1] = Camera2Session.create(isFrontface, com.exteragram.messenger.utils.system.SystemUtils.getRoundVideoResolution(), com.exteragram.messenger.utils.system.SystemUtils.getRoundVideoResolution());
                 if (camera2SessionCurrent == null) {
                     legacyCameraSwitchAwaitingFrame = false;
                     logLegacyCameraSwitchStage("failed: Camera2Session.create returned null");
@@ -1660,7 +1627,7 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
 
             if (useCameraX) {
                 final Preview.SurfaceProvider surfaceProvider =
-                        app.tsunderegram.camera.CameraXSession.createSurfaceProvider(
+                        app.exteraless.camera.CameraXSession.createSurfaceProvider(
                                 getContext(), surfaceTexture,
                                 (width, height) -> {
                                     if (cameraThread != null) {
@@ -1668,8 +1635,8 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
                                     }
                                 });
                 if (index == 0) {
-                    final app.tsunderegram.camera.CameraXSession session =
-                            new app.tsunderegram.camera.CameraXSession(camLifecycle, surfaceProvider);
+                    final app.exteraless.camera.CameraXSession session =
+                            new app.exteraless.camera.CameraXSession(camLifecycle, surfaceProvider);
                     cameraXSession = session;
                     session.initCamera(getContext(), isFrontface, bothCameras, () -> {
                         if (cameraXSession != session) {
@@ -2397,7 +2364,7 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
                 }
                 case DO_SETORIENTATION_MESSAGE: {
                     // У CameraX нет getWorldAngle(): поворот берём с дисплея.
-                    final app.tsunderegram.camera.CameraXSession session = cameraXSession;
+                    final app.exteraless.camera.CameraXSession session = cameraXSession;
                     final int rotationAngle = session != null ? session.getDisplayOrientation() : 0;
                     android.opengl.Matrix.setIdentityM(mMVPMatrix, 0);
                     if (rotationAngle != 0) {
@@ -2552,7 +2519,7 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
         private static final int IFRAME_INTERVAL = 1;
 
         /**
-         * Реальная частота кадров для энкодера. Перенос из TsundereGram 12.9.0,
+         * Реальная частота кадров для энкодера. Перенос из exteraGram 12.9.0,
          * InstantCameraView.java:2429: 60 отдаётся только если драйвер подтвердил
          * расширенный диапазон, иначе кадры снимутся в 60, а запишутся как 30.
          */
@@ -2560,11 +2527,11 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
         private int encoderFrameRate = FRAME_RATE;
 
         private int resolveEncoderFrameRate() {
-            if (!app.tsunderegram.chats.ChatsConfig.extendedFramesPerSecond.Bool()) {
+            if (!app.exteraless.chats.ChatsConfig.extendedFramesPerSecond.Bool()) {
                 return FRAME_RATE;
             }
             if (useCameraX) {
-                final app.tsunderegram.camera.CameraXSession session = cameraXSession;
+                final app.exteraless.camera.CameraXSession session = cameraXSession;
                 return session != null ? session.getRecordingFrameRate() : FRAME_RATE;
             }
             if (useCamera2) {
@@ -2643,7 +2610,6 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
         private int texelSizeHandle;
         private int alphaHandle;
         private int zeroTimeStamps;
-        private long cameraClockOffsetNs = Long.MIN_VALUE;
         private Integer lastCameraId = 0;
         private InstantCameraVideoEncoderOverlayHelper overlayHelper;
 
@@ -2667,8 +2633,6 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
                 boolean done = false;
                 AudioTimestamp audioTimestamp = new AudioTimestamp();
                 boolean shouldUseTimestamp = true;
-                long audioFramesRead = 0;
-                final int audioFrameBytes = 2 * Math.max(1, audioRecorder.getChannelCount());
 
                 while (!done) {
                     if ((!running || pauseRecorder) && audioRecorder.getRecordingState() != AudioRecord.RECORDSTATE_STOPPED) {
@@ -2724,8 +2688,7 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
                         if (shouldUseTimestamp) {
                             try {
                                 audioRecorder.getTimestamp(audioTimestamp, AudioTimestamp.TIMEBASE_MONOTONIC);
-                                timestamp = (audioTimestamp.nanoTime
-                                        - (audioTimestamp.framePosition - audioFramesRead) * 1_000_000_000L / audioSampleRate) / 1000;
+                                timestamp = audioTimestamp.nanoTime / 1000;
                             } catch (Exception e) {
                                 FileLog.e(e);
                                 shouldUseTimestamp = false;
@@ -2735,7 +2698,6 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
                             timestamp = audioPresentationTimeUs;
                         }
                         buffer.offset[a] = timestamp;
-                        audioFramesRead += readResult / audioFrameBytes;
 
                         buffer.read[a] = readResult;
                         int bufferDurationUs = 1000000 * readResult / audioSampleRate / 2;
@@ -2780,8 +2742,8 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
             }
 
             started = true;
-            int resolution = com.tsunderegram.messenger.utils.system.SystemUtils.getRoundVideoResolution();
-            int bitrate = com.tsunderegram.messenger.utils.system.SystemUtils.getRoundVideoBitrate() * 1024;
+            int resolution = com.exteragram.messenger.utils.system.SystemUtils.getRoundVideoResolution();
+            int bitrate = com.exteragram.messenger.utils.system.SystemUtils.getRoundVideoBitrate() * 1024;
             AndroidUtilities.runOnUIThread(() -> {
                 NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.stopAllHeavyOperations, 512);
             });
@@ -2816,7 +2778,6 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
 
             keyframeThumbs.clear();
             frameCount = 0;
-            cameraClockOffsetNs = Long.MIN_VALUE;
             DispatchQueue queue = generateKeyframeThumbsQueue;
             if (queue != null) {
                 queue.cleanupQueue();
@@ -2863,17 +2824,8 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
                 }
             } else {
                 zeroTimeStamps = 0;
-                if (cameraClockOffsetNs == Long.MIN_VALUE) {
-                    final long boottimeNs = SystemClock.elapsedRealtimeNanos();
-                    final long monotonicNs = System.nanoTime();
-                    cameraClockOffsetNs = Math.abs(timestamp - boottimeNs) < Math.abs(timestamp - monotonicNs)
-                            ? boottimeNs - monotonicNs
-                            : 0;
-                }
-                timestamp -= cameraClockOffsetNs;
             }
             prevTimestamp = timestamp;
-            handler.removeMessages(MSG_VIDEOFRAME_AVAILABLE);
             handler.sendMessage(handler.obtainMessage(MSG_VIDEOFRAME_AVAILABLE, (int) (timestamp >> 32), (int) timestamp, cameraId));
         }
 
@@ -2971,7 +2923,7 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
                         for (int a = input.lastWroteBuffer; a <= input.results; a++) {
                             if (a < input.results) {
                                 long totalTime = input.offset[a] - audioStartTime;
-                                if (!running && (input.offset[a] >= videoLast / 1000 - desyncTime || totalTime >= 60_000000)) {
+                                if (!running && (input.offset[a] >= videoLast - desyncTime || totalTime >= 60_000000)) {
                                     if (BuildVars.LOGS_ENABLED) {
                                         if (totalTime >= 60_000000) {
                                             FileLog.d("InstantCamera stop audio encoding because recorded time more than 60s");
@@ -3324,7 +3276,7 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
             animatorSet.playTogether(
                     ObjectAnimator.ofFloat(buttonsLayout, View.ALPHA, 0.0f),
                     ObjectAnimator.ofFloat(zoomControlView, View.ALPHA, 0.0f),
-                    ObjectAnimator.ofFloat(zoomSlider, app.tsunderegram.camera.InstantCameraZoomSlider.OPEN_ALPHA, 0.0f),
+                    ObjectAnimator.ofFloat(zoomSlider, app.exteraless.camera.InstantCameraZoomSlider.OPEN_ALPHA, 0.0f),
                     ObjectAnimator.ofInt(paint, AnimationProperties.PAINT_ALPHA, 0),
                     ObjectAnimator.ofFloat(muteImageView, View.ALPHA, 1.0f));
             animatorSet.setDuration(180);
@@ -3677,7 +3629,7 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
                 audioFormat.setString(MediaFormat.KEY_MIME, AUDIO_MIME_TYPE);
                 audioFormat.setInteger(MediaFormat.KEY_SAMPLE_RATE, audioSampleRate);
                 audioFormat.setInteger(MediaFormat.KEY_CHANNEL_COUNT, 1);
-                audioFormat.setInteger(MediaFormat.KEY_BIT_RATE, com.tsunderegram.messenger.utils.system.SystemUtils.getRoundAudioBitrate() * 1024);
+                audioFormat.setInteger(MediaFormat.KEY_BIT_RATE, com.exteragram.messenger.utils.system.SystemUtils.getRoundAudioBitrate() * 1024);
                 audioFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 2048 * AudioBufferInfo.MAX_SAMPLES);
 
                 audioEncoder = MediaCodec.createEncoderByType(AUDIO_MIME_TYPE);
@@ -3870,7 +3822,7 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
 
             ByteBuffer[] encoderOutputBuffers = null;
             while (true) {
-                int encoderStatus = videoEncoder.dequeueOutputBuffer(videoBufferInfo, endOfStream ? 10000 : 0);
+                int encoderStatus = videoEncoder.dequeueOutputBuffer(videoBufferInfo, 10000);
                 if (encoderStatus == MediaCodec.INFO_TRY_AGAIN_LATER) {
                     if (!endOfStream || pauseRecorder) {
                         break;
@@ -4066,7 +4018,7 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
     }
 
     private String createFragmentShader(Size previewSize) {
-        if (SharedConfig.deviceIsLow() || !allowBigSizeCamera() || previewSize != null && Math.max(previewSize.getHeight(), previewSize.getWidth()) * 0.7f < com.tsunderegram.messenger.utils.system.SystemUtils.getRoundVideoResolution()) {
+        if (SharedConfig.deviceIsLow() || !allowBigSizeCamera() || previewSize != null && Math.max(previewSize.getHeight(), previewSize.getWidth()) * 0.7f < com.exteragram.messenger.utils.system.SystemUtils.getRoundVideoResolution()) {
             return "#extension GL_OES_EGL_image_external : require\n" +
                     "precision highp float;\n" +
                     "varying vec2 vTextureCoord;\n" +
@@ -4122,7 +4074,7 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
     }
 
     private String createFragmentShaderV2(Size previewSize) {
-        if (SharedConfig.deviceIsLow() || !allowBigSizeCamera() || previewSize != null && Math.max(previewSize.getHeight(), previewSize.getWidth()) * 0.7f < com.tsunderegram.messenger.utils.system.SystemUtils.getRoundVideoResolution()) {
+        if (SharedConfig.deviceIsLow() || !allowBigSizeCamera() || previewSize != null && Math.max(previewSize.getHeight(), previewSize.getWidth()) * 0.7f < com.exteragram.messenger.utils.system.SystemUtils.getRoundVideoResolution()) {
             return "#extension GL_OES_EGL_image_external : require\n" +
                     "precision highp float;\n" +
                     "varying vec2 vTextureCoord;\n" +
@@ -4300,8 +4252,8 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
     ValueAnimator finishZoomTransition;
 
     // ---- Зум кнопками громкости при записи кружка ----
-    // Перенос из TsundereGram 12.9.0, InstantCameraView.java:3012-3022 (onKeyDown)
-    // и :1421-1508 (adjustZoom). Настройки у TsundereGram нет, фича захардкожена.
+    // Перенос из exteraGram 12.9.0, InstantCameraView.java:3012-3022 (onKeyDown)
+    // и :1421-1508 (adjustZoom). Настройки у exteraGram нет, фича захардкожена.
 
     private ValueAnimator volumeZoomAnimator;
 
@@ -4334,7 +4286,6 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
 
         final float from;
         final float target;
-        final float rawTarget;
         if (useRatioZoom) {
             if (!hasRatioZoomSession()) {
                 return;
@@ -4344,39 +4295,17 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
             if (maxZoom <= minZoom) {
                 return;
             }
-            from = Utilities.clamp(currentCameraZoomRatio(), maxZoom, minZoom);
-            if (useCameraX) {
-                final float oneZoom = Utilities.clamp(
-                        cameraXSession.isActiveCameraFrontface() ? minZoom : 1f,
-                        maxZoom, minZoom);
-                final double zoomRange = maxZoom / oneZoom;
-                int steps = (int) Math.round(Math.log(zoomRange) / Math.log(ZOOM_STEP_BASE));
-                if (steps < 1) {
-                    steps = 1;
-                }
-                final float factor = (float) Math.pow(zoomRange, 1.0d / steps);
-                if (up) {
-                    rawTarget = from >= oneZoom ? from * factor : oneZoom;
-                } else if (from > oneZoom) {
-                    rawTarget = from / factor;
-                } else {
-                    rawTarget = minZoom;
-                }
-            } else {
-                int steps = (int) Math.round(Math.log(maxZoom) / Math.log(ZOOM_STEP_BASE));
-                if (steps < 1) {
-                    steps = 1;
-                }
-                final float factor = (float) Math.pow(maxZoom, 1.0d / steps);
-                rawTarget = up ? from * factor : from / factor;
+            from = Utilities.clamp(pinchScale <= 0f ? minZoom : pinchScale, maxZoom, minZoom);
+            int steps = (int) Math.round(Math.log(maxZoom) / Math.log(ZOOM_STEP_BASE));
+            if (steps < 1) {
+                steps = 1;
             }
-            target = Utilities.clamp(
-                    useCameraX && !up && rawTarget < minZoom ? minZoom : rawTarget,
-                    maxZoom, minZoom);
+            final float factor = (float) Math.pow(maxZoom, 1.0d / steps);
+            final float raw = up ? from * factor : Math.max(minZoom, from / factor);
+            target = Utilities.clamp(raw, maxZoom, minZoom);
         } else {
-            from = Utilities.clamp(pinchScale <= 0f ? 0f : pinchScale, 1f, 0f);
-            rawTarget = from + (up ? 0.125f : -0.125f);
-            target = Utilities.clamp(rawTarget, 1f, 0f);
+            from = Utilities.clamp(pinchScale, 1f, 0f);
+            target = Utilities.clamp(from + (up ? 0.125f : -0.125f), 1f, 0f);
         }
 
         if (Math.abs(from - target) < 0.0001f) {
@@ -4394,7 +4323,6 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
                 cameraSession.setZoom(zoom);
             }
             pinchScale = zoom;
-            lockedZoom = useRatioZoom ? getZoomControlValueFromRatio(zoom) : zoom;
             syncZoomControlView(zoom);
         });
         volumeZoomAnimator.addListener(new AnimatorListenerAdapter() {
@@ -4420,9 +4348,9 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
 
     public void finishZoom() {
         zoomSlider.endPinchZoomGesture();
-        // TsundereGram 12.9.0, InstantCameraView.java:2856-2860 — при staticZoom зум остаётся
+        // exteraGram 12.9.0, InstantCameraView.java:2856-2860 — при staticZoom зум остаётся
         // там, где его оставили пальцы, и не анимируется обратно.
-        if (finishZoomTransition != null || app.tsunderegram.chats.ChatsConfig.staticZoom.Bool()) {
+        if (finishZoomTransition != null || app.exteraless.chats.ChatsConfig.staticZoom.Bool()) {
             return;
         }
 
@@ -4431,7 +4359,7 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
         if (useRatioZoom) {
             if (!hasRatioZoomSession()) return;
             fromZoom = Utilities.clamp(pinchScale, zoomMaxRatio(), zoomMinRatio());
-            toZoom = lockedZoom > 0f ? getLockedZoomRatio() : defaultZoomRatio();
+            toZoom = getLockedZoomRatio();
         } else {
             fromZoom = Utilities.clamp(pinchScale, 1f, 0f);
             toZoom = lockedZoom;
@@ -4497,7 +4425,7 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
 
     private float zoomMinRatio() {
         if (useCameraX) {
-            final app.tsunderegram.camera.CameraXSession session = cameraXSession;
+            final app.exteraless.camera.CameraXSession session = cameraXSession;
             return session == null ? 1f : session.getMinZoomRatio();
         }
         return camera2SessionCurrent == null ? 1f : camera2SessionCurrent.getMinZoom();
@@ -4505,7 +4433,7 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
 
     private float zoomMaxRatio() {
         if (useCameraX) {
-            final app.tsunderegram.camera.CameraXSession session = cameraXSession;
+            final app.exteraless.camera.CameraXSession session = cameraXSession;
             return session == null ? 1f : session.getMaxZoomRatio();
         }
         return camera2SessionCurrent == null ? 1f : camera2SessionCurrent.getMaxZoom();
@@ -4513,7 +4441,7 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
 
     private float currentCameraZoomRatio() {
         if (useCameraX) {
-            final app.tsunderegram.camera.CameraXSession session = cameraXSession;
+            final app.exteraless.camera.CameraXSession session = cameraXSession;
             return session == null ? 1f : session.getZoomRatio();
         }
         return camera2SessionCurrent == null ? 1f : camera2SessionCurrent.getZoom();
@@ -4521,7 +4449,7 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
 
     private void setCameraZoomRatio(float zoom) {
         if (useCameraX) {
-            final app.tsunderegram.camera.CameraXSession session = cameraXSession;
+            final app.exteraless.camera.CameraXSession session = cameraXSession;
             if (session != null) {
                 session.setZoomRatio(zoom);
             }
@@ -4542,24 +4470,6 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
             return min;
         }
         return min + lockedZoom * (max - min);
-    }
-
-    private float defaultZoomRatio() {
-        if (useCameraX) {
-            return zoomSlider.getCameraXResetZoom();
-        }
-        final Camera2Session session = camera2SessionCurrent;
-        if (session == null) {
-            return 1f;
-        }
-        final float min = session.getMinZoom();
-        final float max = session.getMaxZoom();
-        // Пока зум не трогали: основная — 1×, ширик только по настройке; фронталка —
-        // полный сенсор (её минимум), как в CameraXSession.wantsWideAngleStart.
-        if (session.isFront() || app.tsunderegram.chats.ChatsConfig.startWithWideAngleCamera.Bool()) {
-            return min;
-        }
-        return Utilities.clamp(1f, max, min);
     }
 
     private float getZoomControlValueFromRatio(float zoom) {
@@ -4631,13 +4541,6 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
         applyLockedZoomToCamera();
     }
 
-    private void resetZoomOnCameraSwitch() {
-        cancelZoomAnimations();
-        pinchScale = 0f;
-        lockedZoom = 0f;
-        zoomControlView.setZoom(0f, false);
-    }
-
     private void cancelFinishZoomTransition() {
         if (finishZoomTransition != null) {
             finishZoomTransition.cancel();
@@ -4648,15 +4551,15 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
     private void applyLockedZoomToCamera() {
         bindZoomSlider();
         if (useCameraX) {
-            final app.tsunderegram.camera.CameraXSession session = cameraXSession;
+            final app.exteraless.camera.CameraXSession session = cameraXSession;
             if (session == null) {
                 return;
             }
-            final float zoom = lockedZoom > 0f
-                    ? getLockedZoomRatio()
-                    : zoomSlider.getCameraXResetZoom();
-            session.setZoomRatio(zoom);
-            pinchScale = zoom;
+            // Широкий угол на старте — это зум меньше единицы, и его ставит сама
+            // сессия; трогаем зум, только когда пользователь сам его двигал.
+            if (lockedZoom > 0f) {
+                session.setZoomRatio(getLockedZoomRatio());
+            }
             return;
         }
         if (useCamera2) {
@@ -4664,13 +4567,22 @@ public class InstantCameraView extends InstantCameraViewBase implements Notifica
             if (session == null) {
                 return;
             }
-            final float zoom = lockedZoom > 0f ? getLockedZoomRatio() : defaultZoomRatio();
+            final float min = session.getMinZoom();
+            final float max = session.getMaxZoom();
+            // Пока зум не трогали: основная — 1×, ширик только по настройке; фронталка —
+            // полный сенсор (её минимум), как в CameraXSession.wantsWideAngleStart.
+            final float zoom;
+            if (lockedZoom > 0f && max > min) {
+                zoom = min + lockedZoom * (max - min);
+            } else if (session.isFront() || app.exteraless.chats.ChatsConfig.startWithWideAngleCamera.Bool()) {
+                zoom = min;
+            } else {
+                zoom = Utilities.clamp(1f, max, min);
+            }
             session.setZoom(zoom);
-            pinchScale = zoom;
         } else {
             if (cameraSession != null) {
                 cameraSession.setZoom(lockedZoom);
-                pinchScale = lockedZoom;
             }
         }
     }

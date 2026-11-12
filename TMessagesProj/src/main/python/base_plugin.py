@@ -1,4 +1,4 @@
-"""Public plugin API (BasePlugin, hook/menu contracts) — part of the tsunderegram plugin SDK.
+"""Public plugin API (BasePlugin, hook/menu contracts) — part of the exteraless plugin SDK.
 
 This module is import-safe without Chaquopy: the Java bridge is resolved at
 import time inside try/except, and every bridge call degrades gracefully when
@@ -32,10 +32,10 @@ def _engine_class(name):
 
 
 try:
-    from app.tsunderegram.plugins import PluginServices, PythonBridge
+    from app.exteraless.plugins import PluginServices, PythonBridge
 except Exception:  # host interpreter (no Chaquopy) — see fallback paths below
-    PluginServices = _engine_class("app.tsunderegram.plugins.PluginServices")
-    PythonBridge = _engine_class("app.tsunderegram.plugins.PythonBridge")
+    PluginServices = _engine_class("app.exteraless.plugins.PluginServices")
+    PythonBridge = _engine_class("app.exteraless.plugins.PythonBridge")
 
 
 # Hook contracts
@@ -161,7 +161,7 @@ class _PluginsControllerProxy:
 
     Published plugins import the controller either from here or straight from
     the reference Java package. This fork's controller lives in
-    ``app.tsunderegram.plugins``, so attribute access is forwarded to it and the
+    ``app.exteraless.plugins``, so attribute access is forwarded to it and the
     Java package rename stays invisible to the plugin.
     """
 
@@ -172,7 +172,7 @@ class _PluginsControllerProxy:
             from java import jclass
 
             _PluginsControllerProxy._java = jclass(
-                "app.tsunderegram.plugins.PluginsController")
+                "app.exteraless.plugins.PluginsController")
         return _PluginsControllerProxy._java
 
     def getInstance(self):
@@ -523,20 +523,17 @@ def _serialize_hook_filters(before, after) -> str:
                       ensure_ascii=False)
 
 
-_NO_CLIENT_OVERRIDE = object()
-
-
 # BasePlugin
 
 class BasePlugin:
     """Base class every plugin must subclass exactly once per module."""
 
-    _tsunderegram_plugin_id: Optional[str] = None
+    _exteraless_plugin_id: Optional[str] = None
     MenuType = MenuItemType
-    _tsunderegram_send_message_registered = False
+    _exteraless_send_message_registered = False
 
     #: Идентификатор плагина. Плагины читают именно `self.id` — так называется
-    #: это поле у TsundereGram, и без него у них падает всё, что обращается к
+    #: это поле у exteraGram, и без него у них падает всё, что обращается к
     #: контроллеру по id (обновление экрана настроек, поиск себя в реестре).
     id: Optional[str] = None
     enabled: bool = True
@@ -573,65 +570,65 @@ class BasePlugin:
     def on_updates_hook(self, container_name, account, updates):
         return None
 
-    # ---- internal state (managed by the loader via _tsunderegram_attach) ----
+    # ---- internal state (managed by the loader via _exteraless_attach) ----
 
-    def _tsunderegram_state(self, name: str, factory):
+    def _exteraless_state(self, name: str, factory):
         value = self.__dict__.get(name)
         if not isinstance(value, factory):
             value = factory()
             self.__dict__[name] = value
         return value
 
-    def _tsunderegram_attach(self, plugin_id: str):
+    def _exteraless_attach(self, plugin_id: str):
         """Bind this instance to a plugin id. Called by extera_utils.plugin_loader."""
-        self._tsunderegram_plugin_id = plugin_id
+        self._exteraless_plugin_id = plugin_id
         self.id = plugin_id
-        self._tsunderegram_state("_tsunderegram_request_hooks", list)
-        self._tsunderegram_state("_tsunderegram_menu_callbacks", dict)
-        if "_tsunderegram_send_message_registered" not in self.__dict__:
-            self.__dict__["_tsunderegram_send_message_registered"] = False
+        self._exteraless_state("_exteraless_request_hooks", list)
+        self._exteraless_state("_exteraless_menu_callbacks", dict)
+        if "_exteraless_send_message_registered" not in self.__dict__:
+            self.__dict__["_exteraless_send_message_registered"] = False
 
     @property
     def plugin_id(self) -> Optional[str]:
-        return self._tsunderegram_plugin_id
+        return self._exteraless_plugin_id
 
-    def _tsunderegram_bridge_available(self) -> bool:
-        return PythonBridge is not None and bool(self._tsunderegram_plugin_id)
+    def _exteraless_bridge_available(self) -> bool:
+        return PythonBridge is not None and bool(self._exteraless_plugin_id)
 
     # ---- logging ----
 
     def log(self, msg):
         """Write a message to the app's plugin log pipeline."""
         text = str(msg)
-        if self._tsunderegram_bridge_available():
+        if self._exteraless_bridge_available():
             try:
-                PythonBridge.log(self._tsunderegram_plugin_id, text)
+                PythonBridge.log(self._exteraless_plugin_id, text)
                 return
             except Exception:
                 pass  # fall through to stderr
-        print(f"[plugin:{self._tsunderegram_plugin_id or '?'}] {text}", file=sys.stderr)
+        print(f"[plugin:{self._exteraless_plugin_id or '?'}] {text}", file=sys.stderr)
 
     # ---- settings storage ----
 
-    def _tsunderegram_settings_cache(self):
-        cache = self.__dict__.get("_tsunderegram_settings_values")
+    def _exteraless_settings_cache(self):
+        cache = self.__dict__.get("_exteraless_settings_values")
         if cache is None:
             cache = {}
-            self.__dict__["_tsunderegram_settings_values"] = cache
+            self.__dict__["_exteraless_settings_values"] = cache
         return cache
 
-    def _tsunderegram_drop_settings_cache(self):
-        self.__dict__.pop("_tsunderegram_settings_values", None)
+    def _exteraless_drop_settings_cache(self):
+        self.__dict__.pop("_exteraless_settings_values", None)
 
     def get_setting(self, key: str, default=None):
-        if not self._tsunderegram_bridge_available():
+        if not self._exteraless_bridge_available():
             return default
-        cache = self._tsunderegram_settings_cache()
+        cache = self._exteraless_settings_cache()
         if key in cache:
             raw = cache[key]
         else:
             try:
-                raw = PythonBridge.getSetting(self._tsunderegram_plugin_id, key)
+                raw = PythonBridge.getSetting(self._exteraless_plugin_id, key)
             except Exception as e:
                 self.log(f"get_setting({key!r}) failed: {e}")
                 return default
@@ -641,42 +638,39 @@ class BasePlugin:
         if raw is None:
             return default
         try:
-            value = json.loads(raw)
+            return json.loads(raw)
         except (ValueError, TypeError):
             return default
-        from plugin_settings import coerce_value
-        return coerce_value(value, default)
 
     def set_setting(self, key: str, value, reload_settings: bool = False):
-        if not self._tsunderegram_bridge_available():
+        if not self._exteraless_bridge_available():
             return
         try:
             raw = json.dumps(value, ensure_ascii=False)
-            PythonBridge.setSetting(self._tsunderegram_plugin_id, key, raw, bool(reload_settings))
+            PythonBridge.setSetting(self._exteraless_plugin_id, key, raw, bool(reload_settings))
         except Exception as e:
-            self._tsunderegram_drop_settings_cache()
+            self._exteraless_drop_settings_cache()
             self.log(f"set_setting({key!r}) failed: {e}")
             return
-        self._tsunderegram_settings_cache()[key] = raw
+        self._exteraless_settings_cache()[key] = raw
 
     def export_settings(self) -> dict:
-        if not self._tsunderegram_bridge_available():
+        if not self._exteraless_bridge_available():
             return {}
         try:
-            raw = PythonBridge.exportSettings(self._tsunderegram_plugin_id)
-            from plugin_settings import decode_values
-            return decode_values(raw) if raw else {}
+            raw = PythonBridge.exportSettings(self._exteraless_plugin_id)
+            data = json.loads(raw) if raw else {}
+            return data if isinstance(data, dict) else {}
         except Exception as e:
             self.log(f"export_settings() failed: {e}")
             return {}
 
     def import_settings(self, settings: dict, reload_settings: bool = True):
-        if not self._tsunderegram_bridge_available():
+        if not self._exteraless_bridge_available():
             return
         try:
-            from plugin_settings import encode_values
-            PythonBridge.importSettings(self._tsunderegram_plugin_id,
-                                        json.dumps(encode_values(settings), ensure_ascii=False),
+            PythonBridge.importSettings(self._exteraless_plugin_id,
+                                        json.dumps(dict(settings), ensure_ascii=False),
                                         bool(reload_settings))
         except Exception as e:
             self.log(f"import_settings() failed: {e}")
@@ -686,13 +680,13 @@ class BasePlugin:
     def add_hook(self, name: str, match_substring: bool = False, priority: int = 0):
         """Register pre/post request hooks for a TL request name."""
         entry = (str(name), bool(match_substring), int(priority))
-        hooks = self._tsunderegram_state("_tsunderegram_request_hooks", list)
+        hooks = self._exteraless_state("_exteraless_request_hooks", list)
         if entry not in hooks:
             hooks.append(entry)
-        if not self._tsunderegram_bridge_available():
+        if not self._exteraless_bridge_available():
             return
         try:
-            PythonBridge.addRequestHook(self._tsunderegram_plugin_id, entry[0], entry[1], entry[2])
+            PythonBridge.addRequestHook(self._exteraless_plugin_id, entry[0], entry[1], entry[2])
         except Exception as e:
             self.log(f"add_hook({entry[0]!r}) failed: {e}")
 
@@ -700,30 +694,30 @@ class BasePlugin:
         """Снять хук, поставленный add_hook()/add_on_send_message_hook()."""
         key = str(name)
         if key == "on_send_message_hook":
-            self.__dict__["_tsunderegram_send_message_registered"] = False
-            if not self._tsunderegram_bridge_available():
+            self.__dict__["_exteraless_send_message_registered"] = False
+            if not self._exteraless_bridge_available():
                 return
             try:
-                PythonBridge.removeSendMessageHook(self._tsunderegram_plugin_id)
+                PythonBridge.removeSendMessageHook(self._exteraless_plugin_id)
             except Exception as e:
                 self.log(f"remove_hook({key!r}) failed: {e}")
             return
-        hooks = self._tsunderegram_state("_tsunderegram_request_hooks", list)
+        hooks = self._exteraless_state("_exteraless_request_hooks", list)
         hooks[:] = [entry for entry in hooks if entry[0] != key]
-        if not self._tsunderegram_bridge_available():
+        if not self._exteraless_bridge_available():
             return
         try:
-            PythonBridge.removeRequestHook(self._tsunderegram_plugin_id, key)
+            PythonBridge.removeRequestHook(self._exteraless_plugin_id, key)
         except Exception as e:
             self.log(f"remove_hook({key!r}) failed: {e}")
 
     def add_on_send_message_hook(self, priority: int = 0):
         """Register the outgoing-message hook (on_send_message_hook)."""
-        self.__dict__["_tsunderegram_send_message_registered"] = True
-        if not self._tsunderegram_bridge_available():
+        self.__dict__["_exteraless_send_message_registered"] = True
+        if not self._exteraless_bridge_available():
             return
         try:
-            PythonBridge.addSendMessageHook(self._tsunderegram_plugin_id, int(priority))
+            PythonBridge.addSendMessageHook(self._exteraless_plugin_id, int(priority))
         except Exception as e:
             self.log(f"add_on_send_message_hook() failed: {e}")
 
@@ -748,11 +742,11 @@ class BasePlugin:
             value = getattr(menu_item_data, key)
             if value is not None:
                 payload[key] = value
-        if self._tsunderegram_bridge_available():
+        if self._exteraless_bridge_available():
             try:
                 # 3-arg signature: Java stores the PyObject and calls it
                 # directly with a java.util.Map context on menu clicks.
-                item_id = PythonBridge.addMenuItem(self._tsunderegram_plugin_id,
+                item_id = PythonBridge.addMenuItem(self._exteraless_plugin_id,
                                                    json.dumps(payload, ensure_ascii=False),
                                                    menu_item_data.on_click)
             except Exception as e:
@@ -762,21 +756,21 @@ class BasePlugin:
             # Host fallback: deterministic local id so callbacks remain testable.
             item_id = menu_item_data.item_id or f"local_{abs(hash((menu_item_data.menu_type, menu_item_data.text))) & 0xFFFFFFFF:08x}"
         if menu_item_data.on_click is not None and item_id:
-            self._tsunderegram_state("_tsunderegram_menu_callbacks", dict)[item_id] = menu_item_data.on_click
+            self._exteraless_state("_exteraless_menu_callbacks", dict)[item_id] = menu_item_data.on_click
         return item_id
 
     def remove_menu_item(self, item_id: str):
-        self._tsunderegram_state("_tsunderegram_menu_callbacks", dict).pop(item_id, None)
-        if not self._tsunderegram_bridge_available():
+        self._exteraless_state("_exteraless_menu_callbacks", dict).pop(item_id, None)
+        if not self._exteraless_bridge_available():
             return
         try:
-            PythonBridge.removeMenuItem(self._tsunderegram_plugin_id, item_id)
+            PythonBridge.removeMenuItem(self._exteraless_plugin_id, item_id)
         except Exception as e:
             self.log(f"remove_menu_item({item_id!r}) failed: {e}")
 
-    def _tsunderegram_dispatch_menu_click(self, item_id: str, context):
+    def _exteraless_dispatch_menu_click(self, item_id: str, context):
         """Called by the loader when the user taps a plugin menu item."""
-        callback = self._tsunderegram_state("_tsunderegram_menu_callbacks", dict).get(item_id)
+        callback = self._exteraless_state("_exteraless_menu_callbacks", dict).get(item_id)
         if callback is None:
             self.log(f"no menu callback registered for item {item_id!r}")
             return
@@ -792,23 +786,12 @@ class BasePlugin:
         (falling back to the UI-selected account outside hooks);
         ``self.client(account)`` returns an AccountClient bound to *account*.
         """
-        override = self.__dict__.get("_tsunderegram_client_override", _NO_CLIENT_OVERRIDE)
-        if override is not _NO_CLIENT_OVERRIDE:
-            return override
         import client_utils
         return client_utils.AccountClient(None)
 
-    @client.setter
-    def client(self, value):
-        self.__dict__["_tsunderegram_client_override"] = value
-
-    @client.deleter
-    def client(self):
-        self.__dict__.pop("_tsunderegram_client_override", None)
-
     # ---- Xposed-style method hooking ----
 
-    def _tsunderegram_build_method_handler(self, handler, before=None, after=None):
+    def _exteraless_build_method_handler(self, handler, before=None, after=None):
         """Normalize the handler argument to a Java hook-protocol object."""
         if isinstance(handler, (MethodHook, MethodReplacement)):
             return handler
@@ -832,38 +815,38 @@ class BasePlugin:
             wrapper.after_hooked_method = after
         return wrapper
 
-    def _tsunderegram_build_filters_json(self, handler_obj, filters, before_filters, after_filters) -> str:
+    def _exteraless_build_filters_json(self, handler_obj, filters, before_filters, after_filters) -> str:
         declared = _handler_declared_filters(handler_obj)
         before = [*declared["before"], *(filters or ()), *(before_filters or ())]
         after = [*declared["after"], *(after_filters or ())]
         return _serialize_hook_filters(before, after)
 
-    def _tsunderegram_track_unhook_ids(self, ids) -> None:
-        tracked = self._tsunderegram_state("_tsunderegram_method_hook_ids", list)
+    def _exteraless_track_unhook_ids(self, ids) -> None:
+        tracked = self._exteraless_state("_exteraless_method_hook_ids", list)
         for unhook_id in ids:
             if unhook_id is not None:
                 tracked.append(str(unhook_id))
 
-    def _tsunderegram_hook_all(self, kind: str, clazz, method_name, handler_obj, priority, filters_json):
+    def _exteraless_hook_all(self, kind: str, clazz, method_name, handler_obj, priority, filters_json):
         """Shared tail for hook_all_methods/hook_all_constructors."""
-        if PluginServices is None or not self._tsunderegram_plugin_id:
+        if PluginServices is None or not self._exteraless_plugin_id:
             self.log(f"{kind} requires the Android runtime")
             return UnhookIdList((), self)
         try:
-            raw = PluginServices.hookAllMethods(self._tsunderegram_plugin_id, clazz, method_name,
+            raw = PluginServices.hookAllMethods(self._exteraless_plugin_id, clazz, method_name,
                                                 handler_obj, int(priority), filters_json) \
                 if kind == "methods" else \
-                PluginServices.hookAllConstructors(self._tsunderegram_plugin_id, clazz, handler_obj,
+                PluginServices.hookAllConstructors(self._exteraless_plugin_id, clazz, handler_obj,
                                                    int(priority), filters_json)
             ids = [str(x) for x in (json.loads(raw) if raw else [])]
         except Exception as e:
             self.log(f"hook_all_{kind}({method_name or clazz!r}) failed: {e}")
             return UnhookIdList((), self)
-        self._tsunderegram_track_unhook_ids(ids)
+        self._exteraless_track_unhook_ids(ids)
         return UnhookIdList(ids, self)
 
     @staticmethod
-    def _tsunderegram_resolve_class(clazz):
+    def _exteraless_resolve_class(clazz):
         """Accept a jclass/java.lang.Class or a dotted class name."""
         if isinstance(clazz, str):
             from hook_utils import find_class
@@ -887,12 +870,12 @@ class BasePlugin:
         with multiple overloads, all of them are hooked (a list of unhook ids
         is returned then).
         """
-        handler_obj = self._tsunderegram_build_method_handler(handler, before=before, after=after)
-        filters_json = self._tsunderegram_build_filters_json(handler_obj, filters,
+        handler_obj = self._exteraless_build_method_handler(handler, before=before, after=after)
+        filters_json = self._exteraless_build_filters_json(handler_obj, filters,
                                                 before_filters, after_filters)
 
         if isinstance(method, (tuple, list)) and len(method) == 2:
-            clazz = self._tsunderegram_resolve_class(method[0])
+            clazz = self._exteraless_resolve_class(method[0])
             name = str(method[1])
             from hook_utils import _as_class
             matches = [m for m in _as_class(clazz).getDeclaredMethods()
@@ -901,7 +884,7 @@ class BasePlugin:
                 self.log(f"hook_method: no declared method {name!r} on {clazz}")
                 return None
             if len(matches) > 1:
-                return self._tsunderegram_hook_all("methods", clazz, name, handler_obj,
+                return self._exteraless_hook_all("methods", clazz, name, handler_obj,
                                       priority, filters_json)
             member = matches[0]
             try:
@@ -911,11 +894,11 @@ class BasePlugin:
         else:
             member = method
 
-        if PluginServices is None or not self._tsunderegram_plugin_id:
+        if PluginServices is None or not self._exteraless_plugin_id:
             self.log("hook_method requires the Android runtime")
             return None
         try:
-            unhook_id = PluginServices.hookMethod(self._tsunderegram_plugin_id, member, handler_obj,
+            unhook_id = PluginServices.hookMethod(self._exteraless_plugin_id, member, handler_obj,
                                                   int(priority), filters_json)
         except Exception as e:
             self.log(f"hook_method({member!r}) failed: {e}")
@@ -923,27 +906,27 @@ class BasePlugin:
         if unhook_id is None:
             return None
         unhook_id = str(unhook_id)
-        self._tsunderegram_track_unhook_ids((unhook_id,))
+        self._exteraless_track_unhook_ids((unhook_id,))
         return UnhookId(unhook_id, self)
 
     def hook_all_methods(self, clazz, method_name, handler=None, priority: int = 50,
                          filters=None, before=None, after=None,
                          before_filters=None, after_filters=None) -> list:
         """Hook every overload of *method_name* on *clazz*; returns unhook ids."""
-        handler_obj = self._tsunderegram_build_method_handler(handler, before=before, after=after)
-        filters_json = self._tsunderegram_build_filters_json(handler_obj, filters,
+        handler_obj = self._exteraless_build_method_handler(handler, before=before, after=after)
+        filters_json = self._exteraless_build_filters_json(handler_obj, filters,
                                                 before_filters, after_filters)
-        return self._tsunderegram_hook_all("methods", self._tsunderegram_resolve_class(clazz), str(method_name),
+        return self._exteraless_hook_all("methods", self._exteraless_resolve_class(clazz), str(method_name),
                               handler_obj, priority, filters_json)
 
     def hook_all_constructors(self, clazz, handler=None, priority: int = 50,
                               filters=None, before=None, after=None,
                               before_filters=None, after_filters=None) -> list:
         """Hook every constructor of *clazz*; returns unhook ids."""
-        handler_obj = self._tsunderegram_build_method_handler(handler, before=before, after=after)
-        filters_json = self._tsunderegram_build_filters_json(handler_obj, filters,
+        handler_obj = self._exteraless_build_method_handler(handler, before=before, after=after)
+        filters_json = self._exteraless_build_filters_json(handler_obj, filters,
                                                 before_filters, after_filters)
-        return self._tsunderegram_hook_all("constructors", self._tsunderegram_resolve_class(clazz), None,
+        return self._exteraless_hook_all("constructors", self._exteraless_resolve_class(clazz), None,
                               handler_obj, priority, filters_json)
 
     def unhook_method(self, unhook_obj):
@@ -951,7 +934,7 @@ class BasePlugin:
         if unhook_obj is None:
             return
         ids = [unhook_obj] if isinstance(unhook_obj, str) else list(unhook_obj)
-        tracked = self._tsunderegram_state("_tsunderegram_method_hook_ids", list)
+        tracked = self._exteraless_state("_exteraless_method_hook_ids", list)
         for unhook_id in ids:
             if unhook_id is None:
                 continue
@@ -968,7 +951,7 @@ class BasePlugin:
 
     # ---- resource cleanup (driven by the loader on unload) ----
 
-    def _tsunderegram_cleanup_resources(self):
+    def _exteraless_cleanup_resources(self):
         """Best-effort release of SDK resources registered by this plugin.
 
         Called by extera_utils.plugin_loader on unload, after the user's
@@ -976,16 +959,16 @@ class BasePlugin:
         per-plugin sweep as well — every call here tolerates duplicates.
         """
         if PluginServices is not None:
-            for unhook_id in list(self._tsunderegram_state("_tsunderegram_method_hook_ids", list)):
+            for unhook_id in list(self._exteraless_state("_exteraless_method_hook_ids", list)):
                 try:
                     PluginServices.unhook(str(unhook_id))
                 except Exception:
                     pass
-        self.__dict__["_tsunderegram_method_hook_ids"] = []
+        self.__dict__["_exteraless_method_hook_ids"] = []
         for module_name, cleanup in (("file_utils", "_unregister_all_for_plugin"),
                                      ("intents", "_unhandle_all_for_plugin")):
             try:
                 module = __import__(module_name)
-                getattr(module, cleanup)(self._tsunderegram_plugin_id)
+                getattr(module, cleanup)(self._exteraless_plugin_id)
             except Exception:
                 pass

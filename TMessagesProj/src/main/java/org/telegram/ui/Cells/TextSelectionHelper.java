@@ -2197,11 +2197,6 @@ public abstract class TextSelectionHelper<Cell extends TextSelectionHelper.Selec
             }
             selectedView = cell;
             selectedCellId = selectedView.getMessageObject().getId();
-            isRich = selectedView.getMessageObject().type == MessageObject.TYPE_ARTICLE && selectedView.getMessageObject().richLayout != null;
-            if (isRich) {
-                isDescription = false;
-                isFactCheck = false;
-            }
             selectionStart = start;
             selectionEnd = end;
             invalidate();
@@ -3903,15 +3898,11 @@ public abstract class TextSelectionHelper<Cell extends TextSelectionHelper.Selec
                 } else {
                     int n = childCountByPosition.get(i);
                     for (int k = startViewChildPosition; k < n; k++) {
-                        CharSequence text = textByPosition.get(i + (k << 16));
-                        if (text == null) {
-                            continue;
-                        }
                         CharSequence prefix = prefixTextByPosition.get(i + (k << 16));
                         if (prefix != null) {
                             stringBuilder.append(prefix).append(' ');
                         }
-                        stringBuilder.append(text);
+                        stringBuilder.append(textByPosition.get(i + (k << 16)));
                         stringBuilder.append('\n');
                     }
                 }

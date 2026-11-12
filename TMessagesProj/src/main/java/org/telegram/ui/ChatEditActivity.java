@@ -121,6 +121,7 @@ import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 
 import tw.nekomimi.nekogram.NekoConfig;
+import tw.nekomimi.nekogram.helpers.LocalNameHelper;
 import tw.nekomimi.nekogram.utils.AndroidUtil;
 
 public class ChatEditActivity extends BaseFragment implements ImageUpdater.ImageUpdaterDelegate, NotificationCenter.NotificationCenterDelegate {
@@ -138,6 +139,7 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
     private AvatarDrawable avatarDrawable;
     private ImageUpdater imageUpdater;
     private EditTextEmoji nameTextView;
+    private boolean localNameOverrideBulletinShown;
     private LinearLayout linearLayout;
     private SectionsScrollView scrollView;
 
@@ -228,6 +230,7 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
 
     private final static int done_button = 1;
 
+    private final static int fake_done_button = 100;
 
     private int realAdminCount = 0;
 
@@ -544,6 +547,12 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
                     }
                 } else if (id == done_button) {
                     processDone();
+                } else if (id == fake_done_button) {
+                    if (currentUser != null) {
+                        setBotNameOverride();
+                    } else {
+                        setChatNameOverride();
+                    }
                 }
             }
         });
@@ -709,9 +718,9 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
                 super.invalidate(l, t, r, b);
             }
         };
-        avatarImage.setRoundRadius(app.tsunderegram.appearance.AppearanceConfig.getAvatarCorners(
-                dp(64), forum ? app.tsunderegram.appearance.AppearanceConfig.CORNER_TYPE_FORUM
-                             : app.tsunderegram.appearance.AppearanceConfig.CORNER_TYPE_DEFAULT));
+        avatarImage.setRoundRadius(app.exteraless.appearance.AppearanceConfig.getAvatarCorners(
+                dp(64), forum ? app.exteraless.appearance.AppearanceConfig.CORNER_TYPE_FORUM
+                             : app.exteraless.appearance.AppearanceConfig.CORNER_TYPE_DEFAULT));
         avatarImage.getImageReceiver().setAvatarCornersApplied(true);
 
         if (canEditBotInfo() || currentUser == null && ChatObject.canChangeChatInfo(currentChat)) {
@@ -782,8 +791,20 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
         } else {
             nameTextView.setHint(getString("GroupName", R.string.GroupName));
         }
-        nameTextView.setEnabled(currentUser != null ? canEditBotInfo() : ChatObject.canChangeChatInfo(currentChat));
+        // nameTextView.setEnabled(currentChat != null || ChatObject.canChangeChatInfo(currentChat));
+        nameTextView.setEnabled(true);
         nameTextView.setFocusable(nameTextView.isEnabled());
+        nameTextView.getEditText().setOnClickListener(v -> {
+            if (!localNameOverrideBulletinShown && (currentUser != null && currentUser.bot && !currentUser.bot_can_edit || currentUser == null && currentChat != null && !ChatObject.canChangeChatInfo(currentChat))) {
+                localNameOverrideBulletinShown = true;
+                AndroidUtilities.runOnUIThread(() -> {
+                    if (isPaused() || getParentActivity() == null) {
+                        return;
+                    }
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.info, getString(R.string.EditLocalNameOverride), 2, Bulletin.DURATION_SHORT).show();
+                }, 250);
+            }
+        });
         nameTextView.getEditText().addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -957,16 +978,6 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
                         MessagesController.getInstance(currentAccount).getMainSettings().getInt("boostingappearance", 0) + 1
                     ).apply();
                 });
-            }
-
-            // TsundereGram: баннер канала прямо в «Изменить», рядом с оформлением
-            if (ChatObject.isChannelAndNotMegaGroup(currentChat) && ChatObject.canChangeChatInfo(currentChat)) {
-                TextCell bannerCell = new TextCell(context, resourceProvider);
-                bannerCell.setBackground(Theme.getSelectorDrawable(true));
-                final boolean hasBanner = app.tsunderegram.banners.ProfileBannerController.getInstance().hasChannelBanner(-currentChat.id);
-                bannerCell.setTextAndValueAndIcon("Баннер канала", hasBanner ? "Установлен" : "Нет", R.drawable.msg_addphoto, true);
-                typeEditContainer.addView(bannerCell, LayoutHelper.createLinear(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                bannerCell.setOnClickListener(v -> presentFragment(new app.tsunderegram.banners.ChannelBannerActivity(currentChat.id)));
             }
 
             if (ChatObject.isChannelAndNotMegaGroup(currentChat) && !ChatObject.isCommunity(currentChat)) {
@@ -1200,6 +1211,8 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
         if (canEditBotInfo() || currentUser == null && (ChatObject.canChangeChatInfo(currentChat) || /*signCell != null ||*/ historyCell != null)) {
             doneButton = menu.addItemWithWidth(done_button, R.drawable.ic_ab_done, dp(56));
             doneButton.setContentDescription(getString("Done", R.string.Done));
+        } else {
+            menu.addItemWithWidth(fake_done_button, R.drawable.ic_ab_done, dp(56));
         }
 
         if (locationCell != null || /*signCell != null ||*/ historyCell != null || typeCell != null || linkedCell != null || forumsCell != null) {
@@ -2058,7 +2071,7 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
                             if (canEditBotInfo()) {
                                 processDone();
                             } else {
-                                finishFragment();
+                                setBotNameOverride();
                             }
                         })
                         .setNegativeButton(getString(R.string.PassportDiscard), (dialog, which) -> finishFragment())
@@ -2086,7 +2099,7 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
                 if (ChatObject.hasAdminRights(currentChat)) {
                     processDone();
                 } else {
-                    finishFragment();
+                    setChatNameOverride();
                 }
             });
                 builder.setNegativeButton(getString("PassportDiscard", R.string.PassportDiscard), (dialog, which) -> finishFragment());
@@ -2871,8 +2884,74 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
         }
     }
 
+    // local name override start
     private boolean canEditBotInfo() {
         return currentUser != null && currentUser.bot && currentUser.bot_can_edit;
     }
 
+    private void setBotNameOverride() {
+        if (currentUser == null || nameTextView == null) {
+            return;
+        }
+        String existingOverride = LocalNameHelper.getUserNameOverride(userId);
+        String newName = nameTextView.getText().toString().trim();
+        if (existingOverride != null) {
+            if (newName.equals(existingOverride)) {
+                finishFragment();
+                return;
+            }
+            if (newName.isEmpty()) {
+                LocalNameHelper.clearUserNameOverride(userId);
+                getMessagesController().loadFullUser(currentUser, 0, true);
+                AndroidUtilities.runOnUIThread(() -> getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_NAME), 200);
+                finishFragment();
+                return;
+            }
+        } else {
+            if (newName.isEmpty() || newName.equals(currentUser.first_name)) {
+                finishFragment();
+                return;
+            }
+        }
+        LocalNameHelper.setUserNameOverride(userId, newName);
+        currentUser.first_name = newName;
+        currentUser.last_name = "";
+        getMessagesController().putUser(currentUser, false);
+        AndroidUtilities.runOnUIThread(() -> getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_NAME), 200);
+        AndroidUtil.performHapticFeedback();
+        finishFragment();
+    }
+
+    private void setChatNameOverride() {
+        if (currentChat == null || nameTextView == null) {
+            return;
+        }
+        String existingOverride = LocalNameHelper.getChatNameOverride(currentChat.id);
+        String newName = nameTextView.getText().toString().trim();
+        if (existingOverride != null) {
+            if (newName.equals(existingOverride)) {
+                finishFragment();
+                return;
+            }
+            if (newName.isEmpty()) {
+                LocalNameHelper.clearChatNameOverride(currentChat.id);
+                getMessagesController().loadFullChat(currentChat.id, 0, true);
+                AndroidUtilities.runOnUIThread(() -> getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_CHAT_NAME), 200);
+                finishFragment();
+                return;
+            }
+        } else {
+            if (newName.isEmpty() || newName.equals(currentChat.title)) {
+                finishFragment();
+                return;
+            }
+        }
+        LocalNameHelper.setChatNameOverride(currentChat.id, newName);
+        currentChat.title = newName;
+        getMessagesController().putChat(currentChat, false);
+        AndroidUtilities.runOnUIThread(() -> getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_CHAT_NAME), 200);
+        AndroidUtil.performHapticFeedback();
+        finishFragment();
+    }
+    // local name override end
 }

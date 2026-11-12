@@ -660,7 +660,7 @@ public class EditTextCaption extends EditTextBoldCursor implements FloatingToolb
                     }
                 }
                 try {
-                    editable.setSpan(createUrlSpan(app.tsunderegram.links.LinkCleaner.cleanUrlString(url).toString()), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    editable.setSpan(createUrlSpan(app.exteraless.links.LinkCleaner.cleanUrlString(url).toString()), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 } catch (Exception ignore) {}
                 if (delegate != null) {
                     delegate.onSpansChanged();
@@ -705,7 +705,7 @@ public class EditTextCaption extends EditTextBoldCursor implements FloatingToolb
 
             @Override
             public boolean onTextContextMenuItem(int id) {
-                if (id == android.R.id.paste && app.tsunderegram.links.LinkCleaner.handleContextMenuPaste(this)) {
+                if (id == android.R.id.paste && app.exteraless.links.LinkCleaner.handleContextMenuPaste(this)) {
                     return true;
                 }
                 return super.onTextContextMenuItem(id);
@@ -713,7 +713,7 @@ public class EditTextCaption extends EditTextBoldCursor implements FloatingToolb
 
             @Override
             public android.view.inputmethod.InputConnection onCreateInputConnection(android.view.inputmethod.EditorInfo outAttrs) {
-                return app.tsunderegram.links.LinkCleaner.wrapInputConnection(super.onCreateInputConnection(outAttrs));
+                return app.exteraless.links.LinkCleaner.wrapInputConnection(super.onCreateInputConnection(outAttrs));
             }
         };
         final String def = initial == null ? "" : initial;
@@ -767,7 +767,7 @@ public class EditTextCaption extends EditTextBoldCursor implements FloatingToolb
                 FileLog.e(e);
             }
             if (text != null) {
-                editText.setText(app.tsunderegram.links.LinkCleaner.cleanUrlString(text));
+                editText.setText(app.exteraless.links.LinkCleaner.cleanUrlString(text));
                 editText.setSelection(0, editText.getText().length());
             }
             checkPaste.run();
@@ -792,7 +792,7 @@ public class EditTextCaption extends EditTextBoldCursor implements FloatingToolb
                 FileLog.e(e);
             }
             if (text != null) {
-                editText.setText(app.tsunderegram.links.LinkCleaner.cleanUrlString(text));
+                editText.setText(app.exteraless.links.LinkCleaner.cleanUrlString(text));
                 editText.setSelection(0, editText.getText().length());
             }
         }
@@ -1306,7 +1306,7 @@ public class EditTextCaption extends EditTextBoldCursor implements FloatingToolb
                     String html = clipData.getItemAt(0).getHtmlText();
                     SpannableStringBuilder pasted = new SpannableStringBuilder(CopyUtilities.fromHTML(html));
                     Emoji.replaceEmoji(pasted, getPaint().getFontMetricsInt(), false, null);
-                    app.tsunderegram.links.LinkCleaner.cleanSpannedUrls(pasted);
+                    app.exteraless.links.LinkCleaner.cleanSpannedUrls(pasted);
                     AnimatedEmojiSpan[] spans = pasted.getSpans(0, pasted.length(), AnimatedEmojiSpan.class);
                     if (spans != null) {
                         for (int k = 0; k < spans.length; ++k) {
@@ -1332,7 +1332,7 @@ public class EditTextCaption extends EditTextBoldCursor implements FloatingToolb
                     FileLog.e(e);
                 }
             }
-            if (app.tsunderegram.links.LinkCleaner.handleContextMenuPaste(this)) {
+            if (app.exteraless.links.LinkCleaner.handleContextMenuPaste(this)) {
                 return true;
             }
         } else if (id == android.R.id.copy) {
@@ -1370,6 +1370,6 @@ public class EditTextCaption extends EditTextBoldCursor implements FloatingToolb
 
     @Override
     public android.view.inputmethod.InputConnection onCreateInputConnection(android.view.inputmethod.EditorInfo outAttrs) {
-        return app.tsunderegram.links.LinkCleaner.wrapInputConnection(super.onCreateInputConnection(outAttrs));
+        return app.exteraless.links.LinkCleaner.wrapInputConnection(super.onCreateInputConnection(outAttrs));
     }
 }

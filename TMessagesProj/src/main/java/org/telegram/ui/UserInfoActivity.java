@@ -362,10 +362,10 @@ public class UserInfoActivity extends UniversalFragment implements NotificationC
 
         final TLRPC.User user = getUserConfig().getCurrentUser();
         items.add(UItem.asHeader(getString(R.string.EditAccountInfoHeader)));
-        items.add(SettingsActivity.SettingCell.Factory.of(BUTTON_BANNER, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.msg_theme, getString(R.string.ProfileBanner), app.tsunderegram.banners.ProfileBannerController.getInstance().getBannerStatusDescription()));
-        items.add(SettingsActivity.SettingCell.Factory.of(BUTTON_FRAME, IconBackgroundColors.ORANGE.top, IconBackgroundColors.ORANGE.bottom, R.drawable.filled_rating_crown, "Рамка аватара", app.tsunderegram.frames.ProfileFrameController.getInstance().getFrameStatusDescription()));
-        items.add(SettingsActivity.SettingCell.Factory.of(BUTTON_PROFILE_COLORS, IconBackgroundColors.CYAN.top, IconBackgroundColors.CYAN.bottom, R.drawable.msg_theme, "Цвета профиля", app.tsunderegram.profilecolors.ProfileColorController.getInstance().getColorStatusDescription()));
-        items.add(SettingsActivity.SettingCell.Factory.of(BUTTON_NICKNAME_GRADIENT, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.msg_edit, "Градиент никнейма", app.tsunderegram.appearance.TsundereChatCustomizer.getInstance().isNicknameGradientEnabled() ? "Включён" : "Выключен"));
+        items.add(SettingsActivity.SettingCell.Factory.of(BUTTON_BANNER, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.msg_theme, getString(R.string.ProfileBanner), app.exteraless.banners.ProfileBannerController.getInstance().getBannerStatusDescription()));
+        items.add(SettingsActivity.SettingCell.Factory.of(BUTTON_FRAME, IconBackgroundColors.ORANGE.top, IconBackgroundColors.ORANGE.bottom, R.drawable.filled_rating_crown, "Рамка аватара", app.exteraless.frames.ProfileFrameController.getInstance().getFrameStatusDescription()));
+        items.add(SettingsActivity.SettingCell.Factory.of(BUTTON_PROFILE_COLORS, IconBackgroundColors.CYAN.top, IconBackgroundColors.CYAN.bottom, R.drawable.msg_theme, "Цвета профиля", app.exteraless.profilecolors.ProfileColorController.getInstance().getColorStatusDescription()));
+        items.add(SettingsActivity.SettingCell.Factory.of(BUTTON_NICKNAME_GRADIENT, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.msg_edit, "Градиент никнейма", app.exteraless.appearance.TsundereChatCustomizer.getInstance().isNicknameGradientEnabled() ? "Включён" : "Выключен"));
         if (user != null) {
             numberRow = items.size();
             items.add(SettingsActivity.SettingCell.Factory.of(INFO_PHONE, IconBackgroundColors.GREEN.top, IconBackgroundColors.GREEN.bottom, R.drawable.settings_calls, PhoneFormat.getInstance().format("+" + user.phone), getString(R.string.TapToChangePhone)));
@@ -561,18 +561,35 @@ public class UserInfoActivity extends UniversalFragment implements NotificationC
         } else if (item.id == INFO_USERNAME) {
             presentFragment(new ChangeUsernameActivity());
         } else if (item.id == BUTTON_BANNER) {
-            presentFragment(new app.tsunderegram.banners.ProfileBannerActivity());
+            presentFragment(new app.exteraless.banners.ProfileBannerActivity());
         } else if (item.id == BUTTON_FRAME) {
-            presentFragment(new app.tsunderegram.frames.ProfileFrameActivity());
+            presentFragment(new app.exteraless.frames.ProfileFrameActivity());
         } else if (item.id == BUTTON_PROFILE_COLORS) {
-            presentFragment(new app.tsunderegram.profilecolors.ProfileColorActivity());
+            presentFragment(new app.exteraless.profilecolors.ProfileColorActivity());
         } else if (item.id == BUTTON_NICKNAME_GRADIENT) {
-            // TsundereGram: только свои цвета — пресетов больше нет
-            app.tsunderegram.appearance.NicknameGradientPickerSheet.show(this, () -> {
+            String[] presets = {"Кавайный розовый", "Киберпанк неон", "Небесный закат", "Фиолетовое сияние", "Мятная свежесть", "Выключить градиент"};
+            int[][] colors = {
+                    {0xFFFF69B4, 0xFFFFA07A},
+                    {0xFF00F2FE, 0xFF4FACFE},
+                    {0xFFFF0844, 0xFFFFB199},
+                    {0xFFB224EF, 0xFF7579FF},
+                    {0xFF00B09B, 0xFF96C93D}
+            };
+            AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+            builder.setTitle("Градиент никнейма в чатах и профиле");
+            builder.setItems(presets, (dialog, which) -> {
+                if (which >= 0 && which < colors.length) {
+                    app.exteraless.appearance.TsundereChatCustomizer.getInstance().setNicknameGradientEnabled(true);
+                    app.exteraless.appearance.TsundereChatCustomizer.getInstance().setNicknameColors(colors[which][0], colors[which][1]);
+                } else {
+                    app.exteraless.appearance.TsundereChatCustomizer.getInstance().setNicknameGradientEnabled(false);
+                }
                 if (listView != null && listView.adapter != null) {
                     listView.adapter.update(true);
                 }
+                NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_NAME | MessagesController.UPDATE_MASK_STATUS);
             });
+            showDialog(builder.create());
         } else if (item.id == BUTTON_LOGOUT) {
             presentFragment(new LogoutActivity());
         }

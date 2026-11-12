@@ -7,9 +7,9 @@
         android:shortcutShortLabel="@string/GhostMode"
         android:shortcutLongLabel="@string/GhostMode">
         <intent
-            android:action="app.tsunderegram.action.TOGGLE_GHOST_MODE"
+            android:action="app.exteraless.action.TOGGLE_GHOST_MODE"
             android:targetPackage="com.tsunderegram.app"
-            android:targetClass="app.tsunderegram.shortcuts.QuickToggleActivity" />
+            android:targetClass="app.exteraless.shortcuts.QuickToggleActivity" />
     </shortcut>
 
     <shortcut
@@ -19,9 +19,9 @@
         android:shortcutShortLabel="@string/PluginsSafeMode"
         android:shortcutLongLabel="@string/PluginsSafeMode">
         <intent
-            android:action="app.tsunderegram.action.TOGGLE_SAFE_MODE"
+            android:action="app.exteraless.action.TOGGLE_SAFE_MODE"
             android:targetPackage="com.tsunderegram.app"
-            android:targetClass="app.tsunderegram.shortcuts.QuickToggleActivity" />
+            android:targetClass="app.exteraless.shortcuts.QuickToggleActivity" />
     </shortcut>
 
     <share-target android:targetClass="org.telegram.ui.LaunchActivity">

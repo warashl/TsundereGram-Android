@@ -674,19 +674,19 @@ public class StoriesUtilities {
     private static final RectF forumRect = new RectF();
 
     /**
-     * Радиус кольца сторис. TsundereGram рисует кольцо по форме аватарки, а не всегда кругом
+     * Радиус кольца сторис. exteraGram рисует кольцо по форме аватарки, а не всегда кругом
      * (StoriesUtilities.java:805-819). Форумы с дефолтным слайдером сохраняют прежний dp(18).
      */
     private static float storyRingCorners(RectF outlineRect, AvatarStoryParams params, boolean isForum) {
-        if (isForum && app.tsunderegram.appearance.AppearanceConfig.avatarCornersDefault()) {
+        if (isForum && app.exteraless.appearance.AppearanceConfig.avatarCornersDefault()) {
             return dp(18);
         }
         float avatarWidth = params != null && params.originalAvatarRect != null && params.originalAvatarRect.width() > 0
                 ? params.originalAvatarRect.width()
                 : outlineRect.width() - dp(8);
-        float avatarRadius = app.tsunderegram.appearance.AppearanceConfig.getAvatarCorners(
+        float avatarRadius = app.exteraless.appearance.AppearanceConfig.getAvatarCorners(
                 avatarWidth,
-                isForum ? app.tsunderegram.appearance.AppearanceConfig.CORNER_TYPE_FORUM : app.tsunderegram.appearance.AppearanceConfig.CORNER_TYPE_DEFAULT,
+                isForum ? app.exteraless.appearance.AppearanceConfig.CORNER_TYPE_FORUM : app.exteraless.appearance.AppearanceConfig.CORNER_TYPE_DEFAULT,
                 false
         );
         float gap = (outlineRect.width() - avatarWidth) / 2f;
@@ -694,7 +694,7 @@ public class StoriesUtilities {
     }
 
     private static void drawCircleInternal(Canvas canvas, View view, AvatarStoryParams params, Paint paint, boolean isForum) {
-        if (isForum || !app.tsunderegram.appearance.AppearanceConfig.avatarCornersDefault()) {
+        if (isForum || !app.exteraless.appearance.AppearanceConfig.avatarCornersDefault()) {
             forumRect.set(rectTmp);
             forumRect.inset(dp(0.5f), dp(0.5f));
             final float r = storyRingCorners(forumRect, params, isForum);
@@ -714,9 +714,9 @@ public class StoriesUtilities {
     private static final Path forumSegmentPath = new Path();
 
     private static void drawSegment(Canvas canvas, RectF rectTmp, Paint paint, float startAngle, float endAngle, AvatarStoryParams params, boolean isForum) {
-        if (isForum || !app.tsunderegram.appearance.AppearanceConfig.avatarCornersDefault()) {
+        if (isForum || !app.exteraless.appearance.AppearanceConfig.avatarCornersDefault()) {
             // Сегментированное кольцо тоже идёт по форме аватарки.
-            float r = isForum && app.tsunderegram.appearance.AppearanceConfig.avatarCornersDefault()
+            float r = isForum && app.exteraless.appearance.AppearanceConfig.avatarCornersDefault()
                     ? rectTmp.height() * 0.32f
                     : storyRingCorners(rectTmp, params, isForum);
             float rotateAngle = (((int)(startAngle)) / 90) * 90 + 90;

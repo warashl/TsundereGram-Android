@@ -135,9 +135,9 @@ public class AccountSelectCell extends FrameLayout {
         TLRPC.User user = UserConfig.getInstance(accountNumber).getCurrentUser();
         avatarDrawable.setInfo(account, user);
         textView.setText(ContactsController.formatName(user.first_name, user.last_name));
-        com.tsunderegram.messenger.api.dto.BadgeDTO userBadge = com.tsunderegram.messenger.badges.BadgesController.INSTANCE.getBadge(user);
+        com.exteragram.messenger.api.dto.BadgeDTO userBadge = com.exteragram.messenger.badges.BadgesController.INSTANCE.getBadge(user);
         if (userBadge != null) {
-            textView.setRightDrawable(com.tsunderegram.messenger.badges.BadgesController.INSTANCE.getCustomBadgeDrawable(userBadge, 16));
+            textView.setRightDrawable(com.exteragram.messenger.badges.BadgesController.INSTANCE.getCustomBadgeDrawable(userBadge, 16));
         } else {
             textView.setRightDrawable(null);
         }

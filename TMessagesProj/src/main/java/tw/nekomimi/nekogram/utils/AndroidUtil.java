@@ -374,8 +374,7 @@ public class AndroidUtil {
     }
 
     public static boolean shouldEnableCrashlytics() {
-        // TsundereGram: google-services.json принадлежит Firebase-проекту tsunderegram —
-        // отчёты о падениях уходили бы чужим разработчикам. Отключено полностью.
-        return false;
+        return !BuildConfig.DEBUG
+                && app.exteraless.general.GeneralConfig.crashReports();
     }
 }

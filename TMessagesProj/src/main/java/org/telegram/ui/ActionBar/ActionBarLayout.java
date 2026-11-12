@@ -8,7 +8,7 @@
 
 package org.telegram.ui.ActionBar;
 
-import app.tsunderegram.utils.AppUtils;
+import app.exteraless.utils.AppUtils;
 
 import static org.telegram.messenger.AndroidUtilities.dp;
 import static org.telegram.messenger.AndroidUtilities.dpf2;
@@ -403,24 +403,17 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
             getWindowVisibleDisplayFrame(rect);
             int usableViewHeight = rootView.getHeight() - (rect.top != 0 ? AndroidUtilities.statusBarHeight : 0) - AndroidUtilities.getViewInset(rootView);
             isKeyboardVisible = usableViewHeight - (rect.bottom - rect.top) > 0;
+            if (waitingForKeyboardCloseRunnable != null && !containerView.isKeyboardVisible && !containerViewBack.isKeyboardVisible) {
+                AndroidUtilities.cancelRunOnUIThread(waitingForKeyboardCloseRunnable);
+                waitingForKeyboardCloseRunnable.run();
+                waitingForKeyboardCloseRunnable = null;
+            }
         }
 
         @Override
         public void addView(View child, int index, ViewGroup.LayoutParams params) {
             super.addView(child, index, params);
-            applyInsets(this);
-        }
-
-        /**
-         * The last insets straight to this container (and the new fragment in it). requestApplyInsets would dispatch
-         * them through the whole window on the next traversal, on every fragment switch (a frame lost to it).
-         */
-        private void applyInsets(View fallback) {
-            if (lastWindowInsetsCompat != null && getParent() == ActionBarLayout.this) {
-                dispatchApplyWindowInsetsInternal(this, lastWindowInsetsCompat);
-            } else if (fallback != null) {
-                ViewCompat.requestApplyInsets(fallback);
-            }
+            ViewCompat.requestApplyInsets(this);
         }
 
         @Override
@@ -464,7 +457,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
             if (this.edgeToEdgeSupportMode != edgeToEdgeSupportMode) {
                 this.edgeToEdgeSupportMode = edgeToEdgeSupportMode;
                 this.isSupportEdgeToEdge = edgeToEdgeSupportMode != EdgeToEdgeSupportMode.NONE;
-                applyInsets((View) getParent());
+                ViewCompat.requestApplyInsets((View) getParent());
             }
         }
         public void setDrawNavigationBar(boolean drawNavigationBar) {
@@ -572,6 +565,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
     private static Drawable layerShadowDrawable;
     private static Paint scrimPaint;
 
+    private Runnable waitingForKeyboardCloseRunnable;
     private Runnable delayedOpenAnimationRunnable;
 
     private boolean inBubbleMode;
@@ -691,6 +685,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
     private List<BaseFragment> fragmentsStack;
     private List<BackButtonMenu.PulledDialog> pulledDialogs;
     private Rect rect = new Rect();
+    private boolean delayedAnimationResumed;
     private Runnable onFragmentStackChangedListener;
 
     private int overrideWidthOffset = -1;
@@ -967,7 +962,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
         if (!SharedConfig.drawActionBarShadow) {
             return;
         }
-        // TsundereGram 12.9.0, ActionBarLayout.java:2603-2615 — вместо градиентной тени
+        // exteraGram 12.9.0, ActionBarLayout.java:2603-2615 — вместо градиентной тени
         // ровно одна линия в 1 px цветом разделителя.
         final Paint forced = Theme.forcedDividerPaint;
         if (forced != null) {
@@ -1105,14 +1100,11 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
             clipPath.addRoundRect(AndroidUtilities.rectTmp, r, r, Path.Direction.CW);
             canvas.clipPath(clipPath);
         }
-        if (!m3PredictiveBack && m3Snapshot != null) {
-            releaseM3Snapshot();
-        }
         if (m3BackTransition() && predictiveBackBackgroundDrawable != null) {
-            app.tsunderegram.utils.PredictiveBackAnimationHelper.drawTransitionBackground(
+            app.exteraless.utils.PredictiveBackAnimationHelper.drawTransitionBackground(
                     canvas, predictiveBackBackgroundDrawable, getWidth(), getHeight(), predictiveBackTmpRect);
         } else if (springRouteBackgroundDrawable != null) {
-            app.tsunderegram.utils.PredictiveBackAnimationHelper.drawTransitionBackground(
+            app.exteraless.utils.PredictiveBackAnimationHelper.drawTransitionBackground(
                     canvas, springRouteBackgroundDrawable, getWidth(), getHeight(), predictiveBackTmpRect);
         }
         super.dispatchDraw(canvas);
@@ -1143,12 +1135,6 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
 
         if (child == containerViewBack) {
             clipRight = translationX + dp(1);
-            // openExtera: при свайпе карточкой уменьшенный экран не закрывает полосы сверху и снизу.
-            // Нижний экран обрезался по пальцу, и справа от обреза в этих полосах ничего не рисовалось —
-            // на части устройств там проступали «пиксели» прошлых кадров. Рисуем его на всю ширину, как TsundereGram.
-            if (containerView != null && (containerView.getScaleX() < 1f || containerView.getScaleY() < 1f)) {
-                clipRight = width + getPaddingLeft();
-            }
         } else if (child == containerView) {
             clipLeft = translationX;
         }
@@ -1181,57 +1167,11 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
             clipPath.rewind();
             clipPath.addRoundRect(AndroidUtilities.rectTmp, m3Radius, m3Radius, Path.Direction.CW);
             canvas.clipPath(clipPath);
-            if (child == containerView && m3Snapshot != null && !m3Snapshot.isRecycled()) {
-                // Закрывающийся экран рисуем снимком, сделанным в начале жеста: живая отрисовка
-                // (размытие под шапкой и полем ввода, fade-зоны) при масштабировании «плыла» сверху и снизу.
-                m3SnapshotPaint.setAlpha((int) (255 * Utilities.clamp01(child.getAlpha())));
-                canvas.drawBitmap(m3Snapshot, child.getLeft(), child.getTop(), m3SnapshotPaint);
-                canvas.restoreToCount(restoreCount2);
-                return false;
-            }
             final boolean m3Result = super.drawChild(canvas, child, drawingTime);
             canvas.restoreToCount(restoreCount2);
             return m3Result;
         }
-        // openExtera: карточка при свайпе назад (пружина) уменьшается через setScale, и прежний клип
-        // по неуменьшенному прямоугольнику оказывался снаружи — углы карточки были квадратными.
-        // Как в TsundereGram: обрезаем уменьшенную карточку по скруглениям экрана телефона.
-        final boolean springCardClip = child == containerView && !isSheet && isUseSpringAnimation()
-                && (containerView.getScaleX() < 0.999f || containerView.getScaleY() < 0.999f);
-        if (springCardClip) {
-            final float sx = containerView.getScaleX(), sy = containerView.getScaleY();
-            final float cw = containerView.getWidth(), ch = containerView.getHeight();
-            final float pivotX = containerView.getLeft() + containerView.getPivotX() + containerView.getTranslationX();
-            final float pivotY = containerView.getTop() + containerView.getPivotY() + containerView.getTranslationY();
-            final float left = pivotX - containerView.getPivotX() * sx;
-            final float top = pivotY - containerView.getPivotY() * sy;
-            AndroidUtilities.rectTmp.set(left, top, left + cw * sx, top + ch * sy);
-            float tl = 0, tr = 0, br = 0, bl = 0;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                final WindowInsets insets = getRootWindowInsets();
-                if (insets != null) {
-                    final RoundedCorner c0 = insets.getRoundedCorner(RoundedCorner.POSITION_TOP_LEFT);
-                    final RoundedCorner c1 = insets.getRoundedCorner(RoundedCorner.POSITION_TOP_RIGHT);
-                    final RoundedCorner c2 = insets.getRoundedCorner(RoundedCorner.POSITION_BOTTOM_RIGHT);
-                    final RoundedCorner c3 = insets.getRoundedCorner(RoundedCorner.POSITION_BOTTOM_LEFT);
-                    tl = c0 == null ? 0 : c0.getRadius();
-                    tr = c1 == null ? 0 : c1.getRadius();
-                    br = c2 == null ? 0 : c2.getRadius();
-                    bl = c3 == null ? 0 : c3.getRadius();
-                }
-            }
-            final float fallback = dp(28);
-            radii[0] = radii[1] = tl > 0 ? tl : fallback;
-            radii[2] = radii[3] = tr > 0 ? tr : fallback;
-            radii[4] = radii[5] = br > 0 ? br : fallback;
-            radii[6] = radii[7] = bl > 0 ? bl : fallback;
-            // плавно появляются в начале жеста, чтобы карточка не «щёлкала» скруглением
-            final float k = Utilities.clamp01((1f - Math.min(sx, sy)) / 0.03f);
-            for (int i = 0; i < 8; i++) radii[i] *= k;
-            clipPath.rewind();
-            clipPath.addRoundRect(AndroidUtilities.rectTmp, radii, Path.Direction.CW);
-            canvas.clipPath(clipPath);
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !isSheet && (!isUseSpringAnimation() || !isTransitionAnimationInProgress() && !animationInProgress) && (translationX != 0 || overrideWidthOffset != -1)) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !isSheet && (!isUseSpringAnimation() || !isTransitionAnimationInProgress() && !animationInProgress) && (translationX != 0 || overrideWidthOffset != -1)) {
             if (child == containerView) {
                 final WindowInsets insets = getRootWindowInsets();
                 if (insets != null) {
@@ -1327,9 +1267,9 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                 }
             } else if (child == containerViewBack) {
                 float opacity = MathUtils.clamp(widthOffset / (float) width, 0, 0.8f);
-                // TsundereGram 12.9.0, drawChild: (springAnimations ? 102 : 120) * opacity.
+                // exteraGram 12.9.0, drawChild: (springAnimations ? 102 : 120) * opacity.
                 // У нас при пружинах было 0x7a=122 — нижний экран затемнялся заметно сильнее.
-                // Режим crossfade — специфика NagramX, у TsundereGram его нет, значение оставлено.
+                // Режим crossfade — специфика NagramX, у exteraGram его нет, значение оставлено.
                 scrimPaint.setColor(Color.argb((int) ((isUseSpringAnimation() ? isUseActionbarCrossfade() ? 0x29 : 102 : 120) * opacity), 0x00, 0x00, 0x00));
                 if (overrideWidthOffset != -1) {
                     canvas.drawRect(0, top, getWidth(), getHeight() * 1.5f, scrimPaint);
@@ -1518,15 +1458,9 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                 ViewCompat.setOnApplyWindowInsetsListener(fragmentView, lastFragment::onInsetsInternal);
                 containerViewBack.invalidate();
             }
-            if (fragmentView != null && NekoConfig.disableVibration.Bool()) {
+            if (NekoConfig.disableVibration.Bool()) {
                 AndroidUtil.disableHapticFeedback(fragmentView);
             }
-        }
-        if (fragmentView == null) {
-            startedTracking = false;
-            layoutToIgnore = null;
-            containerViewBack.setVisibility(View.INVISIBLE);
-            return;
         }
         ViewGroup parent = (ViewGroup) fragmentView.getParent();
         if (parent != null) {
@@ -1559,13 +1493,6 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
         }
 
         containerView.setLayerType(LAYER_TYPE_HARDWARE, null);
-
-        if (isUseSpringAnimation()) {
-            // openExtera: подложка на время свайпа карточкой — без неё в зазорах вокруг уменьшенной
-            // карточки (над шапкой и под полем ввода) оставались неочищенные пиксели
-            springRouteBackgroundDrawable = app.tsunderegram.utils.PredictiveBackAnimationHelper
-                    .getTransitionBackground(fragmentsStack, getLastFragment());
-        }
 
         BaseFragment currentFragment = fragmentsStack.get(fragmentsStack.size() - 1);
         currentFragment.prepareFragmentToSlide(true, true);
@@ -1716,8 +1643,8 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
     private float predictiveBackY;
     private boolean predictiveBackLeft;
 
-    // ---- Material 3 predictive back (порт TsundereGram) ----
-    private final app.tsunderegram.utils.PredictiveBackAnimationHelper predictiveBackAnimation = new app.tsunderegram.utils.PredictiveBackAnimationHelper();
+    // ---- Material 3 predictive back (порт exteraGram) ----
+    private final app.exteraless.utils.PredictiveBackAnimationHelper predictiveBackAnimation = new app.exteraless.utils.PredictiveBackAnimationHelper();
     private final RectF predictiveBackRect = new RectF();
     private final Rect predictiveBackTmpRect = new Rect();
     private Drawable predictiveBackBackgroundDrawable;
@@ -1726,7 +1653,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
 
     /**
      * Подложка нижележащего фрагмента на время обычного (не жестового) пружинного перехода.
-     * Без неё уменьшенный экран открывает щель в цвет окна. Порт TsundereGram:
+     * Без неё уменьшенный экран открывает щель в цвет окна. Порт exteraGram:
      * ActionBarLayout.springRouteBackgroundDrawable.
      */
     private Drawable springRouteBackgroundDrawable;
@@ -1759,51 +1686,6 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
     }
 
     /** Рисуем ли сейчас M3-карточку. */
-    private android.graphics.Bitmap m3Snapshot;
-    private int m3SnapshotRequestId;
-    private final Paint m3SnapshotPaint = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG);
-
-    private void requestM3Snapshot() {
-        releaseM3Snapshot();
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || parentActivity == null || parentActivity.getWindow() == null || containerView == null) {
-            return;
-        }
-        if (containerView.isKeyboardVisible || getBottomTabsHeight(false) > 0) {
-            return; // раскладка сейчас поменяется (клавиатура) или поверх есть вкладки — рисуем вживую
-        }
-        final int w = containerView.getWidth(), h = containerView.getHeight();
-        if (w <= 0 || h <= 0) {
-            return;
-        }
-        final int[] loc = new int[2];
-        containerView.getLocationInWindow(loc);
-        final android.graphics.Rect src = new android.graphics.Rect(loc[0], loc[1], loc[0] + w, loc[1] + h);
-        final android.graphics.Bitmap bitmap;
-        try {
-            bitmap = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888);
-        } catch (Throwable e) {
-            return;
-        }
-        final int requestId = ++m3SnapshotRequestId;
-        try {
-            android.view.PixelCopy.request(parentActivity.getWindow(), src, bitmap, result -> {
-                if (requestId != m3SnapshotRequestId || result != android.view.PixelCopy.SUCCESS || !m3PredictiveBack) {
-                    return;
-                }
-                m3Snapshot = bitmap;
-                invalidate();
-            }, new android.os.Handler(android.os.Looper.getMainLooper()));
-        } catch (Throwable e) {
-            FileLog.e(e);
-        }
-    }
-
-    private void releaseM3Snapshot() {
-        m3SnapshotRequestId++;
-        // без recycle(): кадр с битмапом мог ещё не дорисоваться на RenderThread
-        m3Snapshot = null;
-    }
-
     private boolean m3BackTransition() {
         return m3PredictiveBack && predictiveBackInProgress && predictiveBackHasProgress;
     }
@@ -1885,7 +1767,6 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
     }
 
     private void resetPredictiveBackState() {
-        releaseM3Snapshot();
         predictiveBackInProgress = false;
         predictiveBackHasProgress = false;
         m3PredictiveBack = false;
@@ -1937,12 +1818,9 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                     getPredictiveBackStartCornerRadius()
             );
         }
-        if (m3PredictiveBack) {
-            requestM3Snapshot();
-        }
         prepareForMoving();
         if (m3PredictiveBack) {
-            predictiveBackBackgroundDrawable = app.tsunderegram.utils.PredictiveBackAnimationHelper
+            predictiveBackBackgroundDrawable = app.exteraless.utils.PredictiveBackAnimationHelper
                     .getTransitionBackground(fragmentsStack, getLastFragment());
         }
         if (parentActivity != null && parentActivity.getCurrentFocus() != null) {
@@ -1960,7 +1838,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
         if (!predictiveInput) return;
         // Чувствительность применяется только к живому жесту; докат и откат зовут
         // applyPredictiveBackProgress напрямую, иначе множитель наложился бы дважды
-        t = app.tsunderegram.utils.UtilsConfig.adjustPredictiveBackProgress(t);
+        t = app.exteraless.utils.UtilsConfig.adjustPredictiveBackProgress(t);
         if (NaConfig.INSTANCE.getBackAnimationStyle().Int() == BACK_ANIMATION_SLIDE) {
             final float dx = dp(180) * CubicBezierInterpolator.StandardDecelerate.getInterpolation(t);
             predictiveBackHasProgress = t > 0;
@@ -2026,10 +1904,10 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                             .setStiffness(SPRING_STIFFNESS)
                             .setDampingRatio(SpringForce.DAMPING_RATIO_NO_BOUNCY));
             if (velX != 0) {
-                // TsundereGram 12.9.0, onTouchEvent/ACTION_UP: скорость переводится в ту же
+                // exteraGram 12.9.0, onTouchEvent/ACTION_UP: скорость переводится в ту же
                 // нормированную шкалу 0..1000, в которой живёт пружина. У нас было velX/15 —
                 // на экране 1080 px это в ~14 раз слабее, флик почти не докидывал экран.
-                // TsundereGram задаёт стартовую скорость и в ветке отката тоже.
+                // exteraGram задаёт стартовую скорость и в ветке отката тоже.
                 currentSpringAnimation.setStartVelocity((velX / containerView.getMeasuredWidth()) * SPRING_MULTIPLIER);
             }
             currentSpringAnimation.addUpdateListener((animation, value, velocity) -> {
@@ -2049,17 +1927,11 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                             (containerView.getMeasuredHeight() * (1f - m3s)) / 2f - dp(8)));
                 }
 
-                final BaseFragment lastFragment = getLastFragment();
-                final BaseFragment backgroundFragment = getBackgroundFragment();
                 if (!backAnimation) {
-                    if (lastFragment != null) {
-                        lastFragment.onTransitionAnimationProgress(false, progress);
-                    }
-                    if (backgroundFragment != null) {
-                        backgroundFragment.onTransitionAnimationProgress(true, progress);
-                    }
-                } else if (backgroundFragment != null) {
-                    backgroundFragment.onTransitionAnimationProgress(true, 1f - progress);
+                    getLastFragment().onTransitionAnimationProgress(false, progress);
+                    getBackgroundFragment().onTransitionAnimationProgress(true, progress);
+                } else {
+                    getBackgroundFragment().onTransitionAnimationProgress(true, 1f - progress);
                 }
             });
             currentSpringAnimation.addEndListener((animation, canceled, value, velocity) -> {
@@ -2182,6 +2054,10 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
     private void onAnimationEndCheck(boolean byCheck) {
         onCloseAnimationEnd();
         onOpenAnimationEnd();
+        if (waitingForKeyboardCloseRunnable != null) {
+            AndroidUtilities.cancelRunOnUIThread(waitingForKeyboardCloseRunnable);
+            waitingForKeyboardCloseRunnable = null;
+        }
         if (currentAnimation != null) {
             if (byCheck) {
                 currentAnimation.cancel();
@@ -2319,10 +2195,10 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
             }
             if (!preview && !predictiveBackInProgress) {
                 // openExtera: фон нижележащего фрагмента, чтобы за уменьшенной карточкой
-                // не зияла щель в цвет окна (TsundereGram: springRouteBackgroundDrawable)
+                // не зияла щель в цвет окна (exteraGram: springRouteBackgroundDrawable)
                 springRouteYRatio = 0f;
                 springRouteBackgroundDrawable =
-                        app.tsunderegram.utils.PredictiveBackAnimationHelper.getTransitionBackground(
+                        app.exteraless.utils.PredictiveBackAnimationHelper.getTransitionBackground(
                                 fragmentsStack, getLastFragment());
             }
             FloatValueHolder valueHolder = new FloatValueHolder(0);
@@ -2376,7 +2252,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                         containerView.setTranslationX((1.0f - interpolated) * widthNoPaddings);
                         containerViewBack.setTranslationX(-interpolated * 0.35f * widthNoPaddings);
                         setInnerTranslationX((1.0f - interpolated) * widthNoPaddings);
-                        // openExtera: открывающийся экран разжимается карточкой (TsundereGram)
+                        // openExtera: открывающийся экран разжимается карточкой (exteraGram)
                         final float m3s = AndroidUtilities.lerp(0.85f, 1.0f, interpolated);
                         containerView.setScaleX(m3s);
                         containerView.setScaleY(m3s);
@@ -2532,7 +2408,8 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
 
     @Override
     public void resumeDelayedFragmentAnimation() {
-        if (delayedOpenAnimationRunnable == null) {
+        delayedAnimationResumed = true;
+        if (delayedOpenAnimationRunnable == null || waitingForKeyboardCloseRunnable != null) {
             return;
         }
         AndroidUtilities.cancelRunOnUIThread(delayedOpenAnimationRunnable);
@@ -2824,6 +2701,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                     fragment.onTransitionAnimationStart(true, false);
                 }
 
+                delayedAnimationResumed = false;
                 oldFragment = currentFragment;
                 newFragment = fragment;
                 AnimatorSet animation = null;
@@ -2852,10 +2730,51 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                             containerView.setScaleY(1.0f);
                         }
                     }
-                    if (currentFragment != null && !preview && (containerView.isKeyboardVisible || containerViewBack.isKeyboardVisible)) {
-                        currentFragment.saveKeyboardPositionBeforeTransition();
-                    }
-                    if (fragment.needDelayOpenAnimation()) {
+                    if (containerView.isKeyboardVisible || containerViewBack.isKeyboardVisible) {
+                        if (currentFragment != null && !preview) {
+                            currentFragment.saveKeyboardPositionBeforeTransition();
+                        }
+                        waitingForKeyboardCloseRunnable = new Runnable() {
+                            @Override
+                            public void run() {
+                                if (waitingForKeyboardCloseRunnable != this) {
+                                    return;
+                                }
+                                waitingForKeyboardCloseRunnable = null;
+                                if (noDelay) {
+                                    if (currentFragment != null) {
+                                        currentFragment.onTransitionAnimationStart(false, false);
+                                    }
+                                    fragment.onTransitionAnimationStart(true, false);
+                                    startLayoutAnimation(true, true, preview);
+                                } else if (delayedOpenAnimationRunnable != null) {
+                                    AndroidUtilities.cancelRunOnUIThread(delayedOpenAnimationRunnable);
+                                    if (delayedAnimationResumed) {
+                                        delayedOpenAnimationRunnable.run();
+                                    } else {
+                                        AndroidUtilities.runOnUIThread(delayedOpenAnimationRunnable, 200);
+                                    }
+                                }
+                            }
+                        };
+                        if (fragment.needDelayOpenAnimation()) {
+                            delayedOpenAnimationRunnable = new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (delayedOpenAnimationRunnable != this) {
+                                        return;
+                                    }
+                                    delayedOpenAnimationRunnable = null;
+                                    if (currentFragment != null) {
+                                        currentFragment.onTransitionAnimationStart(false, false);
+                                    }
+                                    fragment.onTransitionAnimationStart(true, false);
+                                    startLayoutAnimation(true, true, preview);
+                                }
+                            };
+                        }
+                        AndroidUtilities.runOnUIThread(waitingForKeyboardCloseRunnable, 250);
+                    } else if (fragment.needDelayOpenAnimation()) {
                         delayedOpenAnimationRunnable = new Runnable() {
                             @Override
                             public void run() {
@@ -2863,9 +2782,6 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                                     return;
                                 }
                                 delayedOpenAnimationRunnable = null;
-                                if (currentFragment != null) {
-                                    currentFragment.onTransitionAnimationStart(false, false);
-                                }
                                 fragment.onTransitionAnimationStart(true, false);
                                 startLayoutAnimation(true, true, preview);
                             }
@@ -3303,7 +3219,21 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                     animation = currentFragment.onCustomTransitionAnimation(false, () -> onAnimationEndCheck(false));
                 }
                 if (animation == null) {
-                    startLayoutAnimation(false, true, inPreviewMode || transitionAnimationPreviewMode);
+                    if (!inPreviewMode && (containerView.isKeyboardVisible || containerViewBack.isKeyboardVisible)) {
+                        waitingForKeyboardCloseRunnable = new Runnable() {
+                            @Override
+                            public void run() {
+                                if (waitingForKeyboardCloseRunnable != this) {
+                                    return;
+                                }
+                                waitingForKeyboardCloseRunnable = null;
+                                startLayoutAnimation(false, true, false);
+                            }
+                        };
+                        AndroidUtilities.runOnUIThread(waitingForKeyboardCloseRunnable, 200);
+                    } else {
+                        startLayoutAnimation(false, true, inPreviewMode || transitionAnimationPreviewMode);
+                    }
                 } else {
                     currentAnimation = animation;
                     if (Bulletin.getVisibleBulletin() != null && Bulletin.getVisibleBulletin().isShowing()) {
@@ -3407,7 +3337,6 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                 parent.removeView(fragmentView);
             }
         }
-        AndroidUtilities.removeFromParent(fragmentView);
         containerView.addView(fragmentView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         containerView.setShouldHandleBottomInsets(previousFragment.getEdgeToEdgeSupportMode());
         containerView.setDrawNavigationBar(previousFragment.drawEdgeNavigationBar());

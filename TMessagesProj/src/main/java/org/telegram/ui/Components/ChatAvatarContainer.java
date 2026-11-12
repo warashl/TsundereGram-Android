@@ -39,9 +39,9 @@ import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
-import com.tsunderegram.privacy.utils.LastSeenHelper;
+import com.radolyn.ayugram.utils.LastSeenHelper;
 
-import app.tsunderegram.appearance.ChatHeaderUiHelper;
+import app.exteraless.appearance.ChatHeaderUiHelper;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
@@ -524,20 +524,58 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
         final float s = bounce.getScale(.02f);
         canvas.scale(s, s, getPivotX(), getHeight() - ActionBar.getCurrentActionBarHeight() / 2f);
         super.dispatchDraw(canvas);
-        long dialogId = parentFragment != null ? parentFragment.getDialogId() : 0;
-        if (dialogId != 0 && avatarImageView != null && avatarImageView.getVisibility() == VISIBLE) {
-            int save = canvas.save();
-            app.tsunderegram.frames.ProfileFrameController.getInstance().drawFrame(
-                    canvas,
-                    dialogId,
-                    avatarImageView.getX(),
-                    avatarImageView.getY(),
-                    avatarImageView.getWidth(),
-                    avatarImageView.getHeight()
-            );
-            canvas.restoreToCount(save);
-        }
+        // Рамка аватарки теперь рисуется в drawChild сразу после самой аватарки:
+        // с её alpha/scale/translation и ПОД заголовком, а не поверх всего хедера.
         canvas.restore();
+    }
+
+    private long getAvatarFrameDialogId() {
+        if (parentFragment == null) {
+            return 0;
+        }
+        long savedDialogId = 0;
+        try {
+            savedDialogId = parentFragment.getSavedDialogId();
+        } catch (Throwable ignore) {}
+        return savedDialogId != 0 ? savedDialogId : parentFragment.getDialogId();
+    }
+
+    private boolean hasAvatarFrameForLayout() {
+        if (avatarImageView == null || avatarImageView.getVisibility() != VISIBLE) {
+            return false;
+        }
+        final long dialogId = getAvatarFrameDialogId();
+        if (dialogId == 0) {
+            return false;
+        }
+        app.exteraless.frames.ProfileFrameController.FrameMeta fm = app.exteraless.frames.ProfileFrameController.getInstance().getFrameFor(dialogId);
+        return fm != null && fm.hasFrame();
+    }
+
+    private void drawAvatarFrame(Canvas canvas, View child) {
+        if (child == null || child.getVisibility() != VISIBLE) {
+            return;
+        }
+        final float alpha = child.getAlpha();
+        if (alpha <= 0.01f) {
+            return;
+        }
+        final long dialogId = getAvatarFrameDialogId();
+        if (dialogId == 0) {
+            return;
+        }
+        final float sx = child.getScaleX();
+        final float sy = child.getScaleY();
+        if (sx <= 0.01f || sy <= 0.01f) {
+            return;
+        }
+        final float w = child.getWidth() * sx;
+        final float h = child.getHeight() * sy;
+        final float x = child.getX() + child.getPivotX() * (1f - sx);
+        final float y = child.getY() + child.getPivotY() * (1f - sy);
+        final int save = canvas.save();
+        app.exteraless.frames.ProfileFrameController.getInstance().drawFrame(canvas, dialogId, x, y, w, h, alpha);
+        canvas.restoreToCount(save);
     }
 
     @Override
@@ -573,6 +611,7 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
             } else {
                 b = super.drawChild(canvas, child, drawingTime);
             }
+            drawAvatarFrame(canvas, child);
         } else {
             b = super.drawChild(canvas, child, drawingTime);
         }
@@ -869,7 +908,10 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
         final int width = MeasureSpec.getSize(widthMeasureSpec);
         // Ширина под текст считается от размера аватарки,
         // сама аватарка меряется с отступом ChatHeaderUiHelper.getAvatarInsetPx (при 42dp — как было)
-        final int availableWidth = width - dp(((avatarImageView.getVisibility() == VISIBLE || isCentered()) ? avatarSizeInDp + 12 : 0) + 16);
+        // если у аватарки есть рамка, onLayout сдвигает заголовок вправо на 18dp — учитываем это здесь,
+        // иначе заголовок залезал под кнопку поиска / обрезался
+        final int frameExtraWidth = (!isCentered() && hasAvatarFrameForLayout()) ? dp(18) : 0;
+        final int availableWidth = width - dp(((avatarImageView.getVisibility() == VISIBLE || isCentered()) ? avatarSizeInDp + 12 : 0) + 16) - frameExtraWidth;
         final int avatarSizePx = ChatHeaderUiHelper.getAvatarSizePx(avatarSizeInDp);
         avatarImageView.measure(MeasureSpec.makeMeasureSpec(avatarSizePx, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(avatarSizePx, MeasureSpec.EXACTLY));
         titleTextView.measure(MeasureSpec.makeMeasureSpec(availableWidth - padding, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(24 + 8), MeasureSpec.AT_MOST));
@@ -896,7 +938,7 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
         }
         SimpleTextView titleTextLargerCopyView = this.titleTextLargerCopyView.get();
         if (titleTextLargerCopyView != null) {
-            int largerAvailableWidth = largerWidth - dp((avatarImageView.getVisibility() == VISIBLE ? avatarSizeInDp + 12 : 0) + 16);
+            int largerAvailableWidth = largerWidth - dp((avatarImageView.getVisibility() == VISIBLE ? avatarSizeInDp + 12 : 0) + 16) - frameExtraWidth;
             titleTextLargerCopyView.measure(MeasureSpec.makeMeasureSpec(largerAvailableWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(24), MeasureSpec.AT_MOST));
         }
         lastWidth = width;
@@ -993,12 +1035,7 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
         final int viewTop = (actionBarHeight - avatarImageView.getMeasuredHeight() - avatarInsetPx * 2) / 2 + (occupyStatusBar ? AndroidUtilities.statusBarHeight : 0);
         final int subtitleTop = viewTop + dp(material3 ? (glassMode ? 26.66f : 27f) : (glassMode ? 23.66f : 24f));
 
-        long currentHeaderDialogId = parentFragment != null ? parentFragment.getDialogId() : 0;
-        boolean hasAvatarFrame = false;
-        if (currentHeaderDialogId != 0) {
-            app.tsunderegram.frames.ProfileFrameController.FrameMeta fm = app.tsunderegram.frames.ProfileFrameController.getInstance().getFrameFor(currentHeaderDialogId);
-            hasAvatarFrame = fm != null && fm.hasFrame();
-        }
+        final boolean hasAvatarFrame = hasAvatarFrameForLayout();
 
         int avatarLeft = avatarInsetPx + leftPadding;
         if (hasAvatarFrame && !isCentered()) {
@@ -1209,9 +1246,9 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
 
         titleTextView.setText(value);
         long currentChatDialogId = parentFragment != null ? parentFragment.getDialogId() : 0;
-        int[] titleGradient = app.tsunderegram.appearance.TsundereChatCustomizer.getInstance().getGradientColorsForUser(currentChatDialogId);
+        int[] titleGradient = app.exteraless.appearance.TsundereChatCustomizer.getInstance().getGradientColorsForUser(currentChatDialogId);
         if (titleGradient != null) {
-            titleTextView.setGradient(titleGradient[0], titleGradient[1], app.tsunderegram.appearance.TsundereChatCustomizer.getInstance().isGradientAnimatedForUser(currentChatDialogId));
+            titleTextView.setGradient(titleGradient[0], titleGradient[1]);
         } else {
             titleTextView.clearGradient();
         }
@@ -1221,7 +1258,7 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
         if (currentUser == null && parentFragment != null && parentFragment.getDialogId() > 0) {
             currentUser = parentFragment.getMessagesController().getUser(parentFragment.getDialogId());
         }
-        boolean isCustomBadge = currentUser != null && com.tsunderegram.messenger.badges.BadgesController.isCustomBadge(currentUser.id);
+        boolean isCustomBadge = currentUser != null && com.exteragram.messenger.badges.BadgesController.isCustomBadge(currentUser.id);
         boolean isDev = isCustomBadge;
         if (scam || fake) {
             rightDrawableIsScam = true;
@@ -1235,11 +1272,11 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
             }
         } else if (isCustomBadge) {
             final TLRPC.User badgeUser = currentUser;
-            final com.tsunderegram.messenger.api.dto.BadgeDTO userBadge = com.tsunderegram.messenger.badges.BadgesController.INSTANCE.getBadge(badgeUser);
-            titleTextView.setRightDrawable2(com.tsunderegram.messenger.badges.BadgesController.INSTANCE.getCustomBadgeDrawable(userBadge, 20));
+            final com.exteragram.messenger.api.dto.BadgeDTO userBadge = com.exteragram.messenger.badges.BadgesController.INSTANCE.getBadge(badgeUser);
+            titleTextView.setRightDrawable2(com.exteragram.messenger.badges.BadgesController.INSTANCE.getCustomBadgeDrawable(userBadge, 20));
             titleTextView.setRightDrawable2OnClick(v -> {
                 if (parentFragment != null) {
-                    com.tsunderegram.messenger.badges.BadgesController.INSTANCE.showBadgeBulletin(parentFragment, userBadge, badgeUser, resourcesProvider, currentAccount);
+                    com.exteragram.messenger.badges.BadgesController.INSTANCE.showBadgeBulletin(parentFragment, userBadge, badgeUser, resourcesProvider, currentAccount);
                 }
             });
             rightDrawableIsScamOrVerified = true;
@@ -1539,7 +1576,7 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
                 } else if (user.bot && user.bot_active_users != 0) {
                     newStatus = LocaleController.formatPluralStringComma("BotUsers", user.bot_active_users, ',');
                 } else if (user.bot) {
-                    newStatus = UserObject.getBotStatus(user);
+                    newStatus = getString(R.string.Bot);
                 } else {
                     isOnline[0] = false;
                     newStatus = LocaleController.formatUserStatus(currentAccount, user, isOnline, allowShorterStatus ? statusMadeShorter : null, new boolean[1]);

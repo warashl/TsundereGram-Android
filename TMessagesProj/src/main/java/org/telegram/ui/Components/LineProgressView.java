@@ -16,7 +16,7 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.widget.FrameLayout;
 
-import app.tsunderegram.appearance.AppearanceConfig;
+import app.exteraless.appearance.AppearanceConfig;
 
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
@@ -188,7 +188,7 @@ public class LineProgressView extends FrameLayout {
     /**
      * Тип 0 обычная полоса, тип 1 волнистая
      * (wavelengthDeterminate dp(40), waveAmplitude dp(3), waveSpeed dp(15)).
-     * При выключенном newLoadingStyle тип принудительно 0, как в TsundereGram.
+     * При выключенном newLoadingStyle тип принудительно 0, как в exteraGram.
      */
     public void setProgressType(int type) {
         typeSet = true;

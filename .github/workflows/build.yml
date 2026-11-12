@@ -1,0 +1,266 @@
+name: TsundereGram Build
+
+# Собирает НАСТОЯЩУЮ версию TsundereGram (exteraless 13.1.1 + все наши патчи + ребренд) —
+# ровно тем же конвейером, что и старые сборки (pr.yml в ветке fix/crash-ui-stories).
+# Подпись — старым ключом (DEBUG_KEYSTORE_*), versionCode = 2000 + номер запуска,
+# поэтому ставится поверх любой прошлой версии без удаления.
+# Запуск: коммит в main с [build] в сообщении или кнопка Run workflow.
+# PR в main собираются тем же конвейером как проверка (с правками final-patches из PR),
+# но без публикации релизов и без сообщений в Telegram.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "final-patches/**"
+      - ".github/workflows/build.yml"
+      - ".github/scripts/**"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Gradle Build (13.1.1)
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' || contains(github.event.head_commit.message, '[build]') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
+      CCACHE_HARDLINK: "true"
+      CCACHE_NOHASHDIR: "true"
+      CCACHE_MAXSIZE: "2G"
+      NATIVE_TARGET: "arm64-v8a"
+      CMAKE_POLICY_VERSION_MINIMUM: "3.5"
+      SRC_REF: fix/crash-ui-stories
+      TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+      TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+      # проверочные сборки PR не пишут в Telegram (tg_step.sh смотрит на TG_ENABLED)
+      TG_ENABLED: ${{ github.event_name != 'pull_request' }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Checkout source (TsundereGram 13.1.1 pipeline)
+        uses: actions/checkout@v7
+        with:
+          ref: fix/crash-ui-stories
+          fetch-depth: 1
+          submodules: recursive
+      - name: Checkout CI scripts (main)
+        uses: actions/checkout@v7
+        with:
+          path: _ci
+          sparse-checkout: |
+            .github
+            final-patches
+          persist-credentials: false
+      - name: "Telegram: старт"
+        run: |
+          mv _ci "$RUNNER_TEMP/ci"
+          echo "TGS=$RUNNER_TEMP/ci/.github/scripts/tg_step.sh" >> "$GITHUB_ENV"
+          bash "$RUNNER_TEMP/ci/.github/scripts/tg_step.sh" step "Подготовка" "🚀 <b>Сборка TsundereGram 13.1.1</b> (1/5): обновляю до 13.1.1 и накладываю патчи"
+      - name: Apply TsundereGram patches
+        run: |
+          chmod +x gradlew
+          for p in patches/*.patch; do
+            [ -f "$p" ] || continue
+            echo "Applying $p"
+            git apply --whitespace=nowarn "$p"
+          done
+      - name: Update to exteraless / Telegram 13.1.1
+        run: bash patches-post/merge-upstream.sh
+      - name: Embed TsundereGram API URL (repository variable TSUNDERE_API_URL)
+        env:
+          TSUNDERE_API_URL: ${{ vars.TSUNDERE_API_URL }}
+        run: |
+          F=TMessagesProj/src/main/java/app/tsunderegram/security/TsundereApi.java
+          if [ -n "$TSUNDERE_API_URL" ] && [ -f "$F" ]; then
+            sed -i "s#@TSUNDERE_API_URL@#${TSUNDERE_API_URL}#" "$F"
+            echo "API URL embedded"
+          else
+            echo "TSUNDERE_API_URL not set - server address can be entered in the app"
+          fi
+      - name: "Фиксы багов поверх 13.1.1 (final-patches)"
+        run: python3 "$RUNNER_TEMP/ci/final-patches/apply_edits.py" . "$RUNNER_TEMP/ci/final-patches/edits.json"
+      - name: Pin native submodules to exteraless 13.1.1 versions
+        run: |
+          pin() {
+            echo "Pinning $1 -> $2"
+            git -C "$1" fetch -q --depth=1 origin "$2"
+            git -C "$1" checkout -q --detach FETCH_HEAD
+            git -C "$1" submodule update --init --recursive --depth=1 -q || true
+          }
+          pin TMessagesProj/jni/tgcalls 1398c1648f52666b3249111ec3c5b531946e41e4
+          pin TMessagesProj/chaquopy eab341a401913ac50254ff20e9efeebeaae872ef
+          pin TMessagesProj_Modules/media 09b6c97c0d691c50cd4541e1573995d4066d6f5c
+          pin TMessagesProj/jni/third_party/absl 54fac219c4ef0bc379dfffb0b8098725d77ac81b
+          pin TMessagesProj/jni/third_party/boost-regex 4cbcd3078e6ae10d05124379623a1bf03fcb9350
+          pin TMessagesProj/jni/third_party/dav1d 54706fc6bc0cdecab7e9593974a4039cc038fca7
+          pin TMessagesProj/jni/third_party/libprisma 31a5d6fbbef8136e4a2b3adaf7b95e2ccaa7436d
+          pin TMessagesProj/jni/third_party/libvpx 1024874c5919305883187e2953de8fcb4c3d7fa6
+          pin TMessagesProj/jni/third_party/wamr 25bd7eb63e828e4bd242cc9b38d260b4b31c6605
+          pin TMessagesProj/jni/third_party/xiph/ogg be05b13e98b048f0b5a0f5fa8ce514d56db5f822
+          pin TMessagesProj/jni/third_party/xiph/opus 22244de5a79bd1d6d623c32e72bf1954b56235be
+          pin TMessagesProj/jni/third_party/xiph/opusfile a55c164e9891a9326188b7d4d216ec9a88373739
+          pin TMessagesProj/jni/tlottie 31f1b542f88e7b4be9a01e749920d857535fc715
+          sed -i '/^org\.gradle\.java\.home=/d' gradle.properties
+          # TsundereGram: каталог сборки рантайма и имя свойства GuardedMethod под наше имя (patches-post/rebrand.py)
+          cp -r TMessagesProj/chaquopy/exteraless TMessagesProj/chaquopy/tsunderegram
+          sed -i 's/_exteraless_guarded/_tsunderegram_guarded/' TMessagesProj/chaquopy/product/runtime/src/main/python/java/class.pxi
+          grep -c _tsunderegram_guarded TMessagesProj/chaquopy/product/runtime/src/main/python/java/class.pxi
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      - name: Set up Python for Chaquopy
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Point Chaquopy at that Python
+        run: echo "CHAQUOPY_BUILD_PYTHON=$(which python3.11 || which python)" >> $GITHUB_ENV
+      - name: Set up Ccache
+        uses: hendrikmuhs/ccache-action@v1.2.23
+        with:
+          key: android-ndk
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+      - name: Set up Android SDK Tools
+        uses: android-actions/setup-android@v4
+        with:
+          packages: "build-tools;36.0.0 ndk;27.2.12479018 platforms;android-37.0"
+      - name: Configure Android SDK Path
+        run: |
+          echo "sdk.dir=${ANDROID_HOME}" >> local.properties
+      - name: Modify Gradle JVM Args
+        run: |
+          MEMORY_KB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
+          MEMORY_GB=$((MEMORY_KB / 1024 / 1024))
+          echo "Detected memory size: ${MEMORY_GB}GB"
+          if [ $MEMORY_GB -ge 12 ]; then
+            sed -i '/^org\.gradle\.jvmargs=/d' gradle.properties
+            echo "org.gradle.jvmargs=-Xmx8G -XX:MaxMetaspaceSize=2G -XX:+UseParallelGC -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" >> gradle.properties
+          else
+            sed -i '/^org\.gradle\.jvmargs=/d;/^kotlin\.daemon\.jvmargs=/d' gradle.properties
+            echo "org.gradle.jvmargs=-Xmx5G -XX:MaxMetaspaceSize=1G -XX:+UseParallelGC -Dfile.encoding=UTF-8" >> gradle.properties
+            echo "kotlin.daemon.jvmargs=-Xmx1536m" >> gradle.properties
+          fi
+          cat gradle.properties
+      - name: versionCode выше всех прошлых сборок
+        run: |
+          sed -i -E 's/^def verCode = .*/def verCode = 2000 + ((System.getenv("GITHUB_RUN_NUMBER") ?: "0") as Integer)/' TMessagesProj/build.gradle
+          grep -n "def verCode" TMessagesProj/build.gradle
+          grep -q "def verCode = 2000" TMessagesProj/build.gradle
+          grep -n "APP_PACKAGE\|APP_VERSION" gradle.properties || true
+          bash "$TGS" step "Окружение" "⚙️ <b>Патчи наложены</b>, ставлю SDK/NDK (2/5)"
+      - name: Use fixed signing key (same signature every build)
+        env:
+          KS_B64: ${{ secrets.DEBUG_KEYSTORE_B64 }}
+          KS_PASS: ${{ secrets.DEBUG_KEYSTORE_PASS }}
+        run: |
+          if [ -z "$KS_B64" ] || [ -z "$KS_PASS" ]; then
+            echo "::warning::DEBUG_KEYSTORE_B64/DEBUG_KEYSTORE_PASS secrets missing, using random debug key"
+            exit 0
+          fi
+          echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/tsundere.keystore"
+          echo "TG_KS_FILE=$RUNNER_TEMP/tsundere.keystore" >> "$GITHUB_ENV"
+          echo "TG_KS_PASS=$KS_PASS" >> "$GITHUB_ENV"
+          sed -i "0,/signingConfigs {/s##signingConfigs {\n        debug {\n            storeFile file(System.getenv('TG_KS_FILE'))\n            storePassword System.getenv('TG_KS_PASS')\n            keyAlias 'tsundere'\n            keyPassword System.getenv('TG_KS_PASS')\n        }#" TMessagesProj/build.gradle
+          grep -n -A7 "signingConfigs {" TMessagesProj/build.gradle
+      - name: "Telegram: компиляция"
+        run: bash "$TGS" step "Компиляция" "🔨 <b>Компилирую</b> (3/5) — самый долгий этап"
+      - name: Build APK
+        run: |
+          export LOCAL_PROPERTIES="${{ secrets.LOCAL_PROPERTIES }}"
+          export DEBUG_BUILD=true
+          sed -i 's/signingConfig = signingConfigs.release//g' TMessagesProj/build.gradle
+          set -o pipefail
+          ./gradlew TMessagesProj:assembleDebug 2>&1 | tee "$RUNNER_TEMP/build.log"
+          APK=$(find TMessagesProj/build/outputs/apk -name '*.apk' | head -n 1)
+          mkdir -p TMessagesProj/build/outputs/apk/release
+          cp "$APK" TMessagesProj/build/outputs/apk/release/TsundereGram.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs TMessagesProj/build/outputs/apk/release/TsundereGram.apk | grep -iE "DN|SHA-256" || true
+      - name: "Telegram: APK собран"
+        run: |
+          SIZE=$(du -m TMessagesProj/build/outputs/apk/release/TsundereGram.apk | cut -f1)
+          NOTE=""
+          [ -n "${TG_KS_FILE:-}" ] || NOTE="⚠️ подписан временным ключом — поверх установленной версии не встанет"
+          TG_NOTE="$NOTE" bash "$TGS" step "Публикация" "✅ <b>APK собран</b> (${SIZE} МБ), публикую (4/5)"
+      # APK всё равно публикуется релизом ниже — переполненная квота артефактов не должна ронять сборку
+      - name: Upload artifact
+        if: github.event_name != 'pull_request'
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: TsundereGram
+          path: TMessagesProj/build/outputs/apk/release/*.apk
+          retention-days: 3
+      - name: Publish GitHub pre-release
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMITS_JSON: ${{ toJSON(github.event.commits) }}
+        run: |
+          SHORT=$(echo "$GITHUB_SHA" | cut -c1-7)
+          NOTES=$(echo "$COMMITS_JSON" | jq -r 'if type == "array" then map("• " + (.message | split("\n")[0])) | join("\n") else "" end')
+          [ -n "$NOTES" ] || NOTES="TsundereGram 13.1.1 build $SHORT"
+          [ -z "$FINAL_PATCH_SUMMARY" ] || NOTES=$(printf '%s\n\n%s' "$NOTES" "$FINAL_PATCH_SUMMARY")
+          gh release create "ci-$SHORT" TMessagesProj/build/outputs/apk/release/*.apk --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" --prerelease --latest=false \
+            --title "TsundereGram 13.1.1 · $SHORT" --notes "$NOTES"
+      # Этот репозиторий приватный, поэтому «Проверить обновления» в приложении читает релизы
+      # публичного warashl/TsundereGram-Android (GitHubUpdater). Нужен секрет PUBLISH_TOKEN
+      # (fine-grained токен с Contents: Read and write на TsundereGram-Android).
+      - name: Publish APK for in-app updates (TsundereGram-Android)
+        if: github.event_name != 'pull_request'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
+          PUBLIC_REPO: warashl/TsundereGram-Android
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::Нет секрета PUBLISH_TOKEN — сборка не опубликована в $PUBLIC_REPO, проверка обновлений в приложении её не увидит."
+            exit 0
+          fi
+          SHORT=$(echo "$GITHUB_SHA" | cut -c1-7)
+          gh release create "ci-$SHORT" TMessagesProj/build/outputs/apk/release/TsundereGram.apk --repo "$PUBLIC_REPO" \
+            --prerelease --title "TsundereGram 13.1.1 · $SHORT" --notes "TsundereGram 13.1.1 build $SHORT"
+          # храним 20 последних сборок
+          gh release list --repo "$PUBLIC_REPO" --limit 100 --json tagName,createdAt \
+            --jq 'sort_by(.createdAt) | reverse | .[20:] | .[].tagName' | while read -r t; do
+            gh release delete "$t" --repo "$PUBLIC_REPO" --yes --cleanup-tag || true
+          done
+      - name: Send APK to Telegram
+        if: github.event_name != 'pull_request'
+        continue-on-error: true
+        env:
+          TG_API_ID: ${{ secrets.TG_API_ID }}
+          TG_API_HASH: ${{ secrets.TG_API_HASH }}
+          COMMIT_SHA: ${{ github.sha }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          COMMITS_JSON: ${{ toJSON(github.event.commits) }}
+        run: |
+          if [ -z "$TG_BOT_TOKEN" ] || [ -z "$TG_API_ID" ] || [ -z "$TG_API_HASH" ] || [ -z "$TG_CHAT_ID" ]; then
+            echo "секреты Telegram не заданы — отправка пропущена"; exit 0
+          fi
+          pip install --quiet kurigram tgcrypto
+          python3 "$RUNNER_TEMP/ci/.github/scripts/send_apk.py"
+      - name: "Telegram: готово"
+        if: github.event_name != 'pull_request'
+        env:
+          RELEASES_URL: ${{ github.server_url }}/${{ github.repository }}/releases
+        run: |
+          SHORT=$(echo "$GITHUB_SHA" | cut -c1-7)
+          bash "$TGS" final "🎉 <b>Готово!</b> (5/5) TsundereGram 13.1.1: <a href=\"$RELEASES_URL/tag/ci-$SHORT\">ci-$SHORT</a>"
+      - name: "Telegram: сборка упала"
+        if: failure()
+        run: bash "$RUNNER_TEMP/ci/.github/scripts/tg_step.sh" fail "$RUNNER_TEMP/build.log"
+      - name: "Telegram: сборка отменена"
+        if: cancelled()
+        run: bash "$RUNNER_TEMP/ci/.github/scripts/tg_step.sh" step "Отмена" "⏹ Сборка отменена — запущена более новая"

@@ -1,14 +1,14 @@
-"""Имена Java-классов TsundereGram → имена классов tsunderegram.
+"""Имена Java-классов exteraGram → имена классов exteraless.
 
-Плагины каталога написаны под TsundereGram и берут его классы по полному имени:
-``find_class("com.tsunderegram.messenger.pillstack.core.PillRegistry")``,
-``jclass(...)`` или ``from com.tsunderegram.messenger.plugins import PluginsController``.
-У нас тот же код лежит в ``app.tsunderegram.*``, поэтому без подстановки плагин
+Плагины каталога написаны под exteraGram и берут его классы по полному имени:
+``find_class("com.exteragram.messenger.pillstack.core.PillRegistry")``,
+``jclass(...)`` или ``from com.exteragram.messenger.plugins import PluginsController``.
+У нас тот же код лежит в ``app.exteraless.*``, поэтому без подстановки плагин
 получает ``None`` и падает на первом же обращении.
 
 Подстановка работает только на имени: если класса с полученным именем у нас нет,
 вызывающий получает прежний отказ. Разрешения проверяются уже по нашему имени —
-правила в ``plugin_loader._JAVA_CLASS_RULES`` записаны для ``app.tsunderegram.*``.
+правила в ``plugin_loader._JAVA_CLASS_RULES`` записаны для ``app.exteraless.*``.
 """
 
 import importlib as _importlib
@@ -16,7 +16,7 @@ import importlib.util as _importlib_util
 import sys as _sys
 import types as _types
 
-ROOT = "com.tsunderegram.messenger"
+ROOT = "com.exteragram.messenger"
 MEDIA_ROOT = "com.google.android.exoplayer2"
 ROOTS = (ROOT, MEDIA_ROOT)
 
@@ -29,76 +29,76 @@ def _under_root(name):
 
 
 _EXACT = {
-    "com.tsunderegram.messenger.utils.chats.ChatUtils":
-        "com.tsunderegram.messenger.utils.chats.ChatUtils",
-    "com.tsunderegram.messenger.utils.ChatUtils":
-        "com.tsunderegram.messenger.utils.chats.ChatUtils",
-    "com.tsunderegram.messenger.utils.text.LocaleUtils":
-        "com.tsunderegram.messenger.utils.text.LocaleUtils",
-    "com.tsunderegram.messenger.utils.LocaleUtils":
-        "com.tsunderegram.messenger.utils.text.LocaleUtils",
-    "com.tsunderegram.messenger.utils.AppUtils":
-        "com.tsunderegram.messenger.utils.AppUtils",
-    "com.tsunderegram.messenger.R":
+    "com.exteragram.messenger.utils.chats.ChatUtils":
+        "com.exteragram.messenger.utils.chats.ChatUtils",
+    "com.exteragram.messenger.utils.ChatUtils":
+        "com.exteragram.messenger.utils.chats.ChatUtils",
+    "com.exteragram.messenger.utils.text.LocaleUtils":
+        "com.exteragram.messenger.utils.text.LocaleUtils",
+    "com.exteragram.messenger.utils.LocaleUtils":
+        "com.exteragram.messenger.utils.text.LocaleUtils",
+    "com.exteragram.messenger.utils.AppUtils":
+        "com.exteragram.messenger.utils.AppUtils",
+    "com.exteragram.messenger.R":
         "org.telegram.messenger.R",
-    "com.tsunderegram.messenger.utils.system.VibratorUtils":
-        "com.tsunderegram.messenger.utils.system.VibratorUtils",
-    "com.tsunderegram.messenger.ai.AiConfig":
-        "app.tsunderegram.ai.AiConfig",
-    "com.tsunderegram.messenger.ai.AiController":
-        "com.tsunderegram.messenger.ai.AiController",
-    "com.tsunderegram.messenger.ai.ui.ResponseAlert":
-        "com.tsunderegram.messenger.ai.ui.ResponseAlert",
-    "com.tsunderegram.messenger.ai.ui.GenerateFromMessageBottomSheet":
-        "com.tsunderegram.messenger.ai.ui.GenerateFromMessageBottomSheet",
-    "com.tsunderegram.messenger.plugins.ui.components.InstallPluginBottomSheet":
-        "com.tsunderegram.messenger.plugins.ui.components.InstallPluginBottomSheet",
-    "com.tsunderegram.messenger.utils.system.SystemUtils":
-        "com.tsunderegram.messenger.utils.system.SystemUtils",
-    "com.tsunderegram.messenger.utils.SystemUtils":
-        "com.tsunderegram.messenger.utils.system.SystemUtils",
-    "com.tsunderegram.messenger.preferences.MainPreferencesActivity":
-        "app.tsunderegram.settings.OpenExteraSettingsActivity",
-    "com.tsunderegram.messenger.preferences.GeneralPreferencesActivity":
-        "app.tsunderegram.settings.OpenExteraGeneralActivity",
-    "com.tsunderegram.messenger.preferences.AppearancePreferencesActivity":
-        "app.tsunderegram.settings.OpenExteraAppearanceActivity",
-    "com.tsunderegram.messenger.preferences.ChatsPreferencesActivity":
-        "app.tsunderegram.settings.OpenExteraChatsActivity",
-    "com.tsunderegram.messenger.preferences.OtherPreferencesActivity":
-        "app.tsunderegram.settings.OpenExteraOtherActivity",
-    "com.tsunderegram.messenger.preferences.AppNavigationPreferencesActivity":
-        "app.tsunderegram.settings.OpenExteraAppNavigationActivity",
-    "com.tsunderegram.messenger.preferences.BasePreferencesActivity":
-        "com.tsunderegram.messenger.preferences.BasePreferencesActivity",
-    "com.tsunderegram.messenger.preferences.components.AltSeekbar":
-        "app.tsunderegram.appearance.AltSeekbar",
-    "com.tsunderegram.messenger.utils.chats.MainMenuHelper":
-        "app.tsunderegram.drawer.MainMenuHelper",
-    "com.tsunderegram.messenger.icons.ui.IconPacksActivity":
-        "app.tsunderegram.icons.IconPacksActivity",
-    "com.tsunderegram.messenger.pillstack.ui.pills.crypto.utils.ColoredBackground":
-        "app.tsunderegram.pillstack.pills.ColoredBackground",
-    "com.tsunderegram.messenger.pillstack.ui.pills.weather.WeatherPill":
-        "app.tsunderegram.pillstack.pills.WeatherPill",
-    "com.tsunderegram.messenger.pillstack.ui.PillStackPreferencesActivity":
-        "app.tsunderegram.pillstack.PillStackSettingsActivity",
-    "com.tsunderegram.messenger.pillstack.ui.PillStackLayout":
-        "app.tsunderegram.pillstack.PillStackView",
-    "com.tsunderegram.messenger.pillstack.ui.pills.weather.WeatherPreferencesActivity":
-        "app.tsunderegram.pillstack.pills.weather.WeatherSettingsActivity",
-    "com.tsunderegram.messenger.preferences.appearance.AppearancePreferencesActivity":
-        "app.tsunderegram.settings.OpenExteraAppearanceActivity",
-    "com.tsunderegram.messenger.nowplaying.ui.components.NowPlayingCard":
-        "app.tsunderegram.components.ProfileMusicCard",
-    "com.tsunderegram.messenger.nowplaying.NowPlayingController":
-        "app.tsunderegram.nowplaying.NowPlayingController",
-    "com.tsunderegram.messenger.proxy.ProxyController":
-        "app.tsunderegram.proxy.ProxyController",
-    "com.tsunderegram.messenger.utils.ui.UIUtil":
-        "app.tsunderegram.utils.UIUtil",
-    "com.tsunderegram.messenger.utils.ui.MainTabsUiHelper":
-        "app.tsunderegram.appearance.MainTabsUiHelper",
+    "com.exteragram.messenger.utils.system.VibratorUtils":
+        "com.exteragram.messenger.utils.system.VibratorUtils",
+    "com.exteragram.messenger.ai.AiConfig":
+        "app.exteraless.ai.AiConfig",
+    "com.exteragram.messenger.ai.AiController":
+        "com.exteragram.messenger.ai.AiController",
+    "com.exteragram.messenger.ai.ui.ResponseAlert":
+        "com.exteragram.messenger.ai.ui.ResponseAlert",
+    "com.exteragram.messenger.ai.ui.GenerateFromMessageBottomSheet":
+        "com.exteragram.messenger.ai.ui.GenerateFromMessageBottomSheet",
+    "com.exteragram.messenger.plugins.ui.components.InstallPluginBottomSheet":
+        "com.exteragram.messenger.plugins.ui.components.InstallPluginBottomSheet",
+    "com.exteragram.messenger.utils.system.SystemUtils":
+        "com.exteragram.messenger.utils.system.SystemUtils",
+    "com.exteragram.messenger.utils.SystemUtils":
+        "com.exteragram.messenger.utils.system.SystemUtils",
+    "com.exteragram.messenger.preferences.MainPreferencesActivity":
+        "app.exteraless.settings.OpenExteraSettingsActivity",
+    "com.exteragram.messenger.preferences.GeneralPreferencesActivity":
+        "app.exteraless.settings.OpenExteraGeneralActivity",
+    "com.exteragram.messenger.preferences.AppearancePreferencesActivity":
+        "app.exteraless.settings.OpenExteraAppearanceActivity",
+    "com.exteragram.messenger.preferences.ChatsPreferencesActivity":
+        "app.exteraless.settings.OpenExteraChatsActivity",
+    "com.exteragram.messenger.preferences.OtherPreferencesActivity":
+        "app.exteraless.settings.OpenExteraOtherActivity",
+    "com.exteragram.messenger.preferences.AppNavigationPreferencesActivity":
+        "app.exteraless.settings.OpenExteraAppNavigationActivity",
+    "com.exteragram.messenger.preferences.BasePreferencesActivity":
+        "com.exteragram.messenger.preferences.BasePreferencesActivity",
+    "com.exteragram.messenger.preferences.components.AltSeekbar":
+        "app.exteraless.appearance.AltSeekbar",
+    "com.exteragram.messenger.utils.chats.MainMenuHelper":
+        "app.exteraless.drawer.MainMenuHelper",
+    "com.exteragram.messenger.icons.ui.IconPacksActivity":
+        "app.exteraless.icons.IconPacksActivity",
+    "com.exteragram.messenger.pillstack.ui.pills.crypto.utils.ColoredBackground":
+        "app.exteraless.pillstack.pills.ColoredBackground",
+    "com.exteragram.messenger.pillstack.ui.pills.weather.WeatherPill":
+        "app.exteraless.pillstack.pills.WeatherPill",
+    "com.exteragram.messenger.pillstack.ui.PillStackPreferencesActivity":
+        "app.exteraless.pillstack.PillStackSettingsActivity",
+    "com.exteragram.messenger.pillstack.ui.PillStackLayout":
+        "app.exteraless.pillstack.PillStackView",
+    "com.exteragram.messenger.pillstack.ui.pills.weather.WeatherPreferencesActivity":
+        "app.exteraless.pillstack.pills.weather.WeatherSettingsActivity",
+    "com.exteragram.messenger.preferences.appearance.AppearancePreferencesActivity":
+        "app.exteraless.settings.OpenExteraAppearanceActivity",
+    "com.exteragram.messenger.nowplaying.ui.components.NowPlayingCard":
+        "app.exteraless.components.ProfileMusicCard",
+    "com.exteragram.messenger.nowplaying.NowPlayingController":
+        "app.exteraless.nowplaying.NowPlayingController",
+    "com.exteragram.messenger.proxy.ProxyController":
+        "app.exteraless.proxy.ProxyController",
+    "com.exteragram.messenger.utils.ui.UIUtil":
+        "app.exteraless.utils.UIUtil",
+    "com.exteragram.messenger.utils.ui.MainTabsUiHelper":
+        "app.exteraless.appearance.MainTabsUiHelper",
     "com.google.android.exoplayer2.util.Consumer":
         "androidx.media3.common.util.Consumer",
     "com.google.android.exoplayer2.video.VideoSize":
@@ -114,20 +114,20 @@ _EXACT = {
 }
 
 _PREFIXES = (
-    ("com.tsunderegram.messenger.ai.data.", "app.tsunderegram.ai.data."),
-    ("com.tsunderegram.messenger.ai.network.", "app.tsunderegram.ai.network."),
-    ("com.tsunderegram.messenger.pillstack.core.", "app.tsunderegram.pillstack."),
-    ("com.tsunderegram.messenger.pillstack.ui.pills.", "app.tsunderegram.pillstack.pills."),
-    ("com.tsunderegram.messenger.pillstack.ui.", "app.tsunderegram.pillstack."),
-    ("com.tsunderegram.messenger.preferences.", "app.tsunderegram.settings."),
-    ("com.tsunderegram.messenger.plugins.", "app.tsunderegram.plugins."),
-    ("com.tsunderegram.messenger.icons.", "app.tsunderegram.icons."),
-    ("com.tsunderegram.messenger.camera.", "app.tsunderegram.camera."),
-    ("com.tsunderegram.messenger.backup.", "app.tsunderegram.backup."),
-    ("com.tsunderegram.messenger.feed.", "app.tsunderegram.feed."),
-    ("com.tsunderegram.messenger.drawer.", "app.tsunderegram.drawer."),
-    ("com.tsunderegram.messenger.components.", "app.tsunderegram.components."),
-    ("com.tsunderegram.messenger.utils.", "app.tsunderegram.utils."),
+    ("com.exteragram.messenger.ai.data.", "app.exteraless.ai.data."),
+    ("com.exteragram.messenger.ai.network.", "app.exteraless.ai.network."),
+    ("com.exteragram.messenger.pillstack.core.", "app.exteraless.pillstack."),
+    ("com.exteragram.messenger.pillstack.ui.pills.", "app.exteraless.pillstack.pills."),
+    ("com.exteragram.messenger.pillstack.ui.", "app.exteraless.pillstack."),
+    ("com.exteragram.messenger.preferences.", "app.exteraless.settings."),
+    ("com.exteragram.messenger.plugins.", "app.exteraless.plugins."),
+    ("com.exteragram.messenger.icons.", "app.exteraless.icons."),
+    ("com.exteragram.messenger.camera.", "app.exteraless.camera."),
+    ("com.exteragram.messenger.backup.", "app.exteraless.backup."),
+    ("com.exteragram.messenger.feed.", "app.exteraless.feed."),
+    ("com.exteragram.messenger.drawer.", "app.exteraless.drawer."),
+    ("com.exteragram.messenger.components.", "app.exteraless.components."),
+    ("com.exteragram.messenger.utils.", "app.exteraless.utils."),
 )
 
 
@@ -137,7 +137,7 @@ _NO_SHAPE = object()
 
 
 def resolve(name):
-    """Наше имя класса для имени TsundereGram; чужие имена возвращаются как есть."""
+    """Наше имя класса для имени exteraGram; чужие имена возвращаются как есть."""
     if not isinstance(name, str):
         return name
     cached = _resolve_cache.get(name)
@@ -166,7 +166,7 @@ def _resolve_uncached(name):
 
 
 _FIELD_SHAPED = {
-    "com.tsunderegram.messenger.ExteraConfig": {
+    "com.exteragram.messenger.ExteraConfig": {
         "translationProvider": ("getTranslationProvider", "setTranslationProvider"),
         "translationFormality": ("getTranslationFormality", "setTranslationFormality"),
         "disableNumberRounding": ("getDisableNumberRounding", "setDisableNumberRounding"),
@@ -319,7 +319,7 @@ _FIELD_SHAPED = {
         "onlineDotInnerRadius": "getOnlineDotInnerRadius",
         "onlineDotOuterRadius": "getOnlineDotOuterRadius",
     },
-    "com.tsunderegram.messenger.plugins.PluginsController": {
+    "com.exteragram.messenger.plugins.PluginsController": {
         "engines": "getEngines",
         "plugins": "getPlugins",
         "pluginsDir": "getPluginsDir",
@@ -328,12 +328,12 @@ _FIELD_SHAPED = {
         "settings": "getSettings",
         "watchdog": "getWatchdog",
     },
-    "com.tsunderegram.messenger.pillstack.core.PillStackConfig": {
+    "com.exteragram.messenger.pillstack.core.PillStackConfig": {
         "activePills": "getActivePills",
         "hiddenPills": "getHiddenPills",
         "configLoaded": "isConfigLoaded",
     },
-    "com.tsunderegram.messenger.ai.AiConfig": {
+    "com.exteragram.messenger.ai.AiConfig": {
         "saveHistory": ("getSaveHistory", "setSaveHistory"),
         "responseStreaming": ("getResponseStreaming", "setResponseStreaming"),
         "temperature": ("getTemperature", "setTemperature"),
@@ -380,33 +380,33 @@ class _FieldShapedObject:
                     setters[field] = target[1]
             else:
                 getters[field] = target
-        object.__setattr__(self, "_tsunderegram_java", java_obj)
-        object.__setattr__(self, "_tsunderegram_fields", getters)
-        object.__setattr__(self, "_tsunderegram_setters", setters)
+        object.__setattr__(self, "_exteraless_java", java_obj)
+        object.__setattr__(self, "_exteraless_fields", getters)
+        object.__setattr__(self, "_exteraless_setters", setters)
 
     def __getattr__(self, attr):
-        target = object.__getattribute__(self, "_tsunderegram_java")
-        method = object.__getattribute__(self, "_tsunderegram_fields").get(attr)
+        target = object.__getattribute__(self, "_exteraless_java")
+        method = object.__getattribute__(self, "_exteraless_fields").get(attr)
         if method is not None:
             return getattr(target, method)()
         return getattr(target, attr)
 
     def __setattr__(self, attr, value):
-        target = object.__getattribute__(self, "_tsunderegram_java")
-        method = object.__getattribute__(self, "_tsunderegram_setters").get(attr)
+        target = object.__getattribute__(self, "_exteraless_java")
+        method = object.__getattribute__(self, "_exteraless_setters").get(attr)
         if method is not None:
             getattr(target, method)(value)
             return
         setattr(target, attr, value)
 
     def __eq__(self, other):
-        return object.__getattribute__(self, "_tsunderegram_java") == unwrap(other)
+        return object.__getattribute__(self, "_exteraless_java") == unwrap(other)
 
     def __hash__(self):
-        return hash(object.__getattribute__(self, "_tsunderegram_java"))
+        return hash(object.__getattribute__(self, "_exteraless_java"))
 
     def __repr__(self):
-        return repr(object.__getattribute__(self, "_tsunderegram_java"))
+        return repr(object.__getattribute__(self, "_exteraless_java"))
 
 
 def wrap_instance(obj, java_name):
@@ -422,7 +422,7 @@ def wrap_instance(obj, java_name):
 class _FieldShapedClass:
     """Java-класс, у которого часть статических методов читается как поля.
 
-    У TsundereGram это поля (Kotlin-делегаты), у нас — методы: поле не умеет
+    У exteraGram это поля (Kotlin-делегаты), у нас — методы: поле не умеет
     отдавать живое значение настройки. Chaquopy различает вызов и чтение
     атрибута, поэтому плагин, написанный под поле, получал объект метода —
     всегда истинный. Так zwylib считал, что включён safe mode, и молча
@@ -439,39 +439,39 @@ class _FieldShapedClass:
                     setters[field] = target[1]
             else:
                 getters[field] = target
-        object.__setattr__(self, "_tsunderegram_java", java_class)
-        object.__setattr__(self, "_tsunderegram_fields", getters)
-        object.__setattr__(self, "_tsunderegram_setters", setters)
-        object.__setattr__(self, "_tsunderegram_wraps", wraps or {})
+        object.__setattr__(self, "_exteraless_java", java_class)
+        object.__setattr__(self, "_exteraless_fields", getters)
+        object.__setattr__(self, "_exteraless_setters", setters)
+        object.__setattr__(self, "_exteraless_wraps", wraps or {})
 
     def __getattr__(self, attr):
-        target = object.__getattribute__(self, "_tsunderegram_java")
-        method = object.__getattribute__(self, "_tsunderegram_fields").get(attr)
+        target = object.__getattribute__(self, "_exteraless_java")
+        method = object.__getattribute__(self, "_exteraless_fields").get(attr)
         if method is not None:
             value = getattr(target, method)()
         else:
             value = getattr(target, attr)
-        wrapped = object.__getattribute__(self, "_tsunderegram_wraps").get(attr)
+        wrapped = object.__getattribute__(self, "_exteraless_wraps").get(attr)
         if wrapped is not None:
             return wrap_instance(value, wrapped)
         return value
 
     def __setattr__(self, attr, value):
-        target = object.__getattribute__(self, "_tsunderegram_java")
-        method = object.__getattribute__(self, "_tsunderegram_setters").get(attr)
+        target = object.__getattribute__(self, "_exteraless_java")
+        method = object.__getattribute__(self, "_exteraless_setters").get(attr)
         if method is not None:
             getattr(target, method)(value)
             return
         setattr(target, attr, value)
 
     def __repr__(self):
-        return repr(object.__getattribute__(self, "_tsunderegram_java"))
+        return repr(object.__getattribute__(self, "_exteraless_java"))
 
 
 def unwrap(obj):
     """Настоящий Java-класс из обёртки; чужие объекты возвращаются как есть."""
     if isinstance(obj, (_FieldShapedClass, _FieldShapedObject)):
-        return object.__getattribute__(obj, "_tsunderegram_java")
+        return object.__getattribute__(obj, "_exteraless_java")
     return obj
 
 
@@ -513,7 +513,7 @@ def adapt(name, obj):
 
 
 _PYTHON_SUBSTITUTES = {
-    "com.tsunderegram.messenger.plugins.models.PluginItemFactory":
+    "com.exteragram.messenger.plugins.models.PluginItemFactory":
         ("ui.settings", "SimpleSettingFactory"),
 }
 
@@ -581,14 +581,14 @@ class _AliasModule(_types.ModuleType):
 
 
 class _AliasFinder:
-    """sys.meta_path-финдер на ``com.tsunderegram.*``.
+    """sys.meta_path-финдер на ``com.exteragram.*``.
 
-    Нужен для формы ``from com.tsunderegram.messenger.plugins import PluginsController``:
+    Нужен для формы ``from com.exteragram.messenger.plugins import PluginsController``:
     она идёт мимо find_class и jclass, в машинерию импорта.
     """
 
-    PACKAGE = "com.tsunderegram"
-    PACKAGES = ("com.tsunderegram", MEDIA_ROOT)
+    PACKAGE = "com.exteragram"
+    PACKAGES = ("com.exteragram", MEDIA_ROOT)
 
     def find_spec(self, fullname, path=None, target=None):
         if not any(fullname == root or fullname.startswith(root + ".")

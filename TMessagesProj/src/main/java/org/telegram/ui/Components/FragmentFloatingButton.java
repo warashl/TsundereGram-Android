@@ -77,8 +77,8 @@ public class FragmentFloatingButton extends FrameLayout implements FactorAnimato
         setFocusable(true);
         ScaleStateListAnimator.apply(this);
         if (!isSubButton) {
-            // TsundereGram 12.9.0, FragmentFloatingButton.java:67 — squircle вместо круга.
-            setOutlineProvider(app.tsunderegram.appearance.AppearanceConfig.squareFab()
+            // exteraGram 12.9.0, FragmentFloatingButton.java:67 — squircle вместо круга.
+            setOutlineProvider(app.exteraless.appearance.AppearanceConfig.squareFab()
                     ? ViewOutlineProviderImpl.boundsWithPaddingRoundRect(0, dp(14))
                     : ViewOutlineProviderImpl.BOUNDS_OVAL);
             setTranslationZ(dpf2(0.5f));
@@ -105,7 +105,7 @@ public class FragmentFloatingButton extends FrameLayout implements FactorAnimato
             iBlur3Background = iBlur3SourceColor.createDrawable();
             iBlur3Background.setColorProvider(iBlur3ColorProviderTabs);
             iBlur3Background.setStrokeWidth(dpf2(0.4f), dpf2(0.4f));
-            iBlur3Background.setRadius(dp(app.tsunderegram.appearance.AppearanceConfig.squareFab() ? 10 : 18));
+            iBlur3Background.setRadius(dp(app.exteraless.appearance.AppearanceConfig.squareFab() ? 10 : 18));
             iBlur3Background.setPadding(dp(5.66f));
         }
 
@@ -167,13 +167,13 @@ public class FragmentFloatingButton extends FrameLayout implements FactorAnimato
             iBlur3Background.updateColors();
             invalidate();
 
-            int rad = dp(app.tsunderegram.appearance.AppearanceConfig.squareFab() ? 10 : 18);
+            int rad = dp(app.exteraless.appearance.AppearanceConfig.squareFab() ? 10 : 18);
             int pressedColor = Theme.getColor(Theme.key_listSelector, resourcesProvider);
             setBackground(Theme.createInsetRoundRectDrawable(pressedColor, rad, dp(6)));
         } else {
             imageView.setColorFilter(Theme.getColor(Theme.key_chats_actionIcon, resourcesProvider), PorterDuff.Mode.SRC_IN);
             progressView.setProgressColor(Theme.getColor(Theme.key_chats_actionIcon, resourcesProvider));
-            setBackground(app.tsunderegram.utils.UIUtil.createFabSelectorDrawable(48,
+            setBackground(app.exteraless.utils.UIUtil.createFabSelectorDrawable(48,
                 Theme.getColor(Theme.key_featuredStickers_addButton, resourcesProvider),
                 Theme.getColor(Theme.key_featuredStickers_addButtonPressed, resourcesProvider)
             ));

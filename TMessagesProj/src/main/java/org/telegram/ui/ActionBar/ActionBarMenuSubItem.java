@@ -428,8 +428,8 @@ public class ActionBarMenuSubItem extends FrameLayout {
 
     public void updateBackground() {
         setBackground(Theme.createRadSelectorDrawable(selectorColor, top ? selectorRad : 0, bottom ? selectorRad : 0));
-        // TsundereGram: «вдавливание» пункта меню при нажатии (TsundereGram — UIUtil.applyScaleStateListAnimator(this, ..., 0.04f, 1.5f))
-        app.tsunderegram.utils.UIUtil.applyScaleStateListAnimator(this, 0.04f, 1.5f);
+        // exteraGram: «вдавливание» пункта меню при нажатии (exteraGram — UIUtil.applyScaleStateListAnimator(this, ..., 0.04f, 1.5f))
+        app.exteraless.utils.UIUtil.applyScaleStateListAnimator(this, 0.04f, 1.5f);
     }
 
     private int getThemedColor(int key) {

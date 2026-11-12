@@ -35,10 +35,10 @@ import xyz.nextalone.nagram.NaConfig;
 public class TypefaceHelper {
 
     private static final String TEST_TEXT;
-    private static final int CANVAS_SIZE = dp(20);
+    private static final int CANVAS_SIZE = 40;
     private static final Paint PAINT = new Paint() {{
-        setTextSize(CANVAS_SIZE);
-        setAntiAlias(true);
+        setTextSize(20);
+        setAntiAlias(false);
         setSubpixelText(false);
         setFakeBoldText(false);
     }};
@@ -134,23 +134,15 @@ public class TypefaceHelper {
     }
 
     private static Typeface pixelMediumTypeface(boolean italic) {
-        final Typeface regular = createTypeface(400, italic);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             final Typeface weighted = createTypeface(500, italic);
-            if (rendersDifferently(weighted, regular)) {
+            if (rendersDifferently(weighted, Typeface.create(baseTypeface(), 400, italic))) {
                 return weighted;
             }
         }
         final Typeface medium = getSystemGoogleSansMedium();
         if (medium != null) {
-            final Typeface styled = italic ? Typeface.create(medium, Typeface.ITALIC) : medium;
-            if (rendersDifferently(styled, regular)) {
-                return styled;
-            }
-        }
-        final Typeface systemMedium = Typeface.create("sans-serif-medium", italic ? Typeface.ITALIC : Typeface.NORMAL);
-        if (rendersDifferently(systemMedium, regular)) {
-            return systemMedium;
+            return italic ? Typeface.create(medium, Typeface.ITALIC) : medium;
         }
         return Typeface.create(baseTypeface(), italic ? Typeface.BOLD_ITALIC : Typeface.BOLD);
     }
@@ -326,28 +318,32 @@ public class TypefaceHelper {
     public static SpannableStringBuilder getTitleText(int currentAccount) {
         String title = (String) NaConfig.INSTANCE.getCustomTitle().defaultValue;
         // openExtera: заголовок списка чатов (AppearanceConfig.titleText).
-        // Перенесено из TsundereGram 12.9.0, LocaleUtils.getActionBarTitle(int).
+        // Перенесено из exteraGram 12.9.0, LocaleUtils.getActionBarTitle(int).
         // 0 — имя приложения (NagramX customTitle), 1 — username, 2 — имя, 3 — «Чаты».
-        final int oeTitleText = app.tsunderegram.appearance.AppearanceConfig.titleText();
+        final int oeTitleText = app.exteraless.appearance.AppearanceConfig.titleText();
+        if ("exteraless".equalsIgnoreCase(title)) {
+            title = "TsundereGram";
+        }
+        // Каждый вариант даёт свой текст. Раньше «Чаты» и «Свой текст» перетирались именем,
+        // а «Имя пользователя» / «Имя» оставались «TsundereGram».
         if (oeTitleText == 3) {
             title = LocaleController.getString(R.string.FilterChats);
-        } else if (oeTitleText == app.tsunderegram.appearance.AppearanceConfig.TITLE_TEXT_CUSTOM) {
+        } else if (oeTitleText == app.exteraless.appearance.AppearanceConfig.TITLE_TEXT_CUSTOM) {
             String customTitle = NaConfig.INSTANCE.getCustomTitle().String();
-            if (!TextUtils.isEmpty(customTitle)) {
+            if (!TextUtils.isEmpty(customTitle) && !"exteraless".equalsIgnoreCase(customTitle)) {
                 title = customTitle;
             }
-        }
-        if ("tsunderegram".equalsIgnoreCase(title)) {
-            title = "TsundereGram";
-        } else if (oeTitleText != 0) {
+        } else if (oeTitleText == 1 || oeTitleText == 2) {
             TLRPC.User self = UserConfig.getInstance(currentAccount).getCurrentUser();
-            String username = oeTitleText == 1 ? UserObject.getPublicUsername(self) : null;
-            if (!TextUtils.isEmpty(username)) {
-                title = username;
-            } else {
-                String firstName = UserObject.getFirstName(self);
-                if (!TextUtils.isEmpty(firstName)) {
-                    title = firstName;
+            if (self != null) {
+                String username = oeTitleText == 1 ? UserObject.getPublicUsername(self) : null;
+                if (!TextUtils.isEmpty(username)) {
+                    title = username;
+                } else {
+                    String firstName = UserObject.getFirstName(self);
+                    if (!TextUtils.isEmpty(firstName)) {
+                        title = firstName;
+                    }
                 }
             }
         }

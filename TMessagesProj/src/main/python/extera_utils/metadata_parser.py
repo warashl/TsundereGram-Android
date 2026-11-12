@@ -1,4 +1,4 @@
-"""Static plugin metadata reader (AST-based, no module execution) — tsunderegram plugin SDK.
+"""Static plugin metadata reader (AST-based, no module execution) — exteraless plugin SDK.
 
 Pure Python: importable and testable on a host interpreter without Chaquopy.
 """
@@ -24,7 +24,7 @@ _METADATA_KEYS = (
 )
 
 # Permission keys a plugin may declare in ``__permissions__``.
-# Mirrors app.tsunderegram.plugins.PluginPermissions;
+# Mirrors app.exteraless.plugins.PluginPermissions;
 # the Python import hook in plugin_loader imports this tuple, so the two lists
 # cannot drift apart.
 PERMISSION_UI = "ui"

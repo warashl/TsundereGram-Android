@@ -379,6 +379,7 @@ add_library(tgcalls STATIC
         tgcalls/tgcalls/v2/InstanceV2Impl.cpp
         tgcalls/tgcalls/v2/InstanceV2ReferenceImpl.cpp
         tgcalls/tgcalls/v2/MtProtoDtlsTransport.cpp
+        tgcalls/tgcalls/v2/MtProtoDtlsTransportTest.cpp
         tgcalls/tgcalls/v2/NativeNetworkingImpl.cpp
         tgcalls/tgcalls/v2/RawTcpSocket.cpp
         tgcalls/tgcalls/v2/ReflectorPort.cpp

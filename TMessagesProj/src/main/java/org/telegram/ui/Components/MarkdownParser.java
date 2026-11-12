@@ -4,7 +4,7 @@ import static org.telegram.messenger.AndroidUtilities.dp;
 import static org.telegram.messenger.AndroidUtilities.find;
 
 import android.text.TextUtils;
-import app.tsunderegram.utils.MarkdownUtils;
+import app.exteraless.utils.MarkdownUtils;
 import org.telegram.messenger.AndroidUtilities;
 
 import org.commonmark.Extension;

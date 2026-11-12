@@ -229,10 +229,6 @@ public class Browser {
         );
     }
 
-    public static boolean isGetPremiumUrl(String url) {
-        return url != null && url.matches("(?i)^(https?://)?(t\\.me|telegram\\.me|telegram\\.dog)/getpremium([/?#].*)?$");
-    }
-
     public static class Progress {
 
         private Runnable onInitListener;
@@ -292,21 +288,21 @@ public class Browser {
         openUrl(context, uri, allowCustom, tryTelegraph, false, inCaseLoading, null, false, true, false);
     }
 
-    // tsunderegram plugins: обёртка с before/after-хендлерами плагинов (from_intent=false).
+    // exteraless plugins: обёртка с before/after-хендлерами плагинов (from_intent=false).
     // Все публичные openUrl(...) сходятся сюда; внутренние tg://-ссылки дополнительно
     // пройдут через диспетч LaunchActivity.handleIntent (там from_intent=true).
     public static void openUrl(final Context context, Uri uri, boolean _allowCustom, boolean tryTelegraph, boolean forceNotInternalForApps, Progress inCaseLoading, String browser, boolean allowIntent, boolean allowInAppBrowser, boolean forceRequest) {
-        uri = app.tsunderegram.links.LinkCleaner.clean(uri);
-        if (uri != null && app.tsunderegram.plugins.PluginsController.getInstance().isEngineEnabled()
-                && app.tsunderegram.plugins.intents.IntentsDispatcher.hasHandlers()) {
-            java.util.Map<String, Object> pluginContext = app.tsunderegram.plugins.intents.IntentsDispatcher.buildUriContext(uri, UserConfig.selectedAccount, false);
-            if (app.tsunderegram.plugins.intents.IntentsDispatcher.dispatchBefore(pluginContext)) {
+        uri = app.exteraless.links.LinkCleaner.clean(uri);
+        if (uri != null && app.exteraless.plugins.PluginsController.getInstance().isEngineEnabled()
+                && app.exteraless.plugins.intents.IntentsDispatcher.hasHandlers()) {
+            java.util.Map<String, Object> pluginContext = app.exteraless.plugins.intents.IntentsDispatcher.buildUriContext(uri, UserConfig.selectedAccount, false);
+            if (app.exteraless.plugins.intents.IntentsDispatcher.dispatchBefore(pluginContext)) {
                 return;
             }
             try {
                 openUrlInternal(context, uri, _allowCustom, tryTelegraph, forceNotInternalForApps, inCaseLoading, browser, allowIntent, allowInAppBrowser, forceRequest);
             } finally {
-                app.tsunderegram.plugins.intents.IntentsDispatcher.dispatchAfter(pluginContext);
+                app.exteraless.plugins.intents.IntentsDispatcher.dispatchAfter(pluginContext);
             }
             return;
         }
@@ -496,6 +492,16 @@ public class Browser {
         intent.putExtra(LaunchActivity.EXTRA_FORCE_REQUEST, forceRequest);
         activity.onNewIntent(intent, progress);
         return true;
+    }
+
+    public static boolean isInstantViewOpen() {
+        BaseFragment fragment = LaunchActivity.getSafeLastFragment();
+        if (fragment != null && fragment.getParentLayout() instanceof ActionBarLayout) {
+            BaseFragment sheetFragment = ((ActionBarLayout) fragment.getParentLayout()).getSheetFragment();
+            if (sheetFragment != null && sheetFragment.getArticleViewer() != null)
+                return true;
+        }
+        return fragment != null && fragment.getArticleViewer() != null;
     }
 
     public static boolean openInTelegramBrowser(Context context, String url, Browser.Progress progress) {

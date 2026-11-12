@@ -14,7 +14,7 @@ import android.content.SharedPreferences;
 import android.util.Base64;
 import android.util.Pair;
 
-import com.tsunderegram.privacy.utils.AyuGhostUtils;
+import com.radolyn.ayugram.utils.AyuGhostUtils;
 
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.FileLog;
@@ -88,7 +88,7 @@ public class NekoConfig {
     public static ConfigItem ignoreBlocked = addConfig("IgnoreBlocked", configTypeBool, false);
     public static ConfigItem tabletMode = addConfig("TabletMode", configTypeInt, 0);
 
-    // Дефолт выровнен с TsundereGram: ExteraConfig.useSystemFonts = BooleanPref(true).
+    // Дефолт выровнен с exteraGram: ExteraConfig.useSystemFonts = BooleanPref(true).
     // Маппинг ассетов на системные семейства у TypefaceHelper.createTypeface практически
     // совпадает с их FontUtils.getSystemTypeface, расходился только дефолт.
     public static ConfigItem typeface = addConfig("TypefaceUseDefault", configTypeBool, true);
@@ -148,7 +148,7 @@ public class NekoConfig {
     public static ConfigItem mediaPreview = addConfig("MediaPreview", configTypeBool, true);
 
     public static ConfigItem disableVibration = addConfig("DisableVibration", configTypeBool, false);
-    // Дефолт выровнен с TsundereGram: ExteraConfig.pauseOnMinimizeVideo = BooleanPref(true).
+    // Дефолт выровнен с exteraGram: ExteraConfig.pauseOnMinimizeVideo = BooleanPref(true).
     // Механизм у NagramX рабочий, расходился только дефолт.
     public static ConfigItem autoPauseVideo = addConfig("AutoPauseVideo", configTypeBool, true);
     public static ConfigItem disableProximityEvents = addConfig("DisableProximityEvents", configTypeBool, false);
@@ -226,7 +226,7 @@ public class NekoConfig {
             if (ApplicationLoader.applicationContext == null) {
                 return;
             }
-            app.tsunderegram.config.LegacyDefaults.pin(getPreferences());
+            app.exteraless.config.LegacyDefaults.pin(getPreferences());
             for (int i = 0; i < configs.size(); i++) {
                 ConfigItem o = configs.get(i);
 
@@ -279,7 +279,7 @@ public class NekoConfig {
                     getPreferences().edit().remove(o.key).apply();
                 }
             }
-            if ("tsunderegram".equals(customSavePath.String())) {
+            if ("exteraless".equals(customSavePath.String())) {
                 customSavePath.setConfigString("TsundereGram");
             }
             if (!configLoaded)
@@ -312,24 +312,19 @@ public class NekoConfig {
 
     // --- Ghost Mode ---
     public static boolean isGhostModeActive() {
-        // TsundereGram: «Призрак» считается включённым, если активна хотя бы одна его опция.
-        // Раньше достаточно было вернуть одну опцию (например, «в сети»), и меню показывало
-        // «Включить «Призрака»», хотя отметки о прочтении всё ещё не отправлялись.
-        boolean anyUnlocked = false;
         for (Pair<ConfigItem, ConfigItem> pair : ghostToggleItems) {
             ConfigItem item = pair.first;
             ConfigItem lockedItem = pair.second;
             if (!lockedItem.Bool()) {
-                anyUnlocked = true;
                 boolean currentValue = item.Bool();
                 boolean isGhostState = (item == sendOfflinePacketAfterOnline) == currentValue;
 
-                if (isGhostState) {
-                    return true;
+                if (!isGhostState) {
+                    return false;
                 }
             }
         }
-        return !anyUnlocked;
+        return true;
     }
 
     public static void setGhostMode(boolean enabled) {

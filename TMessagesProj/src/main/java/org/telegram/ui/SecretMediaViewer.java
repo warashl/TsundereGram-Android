@@ -117,7 +117,7 @@ import java.util.Locale;
 import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.helpers.MessageHelper;
 
-import com.tsunderegram.privacy.proprietary.AyuMessageUtils;
+import com.radolyn.ayugram.proprietary.AyuMessageUtils;
 
 public class SecretMediaViewer implements NotificationCenter.NotificationCenterDelegate, GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener {
 

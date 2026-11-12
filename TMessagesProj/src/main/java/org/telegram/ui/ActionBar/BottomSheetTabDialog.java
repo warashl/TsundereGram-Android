@@ -88,8 +88,9 @@ public class BottomSheetTabDialog extends Dialog {
         params.flags &= ~WindowManager.LayoutParams.FLAG_DIM_BEHIND;
         params.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE;
         params.height = ViewGroup.LayoutParams.MATCH_PARENT;
-        // same as the activity window: SHORT_EDGES keeps the window out of a cutout on a long edge (e.g. top in landscape), so it ends up below the status bar
-        AndroidUtilities.applyEdgeToEdgeLayoutParams(params);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            params.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+        }
         window.setAttributes(params);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -117,9 +118,7 @@ public class BottomSheetTabDialog extends Dialog {
         navigationBar.invalidate();
         AndroidUtilities.setNavigationBarColor(this, color);
         AndroidUtilities.setLightNavigationBar(this, AndroidUtilities.computePerceivedBrightness(color) >= .721f);
-        if (LaunchActivity.instance != null) {
-            LaunchActivity.instance.checkSystemBarColors(true, true, true);
-        }
+        LaunchActivity.instance.checkSystemBarColors(true, true, true);
     }
 
     public static class WindowView extends FrameLayout implements BottomSheetTabsOverlay.SheetView {

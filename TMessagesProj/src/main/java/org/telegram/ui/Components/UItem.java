@@ -48,8 +48,8 @@ public class UItem extends AdapterWithDiffUtils.Item implements Cloneable {
     public int spanCount = MAX_SPAN_COUNT;
     public int parentSpanCount;
 
-    /** Модель строки настроек плагина, если строку собрал плагин через SDK TsundereGram. */
-    public app.tsunderegram.plugins.models.SettingItem settingItem;
+    /** Модель строки настроек плагина, если строку собрал плагин через SDK exteraGram. */
+    public app.exteraless.plugins.models.SettingItem settingItem;
 
     public boolean include;
     public long dialogId;
@@ -284,17 +284,6 @@ public class UItem extends AdapterWithDiffUtils.Item implements Cloneable {
         i.iconResId = iconResId;
         i.text = text;
         i.textValue = value;
-        return i;
-    }
-
-    public static UItem asButtonWithSubtext(int id, int iconResId, CharSequence text, CharSequence subtext, int pad, int height) {
-        UItem i = new UItem(UniversalAdapter.VIEW_TYPE_TEXT, false);
-        i.id = id;
-        i.iconResId = iconResId;
-        i.text = text;
-        i.subtext = subtext;
-        i.pad = pad;
-        i.intValue = height;
         return i;
     }
 

@@ -17,7 +17,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.tsunderegram.privacy.utils.LastSeenHelper;
+import com.radolyn.ayugram.utils.LastSeenHelper;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.MessageObject;

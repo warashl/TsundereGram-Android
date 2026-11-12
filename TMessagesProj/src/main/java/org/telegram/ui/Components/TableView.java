@@ -666,11 +666,9 @@ public class TableView extends TableLayout {
 
         borderPaint.setStyle(Paint.Style.STROKE);
         borderPaint.setStrokeWidth(w);
-        // TsundereGram: на кастомных темах рамка/фон таблицы совпадали с фоном окна.
-        final int tsunBg = Theme.getColor(Theme.key_dialogBackground, resourcesProvider);
-        borderPaint.setColor(app.tsunderegram.utils.TsunContrast.line(Theme.getColor(Theme.key_table_border, resourcesProvider), tsunBg, 0.14f));
+        borderPaint.setColor(Theme.getColor(Theme.key_table_border, resourcesProvider));
         backgroundPaint.setStyle(Paint.Style.FILL);
-        backgroundPaint.setColor(app.tsunderegram.utils.TsunContrast.line(Theme.getColor(Theme.key_table_background, resourcesProvider), tsunBg, 0.05f, 1.04));
+        backgroundPaint.setColor(Theme.getColor(Theme.key_table_background, resourcesProvider));
 
         final int height = getChildCount();
         for (int y = 0; y < height; ++y) {

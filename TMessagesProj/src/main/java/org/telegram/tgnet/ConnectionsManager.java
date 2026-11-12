@@ -14,7 +14,7 @@ import android.util.Base64;
 
 import androidx.annotation.Keep;
 
-import app.tsunderegram.feed.FeedRequestNormalizer;
+import app.exteraless.feed.FeedRequestNormalizer;
 
 import androidx.annotation.OptIn;
 import androidx.media3.common.util.UnstableApi;
@@ -26,7 +26,7 @@ import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter;
 // import com.google.android.play.core.integrity.IntegrityTokenRequest;
 // import com.google.android.play.core.integrity.IntegrityTokenResponse;
 
-import com.tsunderegram.privacy.utils.AyuGhostUtils;
+import com.radolyn.ayugram.utils.AyuGhostUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -338,7 +338,7 @@ public class ConnectionsManager extends BaseController {
         if (getUserConfig().getCurrentUser() != null) {
             userPremium = getUserConfig().getCurrentUser().premium;
         }
-        init(java.util.Objects.hash(SharedConfig.buildVersion(), TLRPC.LAYER, appVersion), TLRPC.LAYER, NekoXConfig.currentAppId(), deviceModel, systemVersion, appVersion, langCode, systemLangCode, configPath, FileLog.getNetworkLogPath(), pushString, fingerprint, timezoneOffset, getUserConfig().getClientUserId(), userPremium, enablePushConnection);
+        init(SharedConfig.buildVersion(), TLRPC.LAYER, NekoXConfig.currentAppId(), deviceModel, systemVersion, appVersion, langCode, systemLangCode, configPath, FileLog.getNetworkLogPath(), pushString, fingerprint, timezoneOffset, getUserConfig().getClientUserId(), userPremium, enablePushConnection);
     }
 
     private String getRegId() {
@@ -486,11 +486,11 @@ public class ConnectionsManager extends BaseController {
         final var onComplete = interceptResult.effectiveOnComplete();
         // --- Ghost Mode ---
 
-        // --- tsunderegram plugins: pre_request_hook (CANCEL = запрос не уходит) ---
+        // --- exteraless plugins: pre_request_hook (CANCEL = запрос не уходит) ---
         TLObject pluginRequest = object;
-        if (app.tsunderegram.plugins.PluginsController.getInstance().hasAnyRequestHooks()) {
-            app.tsunderegram.plugins.HookResult preHook = app.tsunderegram.plugins.PluginsController.getInstance()
-                    .executePreRequestHook(currentAccount, app.tsunderegram.plugins.PluginsController.hookName(object), object);
+        if (app.exteraless.plugins.PluginsController.getInstance().hasAnyRequestHooks()) {
+            app.exteraless.plugins.HookResult preHook = app.exteraless.plugins.PluginsController.getInstance()
+                    .executePreRequestHook(currentAccount, app.exteraless.plugins.PluginsController.hookName(object), object);
             if (preHook.isCancel()) {
                 FileLog.d("Plugins: request " + object.getClass().getSimpleName() + " cancelled by plugin");
                 return;
@@ -500,7 +500,7 @@ public class ConnectionsManager extends BaseController {
                 pluginRequest = replacement;
             }
         }
-        // --- tsunderegram plugins ---
+        // --- exteraless plugins ---
 
         try {
             final TLObject normalizedObject = FeedRequestNormalizer.normalize(currentAccount, pluginRequest);
@@ -569,10 +569,10 @@ public class ConnectionsManager extends BaseController {
                     final TLRPC.TL_error finalError = error;
                     Utilities.stageQueue.postRunnable(() -> {
                         TLObject pluginResponse = finalResponse;
-                        // tsunderegram plugins: post_request_hook
-                        if (app.tsunderegram.plugins.PluginsController.getInstance().hasAnyRequestHooks()) {
-                            app.tsunderegram.plugins.HookResult postHook = app.tsunderegram.plugins.PluginsController.getInstance()
-                                    .executePostRequestHook(currentAccount, app.tsunderegram.plugins.PluginsController.hookName(normalizedObject), finalResponse, finalError);
+                        // exteraless plugins: post_request_hook
+                        if (app.exteraless.plugins.PluginsController.getInstance().hasAnyRequestHooks()) {
+                            app.exteraless.plugins.HookResult postHook = app.exteraless.plugins.PluginsController.getInstance()
+                                    .executePostRequestHook(currentAccount, app.exteraless.plugins.PluginsController.hookName(normalizedObject), finalResponse, finalError);
                             if (postHook.isCancel()) {
                                 if (onComplete == null && onCompleteTimestamp == null
                                         && finalResponse instanceof TLRPC.Updates) {

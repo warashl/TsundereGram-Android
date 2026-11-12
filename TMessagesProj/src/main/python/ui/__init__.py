@@ -1,1 +1,1 @@
-"""tsunderegram plugin SDK: settings UI declarations package."""
+"""exteraless plugin SDK: settings UI declarations package."""

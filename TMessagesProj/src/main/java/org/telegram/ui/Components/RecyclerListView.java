@@ -2460,9 +2460,7 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
             }
         }
         if (!animated) {
-            if (selectorDrawable != null) {
-                selectorDrawable.setState(StateSet.NOTHING);
-            }
+            selectorDrawable.setState(StateSet.NOTHING);
             selectorRect.setEmpty();
         }
     }
@@ -3290,7 +3288,7 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
     public static Class[] filterThemeDescription(int changeFlags, Class[] classes) {
         if (classes == null
                 || changeFlags != ThemeDescription.FLAG_CELLBACKGROUNDCOLOR
-                || !app.tsunderegram.appearance.AppearanceConfig.sectionsSeparatedHeaders()) {
+                || !app.exteraless.appearance.AppearanceConfig.sectionsSeparatedHeaders()) {
             return classes;
         }
         int count = 0;
@@ -3338,7 +3336,7 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
     }
 
     /**
-     * Помечает строку как «таблетку». У TsundereGram тег ставится прямо в
+     * Помечает строку как «таблетку». У exteraGram тег ставится прямо в
      * Вызов вынесен сюда, чтобы ключ тега знал только этот файл.
      */
     public static void setRoundSectionView(View view, boolean round) {
@@ -3367,13 +3365,13 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
     /**
      * Радиус карточек-секций берётся из настроек внешнего вида openExtera, чтобы слайдер
      * «Радиус секций» действовал на всех экранах, а не только на наших. Значение по
-     * умолчанию (20 dp) повторяет TsundereGram, 0 даёт стоковые острые углы.
+     * умолчанию (20 dp) повторяет exteraGram, 0 даёт стоковые острые углы.
      */
     public void setSections() {
-        setSections(dp(12), dp(app.tsunderegram.appearance.AppearanceConfig.sectionRadius()), false);
+        setSections(dp(12), dp(app.exteraless.appearance.AppearanceConfig.sectionRadius()), false);
     }
     public void setSections(boolean topPadding) {
-        setSections(dp(12), dp(app.tsunderegram.appearance.AppearanceConfig.sectionRadius()), topPadding);
+        setSections(dp(12), dp(app.exteraless.appearance.AppearanceConfig.sectionRadius()), topPadding);
     }
     public void setSections(int padding, float roundRadius, boolean topPadding) {
         setSections(
@@ -3381,7 +3379,7 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
             // оказывается её первой строкой, а смысл выноса ровно обратный
             view -> !(view instanceof TextInfoPrivacyCell || view instanceof ShadowSectionCell || view instanceof FiltersSetupActivity.HintInnerCell || view instanceof GraySectionCell || view instanceof CollapseTextCell)
                     && !((view instanceof HeaderCell || view instanceof tw.nekomimi.nekogram.ui.cells.HeaderCell)
-                            && app.tsunderegram.appearance.AppearanceConfig.sectionsSeparatedHeaders())
+                            && app.exteraless.appearance.AppearanceConfig.sectionsSeparatedHeaders())
                     && !Objects.equals(view.getTag(), TAG_NOT_SECTION),
             padding,
             roundRadius,
@@ -3499,7 +3497,7 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
                         if (last) outRect.bottom = padding;
 
                         // В режиме «Сегменты» между строками одного раздела —
-                        // зазор 2dp, иначе карточки склеятся в одну (TsundereGram:
+                        // зазор 2dp, иначе карточки склеятся в одну (exteraGram:
                         // getItemOffsets, rect.top += dp(2)).
                         if (!first && this.parent.useSegmentedSections()
                                 && this.parent.isViewTypeSection != null
@@ -3543,7 +3541,7 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
     /**
      * Режим «Сегменты»: каждая строка — своя карточка.
      *
-     * Перенос TsundereGram 12.9.0 (RecyclerListView: segmentedSectionsEnabled,
+     * Перенос exteraGram 12.9.0 (RecyclerListView: segmentedSectionsEnabled,
      * drawSegmentedSections, getSegmentedSectionTop/BottomRadius). Стиль
      * выбирается в настройках внешнего вида и до сих пор был выбираемым, но
      * наполовину рабочим: разделители пропадали, а строки оставались одной
@@ -3552,12 +3550,12 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
     private boolean useSegmentedSections() {
         return segmentedSectionsEnabled
                 && sectionsItemDecoration != null
-                && (app.tsunderegram.appearance.AppearanceConfig.dividerStyle()
-                        == app.tsunderegram.appearance.AppearanceConfig.DIVIDER_SEGMENTS
-                        || app.tsunderegram.appearance.M3ListItems.enabled());
+                && (app.exteraless.appearance.AppearanceConfig.dividerStyle()
+                        == app.exteraless.appearance.AppearanceConfig.DIVIDER_SEGMENTS
+                        || app.exteraless.appearance.M3ListItems.enabled());
     }
 
-    /** Внутренний угол сегмента: у TsundereGram min(радиус секции, 4dp). */
+    /** Внутренний угол сегмента: у exteraGram min(радиус секции, 4dp). */
     private float segmentInnerRadius() {
         return Math.min(sectionRadius, dp(4));
     }

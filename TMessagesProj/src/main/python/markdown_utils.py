@@ -1,6 +1,6 @@
 """Markdown parsing for plugins (``markdown_utils.parse_markdown``).
 
-The single most-used formatting entry point in real TsundereGram plugins: of the
+The single most-used formatting entry point in real exteraGram plugins: of the
 361 plugins in the public catalogue, 37 import ``parse_markdown`` at module
 level, so a missing module does not degrade them — it stops them loading.
 

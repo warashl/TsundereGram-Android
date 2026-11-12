@@ -1,4 +1,4 @@
-"""Java reflection helpers (find_class, private fields) — tsunderegram plugin SDK.
+"""Java reflection helpers (find_class, private fields) — exteraless plugin SDK.
 
 NOTE: Android's hidden-API restrictions may block setAccessible(True) on
 SDK-internal classes on newer Android versions; all helpers fail softly

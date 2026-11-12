@@ -1,4 +1,4 @@
-"""tsunderegram plugin SDK utilities package."""
+"""exteraless plugin SDK utilities package."""
 
 # ``from extera_utils import text_formatting`` must work without the submodule
 # having been imported first.

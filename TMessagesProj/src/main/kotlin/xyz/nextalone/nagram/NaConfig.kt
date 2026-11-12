@@ -567,18 +567,6 @@ object NaConfig {
             ConfigItem.configTypeBool,
             true
         )
-    val saveDeletedExceptionsMode =
-        addConfig(
-            "SaveDeletedExceptionsMode",
-            ConfigItem.configTypeInt,
-            0
-        )
-    val saveEditedExceptionsMode =
-        addConfig(
-            "SaveEditedExceptionsMode",
-            ConfigItem.configTypeInt,
-            0
-        )
     val saveLocalLastSeen =
         addConfig(
             "SaveLocalLastSeen",
@@ -644,12 +632,6 @@ object NaConfig {
             "CustomDeletedMark",
             ConfigItem.configTypeString,
             ""
-        )
-    val deletedMarkColor =
-        addConfig(
-            "DeletedMarkColor",
-            ConfigItem.configTypeInt,
-            0
         )
     val hidePremiumSection =
         addConfig(
@@ -1303,7 +1285,7 @@ object NaConfig {
         addConfig(
             "SwitchStyle",
             ConfigItem.configTypeInt,
-            2 // 0: default; 1: Modern; 2: MD3 — openExtera: MD3 по умолчанию, как в TsundereGram
+            2 // 0: default; 1: Modern; 2: MD3 — openExtera: MD3 по умолчанию, как в exteraGram
         )
     val sliderStyle =
         addConfig(
@@ -1537,7 +1519,7 @@ object NaConfig {
     /**
      * Тон перевода DeepL: 0 — как есть, 1 — неформальный, 2 — формальный.
      *
-     * Перенос единственной части переводчиков TsundereGram, которой у NagramX нет
+     * Перенос единственной части переводчиков exteraGram, которой у NagramX нет
      * (12.9.0: TranslationFormality + DeepLTranslator.getFormality). Работает
      * только по своему ключу API: бесключевой путь у нас уходит в стороннюю
      * библиотеку app.nekogram.translator, в которую параметр не пробросить.
@@ -1631,7 +1613,7 @@ object NaConfig {
         if (!getPreferences().contains(strokeOnViews.key)) {
             strokeOnViews.changed(SharedConfig.getDevicePerformanceClass() != SharedConfig.PERFORMANCE_CLASS_LOW)
         }
-        if (customTitle.String() == "tsunderegram" || customTitle.String() == "Nagram") {
+        if (customTitle.String() == "exteraless" || customTitle.String() == "Nagram") {
             customTitle.setConfigString("TsundereGram")
         }
 

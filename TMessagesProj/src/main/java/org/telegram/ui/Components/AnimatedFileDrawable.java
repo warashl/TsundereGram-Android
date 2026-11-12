@@ -739,11 +739,7 @@ public final class AnimatedFileDrawable extends BitmapDrawable implements Animat
             stream.cancel(true);
             stream = null;
         }
-        if (android.os.Looper.myLooper() == android.os.Looper.getMainLooper()) {
-            invalidateInternal();
-        } else {
-            AndroidUtilities.runOnUIThread(this::invalidateInternal);
-        }
+        invalidateInternal();
     }
 
     public void resetStream(boolean stop) {

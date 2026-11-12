@@ -87,7 +87,7 @@ _manifest_cache = None    # manifest dict, loaded lazily
 def _files_dir() -> str:
     """The app-private files dir (same source as the rest of the SDK).
 
-    Falls back to $TSUNDEREGRAM_FILES_DIR so the controller stays testable on
+    Falls back to $EXTERALESS_FILES_DIR so the controller stays testable on
     a host interpreter.
     """
     try:
@@ -97,7 +97,7 @@ def _files_dir() -> str:
             return path
     except Exception:
         pass
-    path = os.environ.get("TSUNDEREGRAM_FILES_DIR")
+    path = os.environ.get("EXTERALESS_FILES_DIR")
     if path:
         return path
     raise RuntimeError("pip_controller: cannot resolve the app files directory")
@@ -419,12 +419,12 @@ def ensure_requirements(plugin_id: str, requirements) -> None:
         bundled = bundled_version(requirement.name)
         if bundled is not None:
             if not requirement.specifier.contains(bundled, prereleases=True):
-                print(f"[tsunderegram:pip] {plugin_id!r} wants '{requirement}', "
+                print(f"[exteraless:pip] {plugin_id!r} wants '{requirement}', "
                       f"the build ships {bundled} — using it anyway",
                       file=sys.stderr)
             continue
         if is_provided(requirement.name):
-            print(f"[tsunderegram:pip] '{requirement}' is already in the build",
+            print(f"[exteraless:pip] '{requirement}' is already in the build",
                   file=sys.stderr)
             continue
 

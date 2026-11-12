@@ -53,7 +53,6 @@ import android.view.View;
 import android.view.View.MeasureSpec;
 import android.view.View.OnLayoutChangeListener;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
 import android.view.animation.AnimationUtils;
@@ -76,7 +75,6 @@ import androidx.appcompat.view.menu.MenuItemImpl;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.BotWebViewVibrationEffect;
-import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
@@ -566,13 +564,7 @@ public final class FloatingToolbar {
             cancelOverflowAnimations();
             refreshCoordinatesAndOverflowDirection(contentRectOnScreen);
             preparePopupContent();
-            try {
-                mPopupWindow.showAtLocation(mParent, Gravity.NO_GRAVITY, mCoordsOnWindow.x, mCoordsOnWindow.y);
-            } catch (WindowManager.BadTokenException e) {
-                FileLog.e(e);
-                mDismissed = true;
-                return;
-            }
+            mPopupWindow.showAtLocation(mParent, Gravity.NO_GRAVITY, mCoordsOnWindow.x, mCoordsOnWindow.y);
             setTouchableSurfaceInsetsComputer();
             runShowAnimation();
         }

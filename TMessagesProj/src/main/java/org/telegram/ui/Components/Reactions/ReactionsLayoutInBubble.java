@@ -1003,7 +1003,7 @@ public class ReactionsLayoutInBubble {
             if (!LiteMode.isEnabled(LiteMode.FLAG_ANIMATED_EMOJI_REACTIONS) || !LiteMode.isEnabled(LiteMode.FLAG_PARTICLES)) return false;
 
             AndroidUtilities.rectTmp.set(x, y, x + width, y + height);
-            float rad = app.tsunderegram.appearance.AppearanceConfig.getAvatarCorners((float) height);
+            float rad = app.exteraless.appearance.AppearanceConfig.getAvatarCorners((float) height);
 
             particles.bounds.set(AndroidUtilities.rectTmp);
             particles.bounds.inset(-dp(4), -dp(4));
@@ -1116,7 +1116,7 @@ public class ReactionsLayoutInBubble {
                 canvas.save();
                 canvas.scale(bounceScale, bounceScale, x + w / 2f, y + height / 2f);
             }
-            float rad = app.tsunderegram.appearance.AppearanceConfig.getAvatarCorners((float) height);
+            float rad = app.exteraless.appearance.AppearanceConfig.getAvatarCorners((float) height);
             if (getDrawServiceShaderBackground() > 0 && !drawBgOnlyIfChosen) {
                 Paint paint1 = Theme.getThemePaint(Theme.key_paint_chatActionBackground, resourcesProvider);
                 Paint paint2 = Theme.getThemePaint(Theme.key_paint_chatActionBackgroundDarken, resourcesProvider);
@@ -1678,7 +1678,7 @@ public class ReactionsLayoutInBubble {
                 visibleReaction.isStar = true;
             } else if (reaction instanceof TLRPC.TL_reactionEmoji) {
                 visibleReaction.emojicon = ((TLRPC.TL_reactionEmoji) reaction).emoticon;
-                visibleReaction.hash = visibleReaction.emojicon != null ? visibleReaction.emojicon.hashCode() : 0;
+                visibleReaction.hash = visibleReaction.emojicon.hashCode();
             } else if (reaction instanceof TLRPC.TL_reactionCustomEmoji) {
                 visibleReaction.documentId = ((TLRPC.TL_reactionCustomEmoji) reaction).document_id;
                 visibleReaction.hash = visibleReaction.documentId;

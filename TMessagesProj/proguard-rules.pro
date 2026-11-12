@@ -193,13 +193,13 @@
 # --- Движок плагинов -------------------------------------------------------
 # Всё ниже достижимо только из Python через рефлексию Chaquopy, для статического
 # анализатора это мёртвый код. minifyEnabled в релизе вырезал бы его целиком.
--keep class app.tsunderegram.plugins.** { *; }
--keep class app.tsunderegram.settings.utils.** { *; }
--keep class app.tsunderegram.utils.text.** { *; }
--keep class app.tsunderegram.pillstack.** { *; }
--keep class app.tsunderegram.appearance.AltSeekbar { *; }
--keep interface app.tsunderegram.appearance.AltSeekbar$OnDrag { *; }
--keep class com.tsunderegram.messenger.** { *; }
+-keep class app.exteraless.plugins.** { *; }
+-keep class app.exteraless.settings.utils.** { *; }
+-keep class app.exteraless.utils.text.** { *; }
+-keep class app.exteraless.pillstack.** { *; }
+-keep class app.exteraless.appearance.AltSeekbar { *; }
+-keep interface app.exteraless.appearance.AltSeekbar$OnDrag { *; }
+-keep class com.exteragram.messenger.** { *; }
 -keep class de.robv.android.xposed.** { *; }
 -keep class kotlin.** { *; }
 -keep class com.google.android.material.** { *; }
@@ -223,8 +223,3 @@
 -keep class * extends com.sun.jna.Structure { *; }
 -dontwarn java.awt.**
 -dontwarn com.sun.jna.**
-
--keep class org.telegram.ui.Wallet.WalletPluginFreeze {
-    static boolean frozen;
-    static int bridgeState();
-}

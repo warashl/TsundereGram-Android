@@ -25,7 +25,6 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -38,11 +37,11 @@ import androidx.core.graphics.Insets;
 import androidx.core.math.MathUtils;
 import androidx.core.view.WindowInsetsCompat;
 
-import app.tsunderegram.appearance.AppearanceConfig;
-import app.tsunderegram.appearance.MainTabsUiHelper;
-import app.tsunderegram.feed.FeedController;
-import app.tsunderegram.feed.ui.FeedActivity;
-import app.tsunderegram.feed.ui.FeedChannelsActivity;
+import app.exteraless.appearance.AppearanceConfig;
+import app.exteraless.appearance.MainTabsUiHelper;
+import app.exteraless.feed.FeedController;
+import app.exteraless.feed.ui.FeedActivity;
+import app.exteraless.feed.ui.FeedChannelsActivity;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
@@ -62,7 +61,6 @@ import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.tgnet.TLRPC;
-import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenuSubItem;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.EdgeToEdgeSupportMode;
@@ -175,7 +173,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
     private boolean dropCallsFragmentAfterPageScroll;
 
     private UpdateLayoutWrapper updateLayoutWrapper;
-    private app.tsunderegram.player.PlayerMiniView miniPlayer;
+    private app.exteraless.player.PlayerMiniView miniPlayer;
     private FrameLayout tabsViewWrapper;
     private MainTabsLayout tabsView;
     private BlurredBackgroundDrawable tabsViewBackground;
@@ -466,20 +464,9 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
 
         contentView.addView(fadeView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 0, Gravity.BOTTOM));
 
-        miniPlayer = new app.tsunderegram.player.PlayerMiniView(context, this, resourceProvider);
+        miniPlayer = new app.exteraless.player.PlayerMiniView(context, this, resourceProvider);
         miniPlayer.setOffsetListener(this::onMiniPlayerOffsetChanged);
-        contentView.addView(miniPlayer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, app.tsunderegram.player.PlayerMiniView.HEIGHT_DP + 16, Gravity.BOTTOM));
-        contentView.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
-            @Override
-            public void onViewAttachedToWindow(@NonNull View v) {
-                v.getViewTreeObserver().addOnPreDrawListener(miniPlayerAnchorListener);
-            }
-
-            @Override
-            public void onViewDetachedFromWindow(@NonNull View v) {
-                v.getViewTreeObserver().removeOnPreDrawListener(miniPlayerAnchorListener);
-            }
-        });
+        contentView.addView(miniPlayer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, app.exteraless.player.PlayerMiniView.HEIGHT_DP + 16, Gravity.BOTTOM));
 
         tabsViewWrapper = new FrameLayout(context);
         tabsViewWrapper.setOnClickListener(v -> {});
@@ -788,7 +775,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
             });
         }
 
-        if (false && BuildConfig.DEBUG) {
+        if (BuildConfig.DEBUG) {
             o.add(R.drawable.menu_download_round, "Dump Canvas", () -> AndroidUtilities.runOnUIThread(this::dumpCanvas, 1000));
         }
 
@@ -1064,25 +1051,13 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         default void setMiniPlayerInset(float inset, int padding) {
 
         }
-
-        default void setMiniPlayerTopPadding(int padding) {
-
-        }
-
-        default float getMiniPlayerTopAnchor() {
-            return -1;
-        }
-
-        default float getMiniPlayerTopVisibility() {
-            return 1f;
-        }
     }
 
     private <T extends BaseFragment> T prepareTabFragment(T fragment) {
         if (fragment instanceof TabFragmentDelegate) {
             ((TabFragmentDelegate) fragment).setParentTabsGlassInvalidationCallback(this::invalidateTabsGlass);
             if (miniPlayer != null) {
-                applyMiniPlayerInsets((TabFragmentDelegate) fragment, fragment instanceof DialogsActivity);
+                ((TabFragmentDelegate) fragment).setMiniPlayerInset(miniPlayer.getVisibleOffset(), miniPlayer.getTargetOffset());
             }
         }
         return fragment;
@@ -1304,54 +1279,19 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         final int gap = hidden || MainTabsUiHelper.isMaterial3NavigationBar() ? dp(12) : dp(4);
         final float factor = hidden ? 1f : animatorTabsVisible.getFloatValue();
         miniPlayer.setHostPosition(-(navigationBarHeight + updateLayoutHeight + tabsHeight + gap - dp(12)), factor);
-        updateMiniPlayerTopAnchor();
         onMiniPlayerOffsetChanged();
-    }
-
-    private final ViewTreeObserver.OnPreDrawListener miniPlayerAnchorListener = () -> {
-        updateMiniPlayerTopAnchor();
-        return true;
-    };
-
-    private void updateMiniPlayerTopAnchor() {
-        if (miniPlayer == null || viewPager == null) {
-            return;
-        }
-        final FragmentState state = fragmentsArr.get(getPositionChats());
-        final BaseFragment chats = state != null ? state.fragment : null;
-        final View view = chats != null ? chats.getFragmentView() : null;
-        final View page = view != null && view.getParent() instanceof View ? (View) view.getParent() : null;
-        float shift = 0f;
-        float zone = 0f;
-        if (page != null && page.getParent() == viewPager && page.getVisibility() == View.VISIBLE && viewPager.getMeasuredWidth() > 0) {
-            shift = page.getTranslationX();
-            zone = MathUtils.clamp(1f - Math.abs(shift) / viewPager.getMeasuredWidth(), 0f, 1f);
-        }
-        float anchor = -1;
-        float visibility = 1f;
-        if (chats instanceof TabFragmentDelegate) {
-            anchor = ((TabFragmentDelegate) chats).getMiniPlayerTopAnchor();
-            visibility = ((TabFragmentDelegate) chats).getMiniPlayerTopVisibility();
-        }
-        if (anchor < 0) {
-            anchor = AndroidUtilities.statusBarHeight + ActionBar.getCurrentActionBarHeight();
-        }
-        miniPlayer.setTopState(anchor, zone, shift, visibility);
-    }
-
-    private void applyMiniPlayerInsets(TabFragmentDelegate delegate, boolean chats) {
-        delegate.setMiniPlayerInset(miniPlayer.getVisibleOffset(chats), miniPlayer.getTargetOffset(chats));
-        delegate.setMiniPlayerTopPadding(miniPlayer.getTargetTopOffset(chats));
     }
 
     private void onMiniPlayerOffsetChanged() {
         if (miniPlayer == null) {
             return;
         }
+        final float inset = miniPlayer.getVisibleOffset();
+        final int padding = miniPlayer.getTargetOffset();
         for (int a = 0, N = fragmentsArr.size(); a < N; a++) {
             final BaseFragment fragment = fragmentsArr.valueAt(a).fragment;
             if (fragment instanceof TabFragmentDelegate) {
-                applyMiniPlayerInsets((TabFragmentDelegate) fragment, fragment instanceof DialogsActivity);
+                ((TabFragmentDelegate) fragment).setMiniPlayerInset(inset, padding);
             }
         }
     }
@@ -1595,11 +1535,8 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
             return openCallsSelector(button);
         }
         if (index == INDEX_SETTINGS) {
-            if (!NekoConfig.showGhostInDrawer.Bool()) {
-                return false;
-            }
             ItemOptions o = ItemOptions.makeOptions(this, button);
-            {
+            if (NekoConfig.showGhostInDrawer.Bool()) {
                 final String msg = NekoConfig.isGhostModeActive()
                     ? getString(R.string.DisableGhostMode)
                     : getString(R.string.EnableGhostMode);
@@ -1611,7 +1548,16 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
                     BulletinFactory.of(contentView, resourceProvider).createSuccessBulletin(toggleMsg).show();
                     NotificationCenter.getInstance(UserConfig.selectedAccount).postNotificationName(NotificationCenter.mainUserInfoChanged);
                 });
+                o.addGap();
             }
+            o.add(R.drawable.web_browser, getString(R.string.InappBrowser), () -> presentFragment(new WebBrowserSettings(null)), () -> BrowserUtils.openBrowserHome(currentAccount, null, true));
+            o.addGap();
+            o.add(R.drawable.msg_retry_solar, getString(R.string.RestartApp), () ->
+                AppRestartHelper.triggerRebirth(
+                    ApplicationLoader.applicationContext,
+                    new Intent(ApplicationLoader.applicationContext, LaunchActivity.class)
+                )
+            );
             setupPopupMenuStyle(o);
             o.show();
             return true;
@@ -1631,6 +1577,11 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
     }
 
     private void addChatsMenuItems(ItemOptions o, View button) {
+        o.add(R.drawable.menu_recent, getString(R.string.RecentChats), () -> {
+            o.dismiss();
+            BackButtonMenuRecent.show(currentAccount, this, button);
+        });
+        o.addGap();
         o.add(R.drawable.msg_archive, getString(R.string.ArchivedChats), () -> {
             Bundle args = new Bundle();
             args.putInt("folderId", 1);

@@ -45,7 +45,7 @@ public class ChatActivityEnterViewAnimatedIconView extends RLottieImageView {
      * Иконка из пака вместо анимации Lottie.
      *
      * Кнопка эмодзи рисуется анимацией (улыбка перетекает в клавиатуру), а
-     * анимацию иконпаком не подменишь: в паке лежат обычные картинки. TsundereGram
+     * анимацию иконпаком не подменишь: в паке лежат обычные картинки. exteraGram
      * ради этого держит отдельный ChatActivityEnterViewStaticIconView и
      * подставляет его, когда активен не только встроенный набор
      * (ChatActivityEnterView:5335). У нас то же самое сделано режимом внутри
@@ -54,7 +54,7 @@ public class ChatActivityEnterViewAnimatedIconView extends RLottieImageView {
      */
     private boolean useStaticIcons() {
         try {
-            return app.tsunderegram.icons.IconPackManager.getInstance().hasReplacements();
+            return app.exteraless.icons.IconPackManager.getInstance().hasReplacements();
         } catch (Throwable ignored) {
             return false;
         }

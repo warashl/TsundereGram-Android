@@ -1,0 +1,35 @@
+name: CI Failure Log
+
+on:
+  workflow_run:
+    workflows: ["Release Build", "TsundereGram Build"]
+    types: [completed]
+
+permissions:
+  actions: read
+  issues: write
+
+jobs:
+  report:
+    # проверочные сборки PR видны в самом PR — issue заводим только для сборок main/ручных
+    if: ${{ github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.event != 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post failed log as issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          gh run view "$RUN_ID" -R "$GITHUB_REPOSITORY" --log-failed > failed.log 2>&1 || true
+          if [ ! -s failed.log ]; then gh run view "$RUN_ID" -R "$GITHUB_REPOSITORY" --log > failed.log 2>&1 || true; fi
+          {
+            echo "Run: $RUN_URL"
+            echo "Commit: $SHA"
+            echo
+            echo '```'
+            grep -v '^[[:space:]]*$' failed.log | tail -n 300 | cut -c1-300 | tail -c 60000
+            echo '```'
+          } > body.md
+          gh issue create -R "$GITHUB_REPOSITORY" --title "CI failure: Release Build ${SHA:0:7}" --body-file body.md

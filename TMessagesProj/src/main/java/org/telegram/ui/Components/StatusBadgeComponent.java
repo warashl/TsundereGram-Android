@@ -42,8 +42,8 @@ public class StatusBadgeComponent {
         } else if (user != null && user.verified) {
             statusDrawable.set(verifiedDrawable = (verifiedDrawable == null ? new CombinedDrawable(Theme.dialogs_verifiedDrawable, Theme.dialogs_verifiedCheckDrawable) : verifiedDrawable), animated);
             statusDrawable.setColor(null);
-        } else if (user != null && DialogObject.getEmojiStatusDocumentId(user) != 0) {
-            statusDrawable.set(DialogObject.getEmojiStatusDocumentId(user), animated);
+        } else if (user != null && DialogObject.getEmojiStatusDocumentId(user.emoji_status) != 0) {
+            statusDrawable.set(DialogObject.getEmojiStatusDocumentId(user.emoji_status), animated);
             statusDrawable.setColor(colorFilter);
         } else if (user != null && user.premium) {
             statusDrawable.set(PremiumGradient.getInstance().premiumStarDrawableMini, animated);

@@ -1,6 +1,6 @@
 package org.telegram.ui.Components.blur3;
 
-import app.tsunderegram.appearance.AppearanceConfig;
+import app.exteraless.appearance.AppearanceConfig;
 
 import java.util.Collections;
 import java.util.Set;

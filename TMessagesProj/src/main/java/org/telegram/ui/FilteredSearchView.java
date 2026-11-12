@@ -1161,8 +1161,8 @@ public class FilteredSearchView extends FrameLayout implements NotificationCente
                         }
                         return;
                     }
-                    // tsunderegram plugins: установить плагин, а не открывать его в просмотрщике.
-                    if (app.tsunderegram.plugins.PluginInstallHelper.handleMessageTap(parentActivity, message)) {
+                    // exteraless plugins: установить плагин, а не открывать его в просмотрщике.
+                    if (app.exteraless.plugins.PluginInstallHelper.handleMessageTap(parentActivity, message)) {
                         return;
                     }
                     AndroidUtilities.openDocument(message, parentActivity, parentFragment);

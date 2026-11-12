@@ -42,19 +42,6 @@ public class LocalNameHelper {
         MessagesController.userOverrideNameCache.remove(userId);
     }
 
-    /** Функция локальных имён удалена: стираем оставшиеся переопределения один раз после обновления. */
-    public static void dropRemovedOverridesOnce() {
-        try {
-            SharedPreferences preferences = getPreferences();
-            if (preferences.getBoolean("localNameOverridesRemoved", false)) {
-                return;
-            }
-            clearAllLocalNameOverrides();
-            preferences.edit().putBoolean("localNameOverridesRemoved", true).apply();
-        } catch (Exception ignore) {
-        }
-    }
-
     public static void clearAllLocalNameOverrides() {
         SharedPreferences preferences = getPreferences();
         SharedPreferences.Editor editor = preferences.edit();

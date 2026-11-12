@@ -19,7 +19,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.animation.AccelerateInterpolator;
 import android.widget.FrameLayout;
 
-import app.tsunderegram.chats.ChatsConfig;
+import app.exteraless.chats.ChatsConfig;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.DocumentObject;
 import org.telegram.messenger.FileLoader;

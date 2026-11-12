@@ -1,6 +1,6 @@
 package org.telegram.ui.Components;
 
-import app.tsunderegram.utils.AppUtils;
+import app.exteraless.utils.AppUtils;
 
 import static org.telegram.messenger.AndroidUtilities.dp;
 import static org.telegram.messenger.Utilities.swapItems;
@@ -902,7 +902,7 @@ public class ViewPagerFixed extends FrameLayout {
             onItemSelected(viewPages[0], oldView, currentPosition, oldPosition);
             setTranslationX(viewPages[0], 0);
             if (tabsView != null) {
-                tabsView.selectTab(nextPosition, currentPosition, currentProgress);
+                tabsView.selectTab(currentPosition, nextPosition, currentProgress);
             }
             onTabAnimationUpdate(true);
         }
@@ -1405,26 +1405,15 @@ public class ViewPagerFixed extends FrameLayout {
                 int colorActive = manualActiveTextColor != null ? manualActiveTextColor : Theme.getColor(activeTextColorKey, resourcesProvider);
                 int colorUnactive = manualUnactiveTextColor != null ? manualUnactiveTextColor : Theme.getColor(unactiveTextColorKey, resourcesProvider);
                 long vpfUid = org.telegram.messenger.UserConfig.getInstance(org.telegram.messenger.UserConfig.selectedAccount).getClientUserId();
-                app.tsunderegram.profilecolors.ProfileColorController.ProfileColorMeta vpfMeta =
-                        app.tsunderegram.profilecolors.ProfileColorController.getInstance().getColorFor(vpfUid);
-                // Цвета профиля учитываем только для вкладок внутри профиля (9/10); вкладки поиска и прочие
-                // экраны рисуются на фоне темы, иначе на тёмной теме текст становился чёрным на тёмном.
-                boolean vpfProfileTabs = selectorType == 9 || selectorType == 10;
-                boolean vpfIsLight = (vpfProfileTabs && vpfMeta != null && vpfMeta.hasCustomColors()) ? vpfMeta.isLight() : !Theme.isCurrentThemeDark();
+                app.exteraless.profilecolors.ProfileColorController.ProfileColorMeta vpfMeta =
+                        app.exteraless.profilecolors.ProfileColorController.getInstance().getColorFor(vpfUid);
+                boolean vpfIsLight = (vpfMeta != null && vpfMeta.hasCustomColors()) ? vpfMeta.isLight() : !Theme.isCurrentThemeDark();
                 if (manualUnactiveTextColor == null && vpfIsLight) {
                     if (ColorUtils.calculateLuminance(colorUnactive) > 0.5f) {
                         colorUnactive = 0x8A000000;
                     }
                     if (ColorUtils.calculateLuminance(colorActive) > 0.85f) {
                         colorActive = 0xFF000000;
-                    }
-                } else if (manualUnactiveTextColor == null && !vpfIsLight) {
-                    // тёмный фон: не даём тексту невыбранных вкладок слиться с подложкой
-                    if (ColorUtils.calculateLuminance(colorUnactive) < 0.2f) {
-                        colorUnactive = 0x99FFFFFF;
-                    }
-                    if (ColorUtils.calculateLuminance(colorActive) < 0.2f) {
-                        colorActive = 0xFFFFFFFF;
                     }
                 }
                 int colorKey = (currentTab.id == id1) ? colorActive : colorUnactive;

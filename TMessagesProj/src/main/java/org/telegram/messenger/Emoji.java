@@ -718,7 +718,7 @@ public class Emoji {
         boolean replacedAppleLogo = EmojiHelper.replaceAppleLogo(s, fontMetrics);
         ArrayList<EmojiSpanRange> emojis = parseEmojis(s, emojiOnly);
         if (emojis.isEmpty()) {
-            // TsundereGram фильтрует зальго на обоих выходах replaceEmoji
+            // exteraGram фильтрует зальго на обоих выходах replaceEmoji
             // (12.9.0:Emoji.java:887,920) — то есть во всём приложении, а не
             // в отдельных ячейках, как это делает NagramX.
             return MessageHelper.zalgoFilter(replacedAppleLogo ? s : cs);

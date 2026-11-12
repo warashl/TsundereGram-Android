@@ -93,7 +93,6 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
     private TLRPC.InputPeer reqPeer;
     private int reqMessageId;
     private boolean reqSum;
-    private Runnable aiReplacementCancel;
     private TL_iv.RichMessage reqRichMessage;
     private RichMessageLayout.PreviewView richLoadingPreviewView;
     private RichMessageLayout.PreviewView richPreviewView;
@@ -121,7 +120,7 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
     private BaseFragment fragment;
     private Utilities.CallbackReturn<URLSpan, Boolean> onLinkPress;
     private boolean firstTranslation = true;
-    private final boolean nekoProviders = app.tsunderegram.chats.ChatsConfig.translateInSheet.Bool();
+    private final boolean nekoProviders = app.exteraless.chats.ChatsConfig.translateInSheet.Bool();
     private int sheetProvider = tw.nekomimi.nekogram.NekoConfig.translationProvider.Int();
 
     public TranslateAlert2(
@@ -316,10 +315,6 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
             ConnectionsManager.getInstance(currentAccount).cancelRequest(reqId, true);
             reqId = null;
         }
-        if (aiReplacementCancel != null) {
-            aiReplacementCancel.run();
-            aiReplacementCancel = null;
-        }
 
         if (nekoProviders && reqRichMessage == null && !reqSum
                 && sheetProvider != tw.nekomimi.nekogram.translate.Translator.providerTelegram) {
@@ -387,7 +382,7 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
             req.peer = reqPeer;
             req.id = reqMessageId;
             req.to_lang = normalizeLanguage(lang);
-            final Utilities.Callback2<TLRPC.TL_textWithEntities, TLRPC.TL_error> onResult = (res, err) -> {
+            reqId = ConnectionsManager.getInstance(currentAccount).sendRequestTyped(req, AndroidUtilities::runOnUIThread, (res, err) -> {
                 reqId = null;
                 if (err != null && "TRANSLATIONS_DISABLED_ALT".equalsIgnoreCase(err.text)) {
                     translateAlt();
@@ -407,25 +402,7 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
                     headerView.toLanguageTextView.setText(languageName(toLanguage = prevToLanguage));
                     adapter.updateMainView(textViewContainer);
                 }
-            };
-            if (app.tsunderegram.ai.TelegramAiReplacement.replacesSummaries(currentAccount)) {
-                aiReplacementCancel = app.tsunderegram.ai.TelegramAiReplacement.translate(textWithEntities.text, lang, res -> {
-                    aiReplacementCancel = null;
-                    onResult.run(res, null);
-                }, (code, message) -> {
-                    aiReplacementCancel = null;
-                    if (firstTranslation) {
-                        dismiss();
-                        com.tsunderegram.messenger.ai.AiController.showErrorBulletin(org.telegram.ui.LaunchActivity.getSafeLastFragment(), code);
-                    } else {
-                        com.tsunderegram.messenger.ai.AiController.showErrorBulletin((FrameLayout) containerView, resourcesProvider, code);
-                        headerView.toLanguageTextView.setText(languageName(toLanguage = prevToLanguage));
-                        adapter.updateMainView(textViewContainer);
-                    }
-                });
-            } else {
-                reqId = ConnectionsManager.getInstance(currentAccount).sendRequestTyped(req, AndroidUtilities::runOnUIThread, onResult);
-            }
+            });
             return;
         }
 
@@ -485,7 +462,7 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
 
     private void translateWithProvider() {
         final int request = ++providerRequest;
-        app.tsunderegram.utils.text.TranslatorUtils.translate(reqText == null ? "" : reqText, toLanguage, providerEntities, new app.tsunderegram.utils.text.TranslatorUtils.TranslateCallback() {
+        app.exteraless.utils.text.TranslatorUtils.translate(reqText == null ? "" : reqText, toLanguage, providerEntities, new app.exteraless.utils.text.TranslatorUtils.TranslateCallback() {
             @Override
             public void onSuccess(TLRPC.TL_textWithEntities result) {
                 if (request != providerRequest || isDismissed() || result == null) {
@@ -1100,10 +1077,6 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
         if (reqId != null) {
             ConnectionsManager.getInstance(currentAccount).cancelRequest(reqId, true);
             reqId = null;
-        }
-        if (aiReplacementCancel != null) {
-            aiReplacementCancel.run();
-            aiReplacementCancel = null;
         }
         super.dismissInternal();
     }

@@ -1935,7 +1935,6 @@ public class StoriesController {
         boolean canceled;
         private int currentRequest;
         private boolean retriedWithoutPremium = false;
-        private boolean retriedPlainMedia = false;
         private long firstSecondSize = -1;
         private long duration;
 
@@ -2511,13 +2510,7 @@ public class StoriesController {
                     entry.updateDocumentRef = null;
                     return;
                 } else if (error != null && !edit) {
-                    // TsundereGram: у бывших премиум-аккаунтов сервер отвечает не только
-                    // PREMIUM_ACCOUNT_REQUIRED, но и ошибками на сохранённые премиум-настройки
-                    // (срок истории, длинная подпись, премиум-эмодзи) — повторяем без них.
-                    if (req instanceof TL_stories.TL_stories_sendStory && error.text != null && (error.text.contains("PREMIUM")
-                            || error.text.contains("STORY_PERIOD_INVALID") || error.text.contains("MEDIA_CAPTION_TOO_LONG")
-                            || error.text.contains("CAPTION_TOO_LONG") || error.text.contains("ENTITY_") || error.text.contains("DOCUMENT_INVALID")
-                            || error.text.contains("MEDIA_AREA") || error.text.contains("ALBUM"))) {
+                    if (req instanceof TL_stories.TL_stories_sendStory && error.text != null && error.text.contains("PREMIUM_ACCOUNT_REQUIRED")) {
                         TL_stories.TL_stories_sendStory retrySend = (TL_stories.TL_stories_sendStory) req;
                         if (!retriedWithoutPremium) {
                             retriedWithoutPremium = true;
@@ -2532,50 +2525,8 @@ public class StoriesController {
                             // тоже считает премиальными — при повторе отправляем без них.
                             retrySend.flags &= ~32;
                             retrySend.media_areas.clear();
-                            // Премиум-эмодзи в подписи — тоже премиальная функция.
-                            if (retrySend.entities != null) {
-                                for (int k = retrySend.entities.size() - 1; k >= 0; k--) {
-                                    if (retrySend.entities.get(k) instanceof TLRPC.TL_messageEntityCustomEmoji) {
-                                        retrySend.entities.remove(k);
-                                    }
-                                }
-                            }
-                            if (retrySend.caption != null) {
-                                final int defLimit = MessagesController.getInstance(currentAccount).storyCaptionLengthLimitDefault;
-                                if (defLimit > 0 && retrySend.caption.length() > defLimit) {
-                                    retrySend.caption = retrySend.caption.substring(0, defLimit);
-                                    retrySend.entities.clear();
-                                }
-                            }
                             // Приватность не трогаем: она не премиальная, а сброс на «Все»
                             // молча публиковал историю шире, чем выбрал пользователь.
-                            currentRequest = ConnectionsManager.getInstance(currentAccount).sendRequest(retrySend, requestDelegate[0], ConnectionsManager.RequestFlagInvokeAfter);
-                            return;
-                        } else if (!retriedPlainMedia && error.text.contains("PREMIUM")) {
-                            // TsundereGram: второй повтор. Сервер всё ещё требует Premium — убираем то, что ещё
-                            // может считаться премиальным в самом медиа: стикеры, живое фото, спойлер и
-                            // форматирование подписи. Приватность (круг зрителей) не меняем.
-                            retriedPlainMedia = true;
-                            if (retrySend.media instanceof TLRPC.TL_inputMediaUploadedPhoto) {
-                                TLRPC.TL_inputMediaUploadedPhoto m = (TLRPC.TL_inputMediaUploadedPhoto) retrySend.media;
-                                m.flags &= ~1;
-                                m.stickers.clear();
-                                m.spoiler = false;
-                                m.live_photo = false;
-                            } else if (retrySend.media instanceof TLRPC.TL_inputMediaUploadedDocument) {
-                                TLRPC.TL_inputMediaUploadedDocument m = (TLRPC.TL_inputMediaUploadedDocument) retrySend.media;
-                                m.flags &= ~1;
-                                m.stickers.clear();
-                                m.spoiler = false;
-                                m.live_photo = false;
-                                for (int k = m.attributes.size() - 1; k >= 0; k--) {
-                                    if (m.attributes.get(k) instanceof TLRPC.TL_documentAttributeHasStickers) {
-                                        m.attributes.remove(k);
-                                    }
-                                }
-                            }
-                            retrySend.flags &= ~2;
-                            retrySend.entities.clear();
                             currentRequest = ConnectionsManager.getInstance(currentAccount).sendRequest(retrySend, requestDelegate[0], ConnectionsManager.RequestFlagInvokeAfter);
                             return;
                         }

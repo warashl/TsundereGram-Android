@@ -1,7 +1,7 @@
 package org.telegram.ui.Components;
 
-import app.tsunderegram.chats.LinkedCustomEmoji;
-import app.tsunderegram.utils.AppUtils;
+import app.exteraless.chats.LinkedCustomEmoji;
+import app.exteraless.utils.AppUtils;
 
 import static org.telegram.messenger.AndroidUtilities.dp;
 import static org.telegram.messenger.AndroidUtilities.dpf2;
@@ -2719,21 +2719,12 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                     if (mediaPages != null) {
                         for (MediaPage mp : mediaPages) {
                             if (mp != null && mp.listView != null) {
-                                final int paddingTopOld = mp.listView.getPaddingTop();
                                 mp.listView.setPadding(
                                     mp.listView.getPaddingLeft(),
                                     getPagePaddingTop(mp.selectedType),
                                     mp.listView.getPaddingRight(),
                                     mp.listView.hintPaddingBottom = getPagePaddingBottom(isStoriesView())
                                 );
-                                // already laid out items keep their position on padding change, so shift them along with tabs
-                                final int scroll = paddingTopOld - mp.listView.getPaddingTop();
-                                if (scroll != 0) {
-                                    AndroidUtilities.doOnLayout(mp.listView, () -> mp.listView.scrollBy(0, scroll));
-                                }
-                            }
-                            if (mp != null && mp.progressView != null) {
-                                updateProgressViewLayout(mp);
                             }
                         }
                     }
@@ -2902,14 +2893,6 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
             mediaPages[a].itemAnimator.setSupportsChangeAnimations(false);
             mediaPages[a].listView = new SharedMediaListView(context) {
 
-                // TsundereGram: карточки секций (голосовые, файлы, ссылки) красим цветами профиля,
-                // как и текст в ячейках. Раньше фон брался из общей темы приложения: при тёмной теме
-                // и светлом профиле получалась чёрная карточка с тёмным текстом.
-                @Override
-                public void drawBackgroundRect(Canvas canvas, android.graphics.RectF rect, float topRadius, float bottomRadius, float alpha) {
-                    RecyclerListView.drawBackgroundRect(canvas, rect, topRadius, bottomRadius, alpha, SharedMediaLayout.this.resourcesProvider);
-                }
-
                 @Override
                 public RecyclerListView.FastScrollAdapter getMovingAdapter() {
                     if (isAnyStoryPageType(changeColumnsTab)) {
@@ -3043,9 +3026,8 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                                 if (archivedHintPaint == null) {
                                     archivedHintPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
                                     archivedHintPaint.setTextSize(dp(14));
+                                    archivedHintPaint.setColor(getThemedColor(Theme.key_windowBackgroundWhiteGrayText2));
                                 }
-                                // TsundereGram: подсказка архива сливалась с фоном на кастомных темах.
-                                archivedHintPaint.setColor(app.tsunderegram.utils.TsunContrast.text(getThemedColor(Theme.key_windowBackgroundWhiteGrayText2), getThemedColor(Theme.key_windowBackgroundWhite)));
                                 int width = getMeasuredWidth() - dp(60);
                                 if (archivedHintLayout == null || archivedHintLayout.getWidth() != width) {
                                     boolean isChannel = profileActivity != null && ChatObject.isChannelAndNotMegaGroup(profileActivity.getMessagesController().getChat(-dialog_id));
@@ -4459,12 +4441,6 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
         ScrollSlidingTextTabStripInner scrollSlidingTextTabStrip = new ScrollSlidingTextTabStripInner(context, resourcesProvider) {
             @Override
             protected int processColor(int color) {
-                // сначала свои цвета профиля (акцент вкладки), иначе при каждом переключении/анимации
-                // текст вкладки становился белым и только потом — цветом профиля
-                int custom = super.processColor(color);
-                if (custom != color) {
-                    return custom;
-                }
                 return SharedMediaLayout.this.processColor(color);
             }
         };
@@ -4545,12 +4521,11 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
             @Override
             public boolean showOptions(int page, View view) {
                 if (profileActivity == null) return false;
-                final boolean isChannel = isBroadcastChannelProfile();
-                if (getTab(page, isChannel) == null) {
+                if (getTab(page, info instanceof TLRPC.TL_channelFull) == null) {
                     return false;
                 }
                 final TLRPC.ProfileTab main_tab;
-                if (isChannel) {
+                if (info instanceof TLRPC.TL_channelFull) {
                     final TLRPC.Chat chat = profileActivity.getMessagesController().getChat(info.id);
                     if (!ChatObject.canUserDoAction(chat, ChatObject.ACTION_POST))
                         return false;
@@ -4568,7 +4543,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                 o.add(R.drawable.tabs_reorder, getString(R.string.ProfileTabSetAsMain), () -> {
                     if (profileActivity == null) return;
                     final TLObject r;
-                    if (isChannel) {
+                    if (info instanceof TLRPC.TL_channelFull) {
                         TLRPC.TL_channels_setMainProfileTab req = new TLRPC.TL_channels_setMainProfileTab();
                         req.tab = getTab(page, true);
                         req.channel = profileActivity.getMessagesController().getInputChannel(info.id);
@@ -7129,7 +7104,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                     }
                     return false;
                 };
-                final boolean isChannel = isBroadcastChannelProfile();
+                final boolean isChannel = info instanceof TLRPC.TL_channelFull;
                 for (int i = 0; i < 15; ++i) {
                     if (getTab(i, isChannel) != null && !has.run(i)) {
                         tabs.add(new Pair<>(i, getTabName(i)));
@@ -7464,7 +7439,8 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                     mediaPages[a].emptyView.setVisibility(View.INVISIBLE);
                 }
             }
-            updateProgressViewLayout(mediaPages[a]);
+            final boolean photos = mediaPages[a].selectedType == TAB_PHOTOVIDEO || isAnyStoryPageType(mediaPages[a].selectedType);
+            mediaPages[a].progressView.setLayoutParams(LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.FILL, photos ? 0 : 12, 48 + (photos ? 8 : 12), photos ? 0 : 12, photos ? 0 : 12));
             if (sections) {
                 mediaPages[a].listView.setSections(false);
             } else {
@@ -7955,8 +7931,8 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                             }
                             return;
                         }
-                        // tsunderegram plugins: установить плагин, а не открывать его в просмотрщике.
-                        if (app.tsunderegram.plugins.PluginInstallHelper.handleMessageTap(profileActivity.getParentActivity(), message)) {
+                        // exteraless plugins: установить плагин, а не открывать его в просмотрщике.
+                        if (app.exteraless.plugins.PluginInstallHelper.handleMessageTap(profileActivity.getParentActivity(), message)) {
                             return;
                         }
                         AndroidUtilities.openDocument(message, profileActivity.getParentActivity(), profileActivity);
@@ -12125,29 +12101,11 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
         return pagesPaddingBottom + (hasButtonPadding ? dp(44 + 8) : 0);
     }
 
-    private void updateProgressViewLayout(MediaPage page) {
-        final boolean photos = page.selectedType == TAB_PHOTOVIDEO || isAnyStoryPageType(page.selectedType);
-        final FrameLayout.LayoutParams lp = LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.FILL, photos ? 0 : 12, 48 + (photos ? 8 : 12), photos ? 0 : 12, photos ? 0 : 12);
-        lp.topMargin += getStoriesTabsPadding(page.selectedType);
-        final ViewGroup.LayoutParams oldLp = page.progressView.getLayoutParams();
-        if (oldLp instanceof FrameLayout.LayoutParams) {
-            final FrameLayout.LayoutParams o = (FrameLayout.LayoutParams) oldLp;
-            if (o.leftMargin == lp.leftMargin && o.topMargin == lp.topMargin && o.rightMargin == lp.rightMargin && o.bottomMargin == lp.bottomMargin && o.gravity == lp.gravity) {
-                return;
-            }
-        }
-        page.progressView.setLayoutParams(lp);
-    }
-
-    private int getStoriesTabsPadding(int type) {
-        return (int) (storiesContainer != null && (isStoryAlbumPageType(type) || type == TAB_STORIES) ? storiesContainer.getVisibilityFactor() * dp(40) : 0);
-    }
-
     private int getPagePaddingTop(int type) {
         return (
             dp(48 + 6) +
             topLayoutPadding +
-            getStoriesTabsPadding(type) +
+            (int) (storiesContainer != null && (isStoryAlbumPageType(type) || type == TAB_STORIES) ? storiesContainer.getVisibilityFactor() * dp(40) : 0) +
             (type == TAB_ARCHIVED_STORIES ? dp(64) : 0)
         );
     }
@@ -12759,12 +12717,6 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
             .getStoriesController();
     }
 
-    // Supergroups also use TL_channelFull, but only broadcast channels support profile tabs
-    private boolean isBroadcastChannelProfile() {
-        if (info == null || profileActivity == null) return false;
-        return ChatObject.isChannelAndNotMegaGroup(profileActivity.getMessagesController().getChat(info.id));
-    }
-
     public static TLRPC.ProfileTab getTab(int id, boolean isChannel) {
         if (id != TAB_STORIES && id != TAB_GIFTS && !isChannel)
             return null;
@@ -12810,10 +12762,9 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
     public void sendTabsOrder() {
         if (profileActivity == null || scrollSlidingTextTabStrip == null) return;
 
-        final boolean isChannel = isBroadcastChannelProfile();
         final ArrayList<TLRPC.ProfileTab> order = new ArrayList<>();
         for (int id : scrollSlidingTextTabStrip.getTabIds()) {
-            final TLRPC.ProfileTab tab = getTab(id, isChannel);
+            final TLRPC.ProfileTab tab = getTab(id, info instanceof TLRPC.TL_channelFull);
             if (tab != null) {
                 order.add(tab);
             }

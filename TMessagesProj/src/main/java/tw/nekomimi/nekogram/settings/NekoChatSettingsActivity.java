@@ -267,7 +267,7 @@ public class NekoChatSettingsActivity extends BaseNekoXSettingsActivity implemen
 
     private final AbstractConfigCell textStyleRow = cellGroup.appendCell(new ConfigCellTextCheckIcon(null, "TextStyle", null, R.drawable.msg_photo_text_framed3, false, () -> {
         if (getParentActivity() == null) return;
-        showDialog(app.tsunderegram.chats.TextStyleDialog.create(getParentActivity()));
+        showDialog(app.exteraless.chats.TextStyleDialog.create(getParentActivity()));
     }));
     private final AbstractConfigCell dividerMenuAndButtons = cellGroup.appendCell(new ConfigCellDivider());
 
@@ -465,8 +465,6 @@ public class NekoChatSettingsActivity extends BaseNekoXSettingsActivity implemen
             types.add(DoubleTap.DOUBLE_TAP_ACTION_REPLY);
             arrayList.add(getString(R.string.AddToSavedMessages));
             types.add(DoubleTap.DOUBLE_TAP_ACTION_SAVE);
-            arrayList.add(getString(R.string.OEDoubleTapSaveToDevice));
-            types.add(DoubleTap.DOUBLE_TAP_ACTION_DOWNLOAD);
             arrayList.add(getString(R.string.Repeat));
             types.add(DoubleTap.DOUBLE_TAP_ACTION_REPEAT);
             arrayList.add(getString(R.string.RepeatAsCopy));

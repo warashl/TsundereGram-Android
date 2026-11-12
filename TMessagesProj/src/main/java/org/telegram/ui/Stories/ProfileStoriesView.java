@@ -903,14 +903,14 @@ public class ProfileStoriesView extends View implements NotificationCenter.Notif
     private final Path forumSegmentPath = new Path();
 
     private boolean useAvatarCornersRing() {
-        return !app.tsunderegram.appearance.AppearanceConfig.avatarCornersDefault() && expandProgress < 0.2f;
+        return !app.exteraless.appearance.AppearanceConfig.avatarCornersDefault() && expandProgress < 0.2f;
     }
 
     private float avatarCornersRingRadius(RectF oval, boolean isForum) {
         float avatarWidth = rect1.width();
-        float avatarRadius = app.tsunderegram.appearance.AppearanceConfig.getAvatarCorners(
+        float avatarRadius = app.exteraless.appearance.AppearanceConfig.getAvatarCorners(
                 avatarWidth,
-                isForum ? app.tsunderegram.appearance.AppearanceConfig.CORNER_TYPE_FORUM : app.tsunderegram.appearance.AppearanceConfig.CORNER_TYPE_DEFAULT,
+                isForum ? app.exteraless.appearance.AppearanceConfig.CORNER_TYPE_FORUM : app.exteraless.appearance.AppearanceConfig.CORNER_TYPE_DEFAULT,
                 true
         );
         float gap = (oval.width() - avatarWidth) / 2f;

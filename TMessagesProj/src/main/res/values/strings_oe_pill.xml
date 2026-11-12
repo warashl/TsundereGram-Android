@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Pill Stack: порт подсистемы интерактивных «пилюль» из TsundereGram -->
+    <!-- Pill Stack: порт подсистемы интерактивных «пилюль» из exteraGram -->
     <string name="PillStackTitle">Pill Stack</string>
     <string name="PillStackPillsSettingsInfo">Configure which pills will be visible. Tap to show or hide, hold and drag to change the display order.</string>
     <string name="PillStackActivePills">Active Pills</string>

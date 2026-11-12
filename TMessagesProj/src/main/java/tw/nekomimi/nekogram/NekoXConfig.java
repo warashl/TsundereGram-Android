@@ -77,15 +77,7 @@ public class NekoXConfig {
         }
     }
 
-    /**
-     * TsundereGram: цвет кружка значка уведомлений не навязываем (раньше в тёмной теме был белый) —
-     * система берёт свой акцентный цвет, как у служебного уведомления «TsundereGram».
-     */
     public static int getNotificationColor() {
-        return 0; // NotificationCompat.COLOR_DEFAULT
-    }
-
-    public static int getLegacyNotificationColor() {
         int color = 0;
         Configuration configuration = ApplicationLoader.applicationContext.getResources().getConfiguration();
         boolean isDark = (configuration.uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;

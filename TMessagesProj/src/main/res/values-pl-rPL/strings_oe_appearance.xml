@@ -125,5 +125,4 @@
     <string name="OEAppearanceHidingInfo">Relacje, przyciski, karty i funkcje AI</string>
     <string name="OEAppearanceHidingInChats">W czatach</string>
     <string name="OEAppearanceHidingAiPremium">AI i Premium</string>
-    <string name="OEKillApp">Zamknij aplikację</string>
 </resources>

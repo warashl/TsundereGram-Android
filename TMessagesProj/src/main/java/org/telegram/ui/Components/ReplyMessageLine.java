@@ -240,21 +240,21 @@ public class ReplyMessageLine {
     }
 
     // ---- openExtera: оформление блока ответа (ChatsConfig.replyColors / replyEmoji / replyBackground) ----
-    // Перенесено из TsundereGram 12.9.0, ReplyMessageLine.check()/resolveCollectionColor().
+    // Перенесено из exteraGram 12.9.0, ReplyMessageLine.check()/resolveCollectionColor().
 
     private static boolean oeReplyColors() {
-        app.tsunderegram.chats.ChatsConfig.ensureLoaded();
-        return app.tsunderegram.chats.ChatsConfig.replyColors.Bool();
+        app.exteraless.chats.ChatsConfig.ensureLoaded();
+        return app.exteraless.chats.ChatsConfig.replyColors.Bool();
     }
 
     private static boolean oeReplyEmoji() {
-        app.tsunderegram.chats.ChatsConfig.ensureLoaded();
-        return app.tsunderegram.chats.ChatsConfig.replyEmoji.Bool();
+        app.exteraless.chats.ChatsConfig.ensureLoaded();
+        return app.exteraless.chats.ChatsConfig.replyEmoji.Bool();
     }
 
     private static boolean oeReplyBackground() {
-        app.tsunderegram.chats.ChatsConfig.ensureLoaded();
-        return app.tsunderegram.chats.ChatsConfig.replyBackground.Bool();
+        app.exteraless.chats.ChatsConfig.ensureLoaded();
+        return app.exteraless.chats.ChatsConfig.replyBackground.Bool();
     }
 
     /** openExtera: сброс цветов линии/имени к стоковым «серым», когда replyColors выключен. */

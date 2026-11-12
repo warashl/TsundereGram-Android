@@ -1,4 +1,4 @@
-"""Settings screen item declarations for plugins — part of the tsunderegram plugin SDK.
+"""Settings screen item declarations for plugins — part of the exteraless plugin SDK.
 
 Pure Python dataclasses; serialization into the JSON schema consumed by the
 Java renderer lives in extera_utils.plugin_loader.
@@ -128,7 +128,7 @@ class SimpleSettingFactory:
 
     ``create_view(context)`` and ``bind_view(view, item, divider)`` are called
     by the settings renderer when the row is drawn. ``java``/``instance`` give
-    the shared Java peer (app.tsunderegram.plugins.models.PluginItemFactory),
+    the shared Java peer (app.exteraless.plugins.models.PluginItemFactory),
     which delegates back to this object instead of generating a subclass.
     """
 
@@ -162,7 +162,7 @@ class SimpleSettingFactory:
     @classmethod
     def getInstance(cls):
         from java import jclass
-        return jclass("app.tsunderegram.plugins.models.PluginItemFactory").getInstance()
+        return jclass("app.exteraless.plugins.models.PluginItemFactory").getInstance()
 
     @property
     def instance(self):
@@ -172,11 +172,11 @@ class SimpleSettingFactory:
     @property
     def java(self):
         from java import jclass
-        return jclass("app.tsunderegram.plugins.models.PluginItemFactory").getInstance()
+        return jclass("app.exteraless.plugins.models.PluginItemFactory").getInstance()
 
     def to_item(self, *factory_args):
         from java import jclass
-        return jclass("app.tsunderegram.plugins.models.PluginItemFactory").create(
+        return jclass("app.exteraless.plugins.models.PluginItemFactory").create(
             self, factory_args or None)
 
     def __call__(self, *factory_args, link_alias: Optional[str] = None) -> Custom:

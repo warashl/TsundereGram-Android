@@ -314,16 +314,11 @@ public class ProfileGiftsContainer extends FrameLayout implements NotificationCe
                     }
                     final int fromPosition = viewHolder.getAdapterPosition();
                     final int toPosition = target.getAdapterPosition();
-                    final int fromIndex = list.gifts.indexOf(getSavedGift(viewHolder));
-                    final int toIndex = list.gifts.indexOf(getSavedGift(target));
-                    if (fromIndex < 0 || toIndex < 0) {
-                        return false;
-                    }
                     if (isCollection) {
-                        list.reorder(fromIndex, toIndex);
+                        list.reorder(fromPosition, toPosition);
                         parent.collections.updateIcon(list.collectionId);
                     } else {
-                        list.reorderPinned(fromIndex, toIndex);
+                        list.reorderPinned(fromPosition, toPosition);
                     }
                     listView.adapter.notifyItemMoved(fromPosition, toPosition);
                     listView.adapter.updateWithoutNotify();
@@ -1168,13 +1163,10 @@ public class ProfileGiftsContainer extends FrameLayout implements NotificationCe
         addView(viewPager, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.FILL));
 
         tabsView = viewPager.createTabsView(true, 10);
-        // TsundereGram: названия коллекций красились «чёрным текстом на белом», а под вкладками
-        // фон профиля — на тёмном фоне текст пропадал. Берём те же цвета, что у вкладок
-        // «Публикации / Архив / Подарки» над ними.
         tabsView.setColors(
             Theme.key_profile_tabSelectedLine,
-            Theme.key_profile_tabSelectedText,
-            Theme.key_profile_tabText,
+            Theme.key_windowBackgroundWhiteBlackText,
+            Theme.key_windowBackgroundWhiteGrayText,
             Theme.key_profile_tabSelector,
             Theme.key_actionBarDefault
         );
@@ -1582,15 +1574,6 @@ public class ProfileGiftsContainer extends FrameLayout implements NotificationCe
         }
     }
 
-    // Distance from the bottom of root to the top of the visible gifts button, for bulletins
-    public int getButtonBulletinOffset(View root) {
-        if (root == null || buttonContainer == null || buttonContainer.getVisibility() != View.VISIBLE || buttonContainer.getAlpha() <= 0) return 0;
-        final int[] rootLocation = new int[2], buttonLocation = new int[2];
-        root.getLocationInWindow(rootLocation);
-        buttonContainer.getLocationInWindow(buttonLocation);
-        return Math.max(0, (int) ((rootLocation[1] + root.getHeight() - buttonLocation[1]) * buttonContainer.getAlpha()));
-    }
-
     public int getBottomOffset() {
         float ty = buttonContainer.getTranslationY();
         ty -= -buttonContainer.getTop() + Math.max(dp(240), visibleHeight) - dp(buttonContainerHeightDp) - 1;
@@ -1767,7 +1750,7 @@ public class ProfileGiftsContainer extends FrameLayout implements NotificationCe
             final TL_stars.SavedStarGift gift = list.gifts.get(i);
             final TLRPC.Document doc = gift.gift.getDocument();
             if (doc == null) continue;
-            if (!giftsIds.add(doc.id)) continue; // same dedup as getLastEmojis(), so the hash follows what's shown
+            giftsIds.add(doc.id);
             hash = Objects.hash(hash, doc.id);
             giftsCount++;
         }

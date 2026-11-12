@@ -1,4 +1,4 @@
-"""Bulletin (in-app notification) helpers — part of the tsunderegram plugin SDK.
+"""Bulletin (in-app notification) helpers — part of the exteraless plugin SDK.
 
 Everything is posted onto the UI thread automatically. If BulletinFactory
 cannot serve a request, the helper degrades to an Android Toast.
@@ -59,7 +59,7 @@ def _toast(text):
 
 def _runnable(fn):
     try:
-        from app.tsunderegram.plugins import PluginServices
+        from app.exteraless.plugins import PluginServices
         return PluginServices.runnable(fn)
     except Exception:
         from android_utils import R

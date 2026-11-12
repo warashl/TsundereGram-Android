@@ -359,7 +359,6 @@ public class TextMessageEnterTransition implements MessageEnterTransitionContain
 
         listViewTargetBottomPadding = listView.getPaddingBottom()
             - (chatActivity.getInputIslandHeightTarget() - dp(44));
-        startBottomInset = chatActivity.getAnimatedBottomInsetForTransition();
 
         gradientMatrix = new Matrix();
         gradientPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -388,7 +387,7 @@ public class TextMessageEnterTransition implements MessageEnterTransitionContain
 
 
         animator.setInterpolator(new LinearInterpolator());
-        animator.setDuration(getCustomDuration(app.tsunderegram.appearance.TsundereChatCustomizer.getInstance().getMessageAnimationType()));
+        animator.setDuration(ChatListItemAnimator.DEFAULT_DURATION);
 
         container.addTransition(this);
         notificationsLocker.lock();
@@ -434,145 +433,8 @@ public class TextMessageEnterTransition implements MessageEnterTransitionContain
     private Path replyRoundRect;
     private float[] roundRectRadii;
     private float listViewTargetBottomPadding;
-    // Инсет клавиатуры на старте анимации: если клавиатура закрывается сразу после отправки,
-    // нижний отступ списка уменьшается, и сообщение должно ехать вниз вместе с ним, а не висеть
-    // на старой высоте (из-за этого оно «прыгало» в конце анимации).
-    private float startBottomInset;
-
-    private float getKeyboardShift() {
-        try {
-            return startBottomInset - chatActivity.getAnimatedBottomInsetForTransition();
-        } catch (Throwable e) {
-            return 0;
-        }
-    }
-
-    private android.graphics.Camera flipCamera;
-    private final android.graphics.Matrix flipMatrix = new android.graphics.Matrix();
-
-    public static long getCustomDuration(int type) {
-        switch (type) {
-            case app.tsunderegram.appearance.TsundereChatCustomizer.ANIMATION_FADE: return 300;
-            case app.tsunderegram.appearance.TsundereChatCustomizer.ANIMATION_SLIDE_RIGHT: return 420;
-            case app.tsunderegram.appearance.TsundereChatCustomizer.ANIMATION_SLIDE_TOP: return 440;
-            case app.tsunderegram.appearance.TsundereChatCustomizer.ANIMATION_ZOOM: return 380;
-            case app.tsunderegram.appearance.TsundereChatCustomizer.ANIMATION_SPRING: return 650;
-            case app.tsunderegram.appearance.TsundereChatCustomizer.ANIMATION_JELLY: return 700;
-            case app.tsunderegram.appearance.TsundereChatCustomizer.ANIMATION_FLIP: return 500;
-            case app.tsunderegram.appearance.TsundereChatCustomizer.ANIMATION_SWIRL: return 460;
-            default: return ChatListItemAnimator.DEFAULT_DURATION;
-        }
-    }
 
     public void onDraw(Canvas canvas) {
-        final int animType = app.tsunderegram.appearance.TsundereChatCustomizer.getInstance().getMessageAnimationType();
-        if (animType == app.tsunderegram.appearance.TsundereChatCustomizer.ANIMATION_DEFAULT) {
-            drawTransition(canvas);
-            return;
-        }
-        if (messageView.getMessageObject() == null || messageView.getMessageObject().stableId != messageId) {
-            return;
-        }
-        // Кастомные анимации: сообщение рисуется в финальном положении целиком (пузырь, текст,
-        // ответ, время), а поверх применяется единый трансформ — так ничего не «разъезжается».
-        final float t = Math.max(0f, Math.min(1f, this.progress));
-        final float savedProgress = this.progress;
-        this.progress = 1f;
-
-        final float mx = messageView.getX() + listView.getX() - container.getX();
-        final float my = messageView.getTop() + messageView.getPaddingTop() + listView.getTop() - container.getY()
-                - (listViewTargetBottomPadding - listView.getPaddingBottom()) + getKeyboardShift();
-        final float l = mx + messageView.getBackgroundDrawableLeft();
-        final float r = mx + messageView.getBackgroundDrawableRight();
-        final float top = my + messageView.getBackgroundDrawableTop();
-        final float bottom = my + messageView.getBackgroundDrawableBottom();
-        final float cx = (l + r) / 2f;
-        final float cy = (top + bottom) / 2f;
-        final boolean out = currentMessageObject != null && currentMessageObject.isOutOwner();
-        final float sideX = out ? r : l;
-        float alpha = 1f;
-
-        canvas.save();
-        switch (animType) {
-            case app.tsunderegram.appearance.TsundereChatCustomizer.ANIMATION_FADE: {
-                float e = CubicBezierInterpolator.EASE_OUT.getInterpolation(t);
-                alpha = e;
-                float sc = 0.92f + 0.08f * e;
-                canvas.translate(0, dp(10) * (1f - e));
-                canvas.scale(sc, sc, cx, bottom);
-                break;
-            }
-            case app.tsunderegram.appearance.TsundereChatCustomizer.ANIMATION_SLIDE_RIGHT: {
-                float e = CubicBezierInterpolator.EASE_OUT_QUINT.getInterpolation(t);
-                alpha = Math.min(1f, t * 2.5f);
-                canvas.translate((container.getMeasuredWidth() - l + dp(16)) * (1f - e), 0);
-                break;
-            }
-            case app.tsunderegram.appearance.TsundereChatCustomizer.ANIMATION_SLIDE_TOP: {
-                float e = CubicBezierInterpolator.EASE_OUT_BACK.getInterpolation(t);
-                alpha = Math.min(1f, t * 3f);
-                canvas.translate(0, -dp(90) * (1f - e));
-                break;
-            }
-            case app.tsunderegram.appearance.TsundereChatCustomizer.ANIMATION_ZOOM: {
-                float e = CubicBezierInterpolator.EASE_OUT_BACK.getInterpolation(t);
-                alpha = Math.min(1f, t * 3f);
-                float sc = Math.max(0.01f, 0.35f + 0.65f * e);
-                canvas.scale(sc, sc, cx, cy);
-                break;
-            }
-            case app.tsunderegram.appearance.TsundereChatCustomizer.ANIMATION_SPRING: {
-                float v = 1f - (float) (Math.exp(-8f * t) * Math.cos(2 * Math.PI * 2.2f * t));
-                alpha = Math.min(1f, t * 5f);
-                float sc = Math.max(0.01f, v);
-                canvas.translate(0, dp(24) * (1f - v));
-                canvas.scale(sc, sc, sideX, bottom);
-                break;
-            }
-            case app.tsunderegram.appearance.TsundereChatCustomizer.ANIMATION_JELLY: {
-                float e = CubicBezierInterpolator.EASE_OUT_QUINT.getInterpolation(t);
-                float w = (float) (Math.exp(-5f * t) * Math.sin(2 * Math.PI * 2.5f * t)) * 0.2f;
-                alpha = Math.min(1f, t * 4f);
-                canvas.translate(0, dp(48) * (1f - e));
-                canvas.scale(1f + w, 1f - w, cx, bottom);
-                break;
-            }
-            case app.tsunderegram.appearance.TsundereChatCustomizer.ANIMATION_FLIP: {
-                float e = CubicBezierInterpolator.EASE_OUT_BACK.getInterpolation(t);
-                alpha = Math.min(1f, t * 2.5f);
-                if (flipCamera == null) {
-                    flipCamera = new android.graphics.Camera();
-                }
-                flipCamera.save();
-                flipCamera.rotateX(-90f * (1f - e));
-                flipCamera.getMatrix(flipMatrix);
-                flipCamera.restore();
-                flipMatrix.preTranslate(-cx, -cy);
-                flipMatrix.postTranslate(cx, cy);
-                canvas.concat(flipMatrix);
-                break;
-            }
-            case app.tsunderegram.appearance.TsundereChatCustomizer.ANIMATION_SWIRL: {
-                float e = CubicBezierInterpolator.EASE_OUT_BACK.getInterpolation(t);
-                alpha = Math.min(1f, t * 3f);
-                float sc = Math.max(0.01f, 0.5f + 0.5f * e);
-                canvas.rotate((out ? 30f : -30f) * (1f - e), sideX, bottom);
-                canvas.scale(sc, sc, sideX, bottom);
-                break;
-            }
-        }
-        if (alpha < 1f) {
-            canvas.saveLayerAlpha(Math.max(0, l - dp(60)), top - dp(60), Math.min(container.getMeasuredWidth(), r + dp(60)), bottom + dp(60), (int) (255 * alpha), Canvas.ALL_SAVE_FLAG);
-            drawTransition(canvas);
-            canvas.restore();
-        } else {
-            drawTransition(canvas);
-        }
-        canvas.restore();
-        this.progress = savedProgress;
-    }
-
-    private void drawTransition(Canvas canvas) {
         if (drawBitmaps && !initBitmaps && crossfadeTextBitmap != null && messageView.getTransitionParams().wasDraw) {
             initBitmaps = true;
             Canvas bitmapCanvas = new Canvas(crossfadeTextBitmap);
@@ -586,8 +448,7 @@ public class TextMessageEnterTransition implements MessageEnterTransitionContain
         float listViewBottom = listView.getY() - container.getY() + listView.getMeasuredHeight();
 
         float fromX = fromStartX - container.getX();
-        final float kbShift = getKeyboardShift();
-        float fromY = fromStartY - container.getY() + kbShift;
+        float fromY = fromStartY - container.getY();
 
         textX = messageView.getTextX();
         textY = messageView.getTextY();
@@ -602,7 +463,6 @@ public class TextMessageEnterTransition implements MessageEnterTransitionContain
             messageViewY = messageView.getTop() + messageView.getPaddingTop() + listView.getTop() - container.getY();
 
             messageViewY -= (listViewTargetBottomPadding - listView.getPaddingBottom());
-            messageViewY += kbShift;
 
             lastMessageX = messageViewX;
             lastMessageY = messageViewY;
@@ -627,7 +487,8 @@ public class TextMessageEnterTransition implements MessageEnterTransitionContain
         canvas.save();
         canvas.clipRect(0, listView.getY() + chatActivity.getChatListViewPadding() - container.getY() - dp(3), container.getMeasuredWidth(), container.getMeasuredHeight());
         canvas.save();
-        float customBubbleFactor = app.tsunderegram.appearance.TsundereChatCustomizer.getInstance().getBubbleAlpha();
+        float customBubbleFactor = app.exteraless.appearance.TsundereChatCustomizer.getInstance().getBubbleAlpha();
+        int animType = app.exteraless.appearance.TsundereChatCustomizer.getInstance().getMessageAnimationType();
 
         float drawableX;
         float drawableToTop = messageViewY + messageView.getBackgroundDrawableTop();
@@ -636,10 +497,49 @@ public class TextMessageEnterTransition implements MessageEnterTransitionContain
         float drawableBottom;
         int drawableRight;
 
-        {
+        if (animType == app.exteraless.appearance.TsundereChatCustomizer.ANIMATION_FADE) {
+            drawableX = messageViewX + messageView.getBackgroundDrawableLeft();
+            drawableTop = drawableToTop;
+            drawableBottom = drawableToTop + drawableH;
+            drawableRight = (int) (messageViewX + messageView.getBackgroundDrawableRight());
+            fromX = toX;
+            fromY = toY;
+            progressX = 1f;
+        } else if (animType == app.exteraless.appearance.TsundereChatCustomizer.ANIMATION_SLIDE_RIGHT) {
+            float slide = (1f - progressX) * AndroidUtilities.dp(160);
+            drawableX = messageViewX + messageView.getBackgroundDrawableLeft() + slide;
+            drawableTop = drawableToTop;
+            drawableBottom = drawableToTop + drawableH;
+            drawableRight = (int) (messageViewX + messageView.getBackgroundDrawableRight() + slide);
+            fromX = toX + slide;
+            fromY = toY;
+        } else if (animType == app.exteraless.appearance.TsundereChatCustomizer.ANIMATION_SLIDE_TOP) {
+            float drop = -(1f - progress) * AndroidUtilities.dp(120);
+            drawableX = messageViewX + messageView.getBackgroundDrawableLeft();
+            drawableTop = drawableToTop + drop;
+            drawableBottom = drawableToTop + drawableH + drop;
+            drawableRight = (int) (messageViewX + messageView.getBackgroundDrawableRight());
+            fromX = toX;
+            fromY = toY + drop;
+            progressX = 1f;
+        } else if (animType == app.exteraless.appearance.TsundereChatCustomizer.ANIMATION_ZOOM) {
+            float scale = 0.6f + 0.4f * progress;
+            float fullW = messageView.getBackgroundDrawableRight() - messageView.getBackgroundDrawableLeft();
+            float cx = messageViewX + messageView.getBackgroundDrawableLeft() + fullW / 2f;
+            float cy = drawableToTop + drawableH / 2f;
+            float scaledW = fullW * scale;
+            float scaledH = drawableH * scale;
+            drawableX = cx - scaledW / 2f;
+            drawableRight = (int) (cx + scaledW / 2f);
+            drawableTop = cy - scaledH / 2f;
+            drawableBottom = cy + scaledH / 2f;
+            fromX = toX;
+            fromY = toY;
+            progressX = 1f;
+        } else {
             drawableX = messageViewX + messageView.getBackgroundDrawableLeft() + (fromX - (toX - toXOffset)) * (1f - progressX);
-            drawableTop = (drawableFromTop - container.getY() + kbShift) * (1f - progress) + (drawableToTop) * progress;
-            drawableBottom = (drawableFromBottom - container.getY() + kbShift) * (1f - progress) + (drawableToTop + drawableH) * progress;
+            drawableTop = (drawableFromTop - container.getY()) * (1f - progress) + (drawableToTop) * progress;
+            drawableBottom = (drawableFromBottom - container.getY()) * (1f - progress) + (drawableToTop + drawableH) * progress;
             drawableRight = (int) (messageViewX + messageView.getBackgroundDrawableRight() + dp(4) * (1f - progressX));
         }
 
@@ -653,23 +553,20 @@ public class TextMessageEnterTransition implements MessageEnterTransitionContain
             messageView.setBackgroundTopY(container.getTop() - listView.getTop());
             Drawable shadowDrawable = drawable.getShadowDrawable();
 
-            // TsundereGram: MessageDrawable.setAlpha() сам умножает на прозрачность пузырей из настроек,
-            // поэтому здесь её не применяем повторно — иначе отправляемое сообщение было прозрачнее
-            // (на тёмных обоях — темнее), чем после отправки
-            if (alphaProgress != 1f && fromMessageDrawable != null) {
+            if (alphaProgress != 1f && fromMessageDrawable != null && animType == app.exteraless.appearance.TsundereChatCustomizer.ANIMATION_DEFAULT) {
                 fromMessageDrawable.setBounds((int) drawableX, (int) drawableTop, drawableRight, (int) drawableBottom);
-                fromMessageDrawable.setAlpha(255);
+                fromMessageDrawable.setAlpha((int) (255 * customBubbleFactor));
                 fromMessageDrawable.draw(canvas);
             }
 
-            if (shadowDrawable != null && customBubbleFactor > 0.15f) {
-                shadowDrawable.setAlpha((int) (255 * progressX));
+            if (shadowDrawable != null) {
+                shadowDrawable.setAlpha((int) (255 * progressX * customBubbleFactor));
                 shadowDrawable.setBounds((int) drawableX, (int) drawableTop, drawableRight, (int) drawableBottom);
                 shadowDrawable.draw(canvas);
                 shadowDrawable.setAlpha(255);
             }
 
-            drawable.setAlpha((int) (255 * alphaProgress));
+            drawable.setAlpha((int) (255 * alphaProgress * customBubbleFactor));
             drawable.setBounds((int) drawableX, (int) drawableTop, drawableRight, (int) drawableBottom);
             drawable.setDrawFullBubble(true);
             drawable.draw(canvas);
@@ -694,6 +591,16 @@ public class TextMessageEnterTransition implements MessageEnterTransitionContain
         }
         float textTransX = messageView.getLeft() + listView.getX() - container.getX();
         float textTransY = messageViewY + (fromY - toY) * (1f - progress);
+        if (animType == app.exteraless.appearance.TsundereChatCustomizer.ANIMATION_FADE) {
+            textTransY = messageViewY;
+        } else if (animType == app.exteraless.appearance.TsundereChatCustomizer.ANIMATION_SLIDE_RIGHT) {
+            textTransX += (fromX - toX);
+            textTransY = messageViewY;
+        } else if (animType == app.exteraless.appearance.TsundereChatCustomizer.ANIMATION_SLIDE_TOP) {
+            textTransY = messageViewY + (fromY - toY);
+        } else if (animType == app.exteraless.appearance.TsundereChatCustomizer.ANIMATION_ZOOM) {
+            textTransY = messageViewY;
+        }
         canvas.translate(textTransX, textTransY);
         messageView.drawTime(canvas, alphaProgress, false);
         messageView.drawNamesLayout(canvas, alphaProgress);
@@ -713,7 +620,7 @@ public class TextMessageEnterTransition implements MessageEnterTransitionContain
             int offset = dp(10);
 
             float fromReplayX = replyFromStartX - container.getX();
-            float fromReplayY = replyFromStartY - container.getY() + kbShift;
+            float fromReplayY = replyFromStartY - container.getY();
             float toReplayX = messageViewX + messageView.replyStartX;
             float toReplayY = messageViewY + messageView.replyStartY;
 

@@ -198,9 +198,9 @@ public class HintDialogCell extends FrameLayout {
         if (DialogObject.isUserDialog(uid)) {
             currentUser = MessagesController.getInstance(currentAccount).getUser(uid);
             CharSequence displayName = name != null ? name : (currentUser != null ? UserObject.getFirstName(currentUser) : "");
-            com.tsunderegram.messenger.api.dto.BadgeDTO userBadge = currentUser != null ? com.tsunderegram.messenger.badges.BadgesController.INSTANCE.getBadge(currentUser) : null;
+            com.exteragram.messenger.api.dto.BadgeDTO userBadge = currentUser != null ? com.exteragram.messenger.badges.BadgesController.INSTANCE.getBadge(currentUser) : null;
             if (userBadge != null) {
-                Drawable bDrawable = com.tsunderegram.messenger.badges.BadgesController.INSTANCE.getCustomBadgeDrawable(userBadge, 14);
+                Drawable bDrawable = com.exteragram.messenger.badges.BadgesController.INSTANCE.getCustomBadgeDrawable(userBadge, 14);
                 if (bDrawable != null) {
                     bDrawable.setBounds(0, 0, AndroidUtilities.dp(14), AndroidUtilities.dp(14));
                     android.text.SpannableStringBuilder ssb = new android.text.SpannableStringBuilder(displayName);
@@ -220,9 +220,9 @@ public class HintDialogCell extends FrameLayout {
         } else {
             TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-uid);
             CharSequence displayName = name != null ? name : (chat != null ? chat.title : "");
-            com.tsunderegram.messenger.api.dto.BadgeDTO chatBadge = chat != null ? com.tsunderegram.messenger.badges.BadgesController.INSTANCE.getBadge(chat) : null;
+            com.exteragram.messenger.api.dto.BadgeDTO chatBadge = chat != null ? com.exteragram.messenger.badges.BadgesController.INSTANCE.getBadge(chat) : null;
             if (chatBadge != null) {
-                Drawable bDrawable = com.tsunderegram.messenger.badges.BadgesController.INSTANCE.getCustomBadgeDrawable(chatBadge, 14);
+                Drawable bDrawable = com.exteragram.messenger.badges.BadgesController.INSTANCE.getCustomBadgeDrawable(chatBadge, 14);
                 if (bDrawable != null) {
                     bDrawable.setBounds(0, 0, AndroidUtilities.dp(14), AndroidUtilities.dp(14));
                     android.text.SpannableStringBuilder ssb = new android.text.SpannableStringBuilder(displayName);
@@ -323,7 +323,7 @@ public class HintDialogCell extends FrameLayout {
             int cy = imageView.getTop() + imageView.getMeasuredHeight() / 2;
             Theme.checkboxSquare_checkPaint.setColor(Theme.getColor(Theme.key_dialogRoundCheckBox));
             Theme.checkboxSquare_checkPaint.setAlpha((int) (checkBox.getProgress() * 255));
-            final float checkCorners = app.tsunderegram.appearance.AppearanceConfig.getAvatarCorners(AndroidUtilities.dp(56));
+            final float checkCorners = app.exteraless.appearance.AppearanceConfig.getAvatarCorners(AndroidUtilities.dp(56));
             canvas.drawRoundRect(cx - AndroidUtilities.dp(28), cy - AndroidUtilities.dp(28),
                     cx + AndroidUtilities.dp(28), cy + AndroidUtilities.dp(28),
                     checkCorners, checkCorners, Theme.checkboxSquare_checkPaint);

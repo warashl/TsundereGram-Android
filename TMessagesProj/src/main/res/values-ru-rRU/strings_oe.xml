@@ -23,8 +23,7 @@
     <string name="QrWifiPasswordCopied">Пароль скопирован</string>
     <string name="QrWifiUnknownNetwork">В коде нет имени сети</string>
     <string name="QrLoginHint">Этот код входит в аккаунт. Используйте Настройки → Устройства → Подключить устройство: тот экран проверяет код и защищает аккаунт.</string>
-    <string name="AppIconTsundereGram" translatable="false">TsundereGram</string>
-    <string name="AppIconArrow">Стрелка</string>
+    <string name="AppIconExteraless" translatable="false">TsundereGram</string>
     <string name="AppIconBlueprint" translatable="false">Blueprint</string>
     <string name="AppIconRed" translatable="false">Red</string>
     <string name="AppIconNya" translatable="false">Nya</string>
@@ -48,6 +47,7 @@
     <string name="ProxyDisableOnMobileData">Мобильный интернет</string>
     <string name="MainTabsHideCallsSettings">Скрыть вкладку «Звонки»</string>
     <string name="MainTabsHideProfile">Скрыть вкладку профиля</string>
+    <string name="OENowPlayingScrobbling">Сейчас играет</string>
     <string name="OEBotWebViewUpdate">Обновить WebView</string>
     <string name="OEProfilerStart">Запустить профайлер</string>
     <string name="OEProfilerStop">Остановить профайлер и отправить отчёт</string>
@@ -111,8 +111,4 @@
     <string name="ProfileBannerGlobalDeleted">Баннер для всех удалён</string>
     <string name="ProfileBannerDeleting">Удаление баннера…</string>
     <string name="OpenExteraGhost">Режим призрака</string>
-    <!-- TsundereGram: restored after 13.1.1 merge -->
-    <string name="OENowPlayingScrobbling">Сейчас играет</string>
-    <!-- TsundereGram: upstream 13.1.1 strings lost in merge -->
-    <string name="QrLoginConfirm">Этот код входит в ваш аккаунт с нового устройства. Разрешайте, только если входите сами на своём устройстве.</string>
 </resources>

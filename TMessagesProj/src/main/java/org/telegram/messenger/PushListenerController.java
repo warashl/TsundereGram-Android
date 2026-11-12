@@ -1559,7 +1559,7 @@ public class PushListenerController {
         }
     }
 
-    static String getReactedText(String loc_key, Object[] args) {
+    private static String getReactedText(String loc_key, Object[] args) {
         switch (loc_key) {
             case "REACT_HIDDEN": {
                 return LocaleController.formatString(R.string.PushReactHidden, args);

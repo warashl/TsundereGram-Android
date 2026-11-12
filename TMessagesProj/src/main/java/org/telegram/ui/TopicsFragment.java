@@ -406,8 +406,8 @@ public class TopicsFragment extends BaseFragment implements NotificationCenter.N
 
     @Override
     public View createView(Context context) {
-        additionNavigationBarHeight = parentDialogsActivity != null && parentDialogsActivity.hasMainTabs && !NaConfig.INSTANCE.getHideBottomNavigationBar().Bool() ? dp(app.tsunderegram.appearance.MainTabsUiHelper.getTabsViewHeightDp()) : 0;
-        additionFloatingButtonOffset = parentDialogsActivity != null && parentDialogsActivity.hasMainTabs && !NaConfig.INSTANCE.getHideBottomNavigationBar().Bool() ? dp(app.tsunderegram.appearance.MainTabsUiHelper.getTabsFabOffsetDp()) : 0;
+        additionNavigationBarHeight = parentDialogsActivity != null && parentDialogsActivity.hasMainTabs && !NaConfig.INSTANCE.getHideBottomNavigationBar().Bool() ? dp(app.exteraless.appearance.MainTabsUiHelper.getTabsViewHeightDp()) : 0;
+        additionFloatingButtonOffset = parentDialogsActivity != null && parentDialogsActivity.hasMainTabs && !NaConfig.INSTANCE.getHideBottomNavigationBar().Bool() ? dp(app.exteraless.appearance.MainTabsUiHelper.getTabsFabOffsetDp()) : 0;
 
         fragmentView = contentView = new SizeNotifierFrameLayout(context) {
             {
@@ -632,7 +632,7 @@ public class TopicsFragment extends BaseFragment implements NotificationCenter.N
         actionBar.setAddToContainer(false);
         actionBar.setCastShadows(false);
         actionBar.setClipContent(true);
-        actionBar.setOccupyStatusBar((!AndroidUtilities.isTablet() || parentLayout != null && parentLayout.isSheet()) && !inPreviewMode);
+        actionBar.setOccupyStatusBar(!AndroidUtilities.isTablet() && !inPreviewMode);
         if (inPreviewMode) {
             actionBar.setBackgroundColor(Color.TRANSPARENT);
             actionBar.setInterceptTouches(false);
@@ -881,7 +881,7 @@ public class TopicsFragment extends BaseFragment implements NotificationCenter.N
 
         avatarContainer = new ChatAvatarContainer(context, this, false, resourceProvider);
         avatarContainer.getAvatarImageView().setRoundRadius(AndroidUtilities.dp(16));
-        avatarContainer.setOccupyStatusBar((!AndroidUtilities.isTablet() || parentLayout != null && parentLayout.isSheet()) && !inPreviewMode);
+        avatarContainer.setOccupyStatusBar(!AndroidUtilities.isTablet() && !inPreviewMode);
         avatarContainer.allowDrawStories = getDialogId() < 0;
         avatarContainer.setClipChildren(false);
         actionBar.addView(avatarContainer, 0, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.LEFT, 56, 0, 86, 0));
@@ -4264,7 +4264,7 @@ public class TopicsFragment extends BaseFragment implements NotificationCenter.N
 
 
         iBlur3PositionActionBar.set(0, -additionalList, fragmentView.getMeasuredWidth(), actionBar.getMeasuredHeight() + additionalList + additionalSearch );
-        app.tsunderegram.appearance.MainTabsUiHelper.setBlurBounds(iBlur3PositionMainTabs, fragmentView, navigationBarHeight);
+        app.exteraless.appearance.MainTabsUiHelper.setBlurBounds(iBlur3PositionMainTabs, fragmentView, navigationBarHeight);
         iBlur3PositionMainTabs.inset(0, LiteMode.isEnabled(LiteMode.FLAG_LIQUID_GLASS) ? 0 : -dp(48));
 
         scrollableViewNoiseSuppressor.setupRenderNodes(iBlur3Positions, parentDialogsActivity != null ? 2 : 1);

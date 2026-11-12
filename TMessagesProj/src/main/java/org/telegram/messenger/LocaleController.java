@@ -8,7 +8,7 @@
 
 package org.telegram.messenger;
 
-import app.tsunderegram.OpenExteraConfig;
+import app.exteraless.OpenExteraConfig;
 
 import static org.telegram.messenger.AndroidUtilities.dp;
 import static org.telegram.messenger.AndroidUtilities.formatWholeNumber;
@@ -66,7 +66,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.shamsicalendar.PersianDate;
-import com.tsunderegram.privacy.utils.LastSeenHelper;
+import com.radolyn.ayugram.utils.LastSeenHelper;
 
 public class LocaleController {
 
@@ -803,7 +803,7 @@ public class LocaleController {
         if (countryCode.length() != 2 || countryCode.equals("YL")) return null;
 
         if (countryCode.equals("FT")) {
-            return "\uD83D\uDC8E";
+            return "\uD83C\uDFF4\u200D\u2620\uFE0F";
         } else if (countryCode.equals("XG")) {
             return "\uD83D\uDEF0";
         } else if (countryCode.equals("XV")){
@@ -1478,7 +1478,7 @@ public class LocaleController {
     }
 
     private String getStringInternal(String key, String fallback, int fallbackRes, int res) {
-        // TsundereGram 12.9.0, LocaleController.java:2301 — перехват ДО обращения к localeValues.
+        // exteraGram 12.9.0, LocaleController.java:2301 — перехват ДО обращения к localeValues.
         // Иначе на любом облачном языке (русский — облачный) ключ AppName подтягивается
         // из языкового пакета телеграма и форк снова называется «Telegram» во всех диалогах,
         // где заголовок берут как getString(R.string.AppName).
@@ -1507,7 +1507,7 @@ public class LocaleController {
         if (value == null) {
             value = "LOC_ERR:" + key;
         }
-        return TsundereBrand.apply(value);
+        return value;
     }
 
     public static String getServerString(String key) {
@@ -1679,7 +1679,6 @@ public class LocaleController {
                 int resourceId = getStringResId(key + "_other");
                 value = ApplicationLoader.applicationContext.getString(resourceId);
             }
-            value = TsundereBrand.apply(value);
             value = value.replace("%d", "%1$s");
             value = value.replace("%1$d", "%1$s");
 
@@ -1758,7 +1757,6 @@ public class LocaleController {
                 }
             }
 
-            value = TsundereBrand.apply(value);
             if (getInstance().currentLocale != null) {
                 return String.format(getInstance().currentLocale, value, args);
             } else {
@@ -1808,7 +1806,6 @@ public class LocaleController {
                 }
             }
 
-            value = TsundereBrand.apply(value);
             SpannableStringBuilder builder = new SpannableStringBuilder(value);
             for (int i = 0; i < args.length; i++) {
                 String formatter = "s";

@@ -48,49 +48,12 @@ public class ImageWithWavesView extends FrameLayout {
         setClipChildren(false);
     }
 
-    /** TsundereGram: рамка аватарки (как в списке чатов и профиле) и на экране звонка. */
-    private long frameDialogId;
-
-    private void updateFrameOwner(Object parentObject) {
-        if (parentObject instanceof org.telegram.tgnet.TLRPC.User) {
-            frameDialogId = ((org.telegram.tgnet.TLRPC.User) parentObject).id;
-        } else if (parentObject instanceof org.telegram.tgnet.TLRPC.Chat) {
-            frameDialogId = -((org.telegram.tgnet.TLRPC.Chat) parentObject).id;
-        } else {
-            frameDialogId = 0;
-        }
-        invalidate();
-    }
-
-    public void setFrameDialogId(long dialogId) {
-        frameDialogId = dialogId;
-        invalidate();
-    }
-
     public void setImage(ImageLocation imageLocation, String imageFilter, String ext, Drawable thumb, Object parentObject) {
         backupImageView.setImage(imageLocation, imageFilter, ext, thumb, parentObject);
-        updateFrameOwner(parentObject);
     }
 
     public void setImage(ImageLocation imageLocation, String imageFilter, Drawable thumb, Object parentObject) {
         backupImageView.setImage(imageLocation, imageFilter, thumb, parentObject);
-        updateFrameOwner(parentObject);
-    }
-
-    @Override
-    protected void dispatchDraw(Canvas canvas) {
-        super.dispatchDraw(canvas);
-        if (frameDialogId != 0 && backupImageView.getVisibility() == VISIBLE && backupImageView.getWidth() > 0) {
-            app.tsunderegram.frames.ProfileFrameController.getInstance().drawFrame(
-                    canvas,
-                    frameDialogId,
-                    backupImageView.getX(),
-                    backupImageView.getY(),
-                    backupImageView.getWidth(),
-                    backupImageView.getHeight(),
-                    backupImageView.getAlpha()
-            );
-        }
     }
 
     public void setRoundRadius(int value) {

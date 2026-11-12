@@ -91,7 +91,7 @@ public class EntitiesHelper {
                         }
                         MediaDataController.addStyleToText(new TextStyleSpan(run), 0, destination.length(), destination, true);
                     } else {
-                        destination.setSpan(new URLSpanReplacement(app.tsunderegram.utils.AppUtils.ensureUrlHasHttps(m.group(2))), 0, destination.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        destination.setSpan(new URLSpanReplacement(app.exteraless.utils.AppUtils.ensureUrlHasHttps(m.group(2))), 0, destination.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                     }
                 }
                 sources.add(m.group(0));

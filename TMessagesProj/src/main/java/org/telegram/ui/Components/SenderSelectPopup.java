@@ -556,9 +556,7 @@ public class SenderSelectPopup extends ActionBarPopupWindow {
 
             LinearLayout textRow = new LinearLayout(context);
             textRow.setOrientation(VERTICAL);
-            textRow.setGravity(Gravity.CENTER_VERTICAL);
-            // TsundereGram: высота по содержимому — с крупными шрифтами подпись («N подписчиков») обрезалась снизу.
-            addView(textRow, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, Gravity.CENTER_VERTICAL, 12, 0, 0, 0));
+            addView(textRow, LayoutHelper.createLinear(0, LayoutHelper.MATCH_PARENT, 1f, 12, 0, 0, 0));
 
             title = new TextView(context);
             title.setTextColor(Theme.getColor(Theme.key_actionBarDefaultSubmenuItem, resourcesProvider));

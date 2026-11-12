@@ -27,8 +27,8 @@ public class BuildVars {
     public static String BUILD_VERSION_STRING = BuildConfig.BUILD_VERSION_STRING;
     public static String BUILD_COMMIT_ID = BuildConfig.BUILD_COMMIT_ID;
 
-    public static int APP_ID = 0;
-    public static String APP_HASH = "";
+    public static int APP_ID = 36979938;
+    public static String APP_HASH = "d0bb835ea619620e1deb18364ad8683b";
     private static final int EXTERA_APP_ID;
     private static final String EXTERA_APP_HASH;
 
@@ -53,7 +53,7 @@ public class BuildVars {
         EXTERA_APP_HASH = BuildConfig.APP_HASH;
         if (ApplicationLoader.applicationContext != null) {
             SharedPreferences sharedPreferences = ApplicationLoader.applicationContext.getSharedPreferences("systemConfig", Context.MODE_PRIVATE);
-            LOGS_ENABLED = sharedPreferences.getBoolean("logsEnabled", false); // TsundereGram: логи на устройстве выключены по умолчанию
+            LOGS_ENABLED = DEBUG_VERSION || sharedPreferences.getBoolean("logsEnabled", DEBUG_VERSION);
             if (LOGS_ENABLED) {
                 final Thread.UncaughtExceptionHandler pastHandler = Thread.getDefaultUncaughtExceptionHandler();
                 Thread.setDefaultUncaughtExceptionHandler((thread, exception) -> {

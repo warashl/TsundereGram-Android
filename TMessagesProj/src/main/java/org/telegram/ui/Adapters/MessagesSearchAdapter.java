@@ -32,7 +32,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ChatObject;
-import app.tsunderegram.feed.FeedMessageUtils;
+import app.exteraless.feed.FeedMessageUtils;
 import org.telegram.messenger.HashtagSearchController;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaDataController;

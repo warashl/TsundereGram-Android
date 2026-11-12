@@ -273,11 +273,9 @@ import org.telegram.ui.Components.Premium.boosts.UserSelectorBottomSheet;
 import org.telegram.ui.Components.ProfileGalleryView;
 import org.telegram.ui.Components.ProfileGooeyView;
 import org.telegram.ui.Components.ProfileMusicView;
-import app.tsunderegram.components.ProfileMusicCard;
-import com.tsunderegram.messenger.api.dto.BadgeDTO;
-import com.tsunderegram.messenger.badges.BadgesController;
-import org.telegram.ui.Components.ProfileBalanceView;
-import org.telegram.ui.Wallet.ProfileWalletCardDialog;
+import app.exteraless.components.ProfileMusicCard;
+import com.exteragram.messenger.api.dto.BadgeDTO;
+import com.exteragram.messenger.badges.BadgesController;
 import org.telegram.ui.Components.RLottieDrawable;
 import org.telegram.ui.Components.RLottieImageView;
 import org.telegram.ui.Components.RadialProgressView;
@@ -332,7 +330,6 @@ import org.telegram.ui.bots.BotWebViewAttachedSheet;
 import org.telegram.ui.bots.ChannelAffiliateProgramsFragment;
 import org.telegram.ui.bots.SetupEmojiStatusSheet;
 import org.telegram.ui.community.CommunitySheet;
-import org.telegram.ui.QrShare.QrShareActivity;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -443,7 +440,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private ProfileActionsView actionsView;
     private MessagesController.SavedMusicList savedMusicList;
     private ProfileMusicView musicView;
-    private ProfileBalanceView balanceView;
     private AnimatedStatusView animatedStatusView;
     public AvatarImageView avatarImage;
     private View avatarOverlay;
@@ -503,8 +499,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private ActionBarMenuItem videoCallItem;
     private ActionBarMenuItem editItem;
     private ActionBarMenuItem otherItem;
-    // tsunderegram plugins: подменю PROFILE_ACTION_MENU в меню «⋮».
-    private app.tsunderegram.plugins.menus.MenuInjector.SwipeBackMenu pluginsMenu;
+    // exteraless plugins: подменю PROFILE_ACTION_MENU в меню «⋮».
+    private app.exteraless.plugins.menus.MenuInjector.SwipeBackMenu pluginsMenu;
     private ActionBarMenuItem searchItem;
     private ActionBarMenuSubItem editColorItem;
     private ActionBarMenuSubItem linkItem;
@@ -665,7 +661,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private final static int add_to_folder = 105;
     private final static int shadow_ban = 107;
     private final static int tsundere_badge_manage = 108;
-    private final static int tsundere_channel_banner = 109;
 
     private Rect rect = new Rect();
 
@@ -789,7 +784,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private int membersSectionRow;
     private boolean hasMusic;
     private boolean hasMusicCard;
-    private boolean hasBalance;
 
     private int sharedMediaRow;
 
@@ -1423,9 +1417,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             if (actionsView != null) {
                 actionsView.setActionsColor(btnColor, hasColorById);
             }
-            if (musicView != null) {
-                musicView.setButtonColor(btnColor, hasColorById);
-            }
 
             int gradientX = getWidth() / 2;
             if (backgroundGradient == null || backgroundGradientColor1 != color1 || backgroundGradientColor2 != color2 || backgroundGradientX != gradientX) {
@@ -1460,20 +1451,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
                 long bannerUid = getProfileTargetUserId();
                 if (bannerUid != 0) {
-                    app.tsunderegram.banners.ProfileBannerController.getInstance().setFullHeight(Math.max(y1, height + getHeaderExtraHeight()));
-                    app.tsunderegram.banners.ProfileBannerController.getInstance().attachVideoIfNeeded(this, bannerUid, getMeasuredWidth(), y1);
-                    // Во время анимации открытия/закрытия профиля баннер проявляется/гаснет вместе
-                    // с градиентом шапки — иначе при выходе в чат оставалась полоса баннера
-                    // поверх шапки чата, а затем чат появлялся рывком.
-                    final float bannerAlpha = playProfileAnimation == 0 ? 1f : Math.max(0f, Math.min(1f, avatarAnimationProgress));
-                    if (bannerAlpha < 1f) {
-                        int bannerSave = canvas.saveLayerAlpha(0, 0, getMeasuredWidth(), y1, (int) (255 * bannerAlpha), Canvas.ALL_SAVE_FLAG);
-                        app.tsunderegram.banners.ProfileBannerController.getInstance().drawBanner(canvas, this, ProfileActivity.this, getMeasuredWidth(), y1, extraHeight, bannerUid);
-                        canvas.restoreToCount(bannerSave);
-                    } else {
-                        app.tsunderegram.banners.ProfileBannerController.getInstance().drawBanner(canvas, this, ProfileActivity.this, getMeasuredWidth(), y1, extraHeight, bannerUid);
-                    }
-                    boolean hideAvatar = app.tsunderegram.banners.ProfileBannerController.getInstance().isHideAvatar(bannerUid);
+                    app.exteraless.banners.ProfileBannerController.getInstance().attachVideoIfNeeded(this, bannerUid, getMeasuredWidth(), y1);
+                    app.exteraless.banners.ProfileBannerController.getInstance().drawBanner(canvas, this, ProfileActivity.this, getMeasuredWidth(), y1, extraHeight, bannerUid);
+                    boolean hideAvatar = app.exteraless.banners.ProfileBannerController.getInstance().isHideAvatar(bannerUid);
                     if (avatarContainer != null) {
                         avatarContainer.setAlpha(hideAvatar ? 0f : 1f);
                     }
@@ -1522,14 +1502,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             if (y1 > 0) {
                 int save = canvas.save();
                 canvas.clipRect(0, 0, getMeasuredWidth(), y1);
-                final float videoAlpha = playProfileAnimation == 0 ? 1f : Math.max(0f, Math.min(1f, avatarAnimationProgress));
-                if (videoAlpha < 1f) {
-                    canvas.saveLayerAlpha(0, 0, getMeasuredWidth(), y1, (int) (255 * videoAlpha), Canvas.ALL_SAVE_FLAG);
-                }
                 super.dispatchDraw(canvas);
                 long bannerUid = getProfileTargetUserId();
                 if (bannerUid != 0) {
-                    app.tsunderegram.banners.ProfileBannerController.getInstance().drawVideoOverlay(canvas, getMeasuredWidth(), y1, extraHeight, bannerUid);
+                    app.exteraless.banners.ProfileBannerController.getInstance().drawVideoOverlay(canvas, getMeasuredWidth(), y1, extraHeight, bannerUid);
                 }
                 canvas.restoreToCount(save);
             } else {
@@ -2228,7 +2204,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     @Override
     public boolean onFragmentCreate() {
         userId = arguments.getLong("user_id", 0);
-        com.tsunderegram.messenger.badges.BadgesController.INSTANCE.checkRefreshRemoteBadges(true);
+        com.exteragram.messenger.badges.BadgesController.INSTANCE.checkRefreshRemoteBadges(true);
         chatId = arguments.getLong("chat_id", 0);
         topicId = arguments.getLong("topic_id", 0);
         saved = arguments.getBoolean("saved", false);
@@ -2385,7 +2361,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         getNotificationCenter().addObserver(this, NotificationCenter.profileMusicUpdated);
         getNotificationCenter().addObserver(this, NotificationCenter.updatedChatRanks);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.emojiLoaded);
-        // tsunderegram plugins: реестр пунктов меняется, когда плагин включают/выключают.
+        // exteraless plugins: реестр пунктов меняется, когда плагин включают/выключают.
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.pluginMenuItemsUpdated);
         updateRowsIds();
         if (listAdapter != null) {
@@ -2417,21 +2393,13 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
             @Override
             public int getBottomOffset(int tag) {
-                final int offset;
                 if (bottomButtonsContainer == null) {
-                    offset = navigationBarHeight + additionFloatingButtonOffset;
-                } else {
-                    final float stories = sharedMediaLayout.getTabVisibility(SharedMediaLayout.TAB_STORIES, true);
-                    final float archivedStories = sharedMediaLayout.getTabVisibility(SharedMediaLayout.TAB_ARCHIVED_STORIES, false);
-                    offset = navigationBarHeight + additionFloatingButtonOffset +
-                        (int) (dp(52) - bottomButtonsContainer.getTranslationY() - archivedStories * bottomButtonContainer[1].getTranslationY() - stories * bottomButtonContainer[0].getTranslationY());
+                    return navigationBarHeight + additionFloatingButtonOffset;
                 }
-                final float gifts = sharedMediaLayout != null && sharedMediaLayout.giftsContainer != null ? sharedMediaLayout.getTabVisibility(SharedMediaLayout.TAB_GIFTS, false) : 0;
-                if (gifts > 0) {
-                    final int giftsOffset = sharedMediaLayout.giftsContainer.getButtonBulletinOffset(fragmentView);
-                    return (int) AndroidUtilities.lerp(offset, Math.max(offset, giftsOffset), Math.min(1f, gifts));
-                }
-                return offset;
+                final float stories = sharedMediaLayout.getTabVisibility(SharedMediaLayout.TAB_STORIES, true);
+                final float archivedStories = sharedMediaLayout.getTabVisibility(SharedMediaLayout.TAB_ARCHIVED_STORIES, false);
+                return navigationBarHeight + additionFloatingButtonOffset +
+                    (int) (dp(52) - bottomButtonsContainer.getTranslationY() - archivedStories * bottomButtonContainer[1].getTranslationY() - stories * bottomButtonContainer[0].getTranslationY());
             }
 
             @Override
@@ -2446,8 +2414,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
         setActionsMode();
 
-        additionNavigationBarHeight = hasMainTabs ? dp(app.tsunderegram.appearance.MainTabsUiHelper.getTabsViewHeightDp()) : 0;
-        additionFloatingButtonOffset = hasMainTabs ? dp(app.tsunderegram.appearance.MainTabsUiHelper.getTabsFabOffsetDp()) : 0;
+        additionNavigationBarHeight = hasMainTabs ? dp(app.exteraless.appearance.MainTabsUiHelper.getTabsViewHeightDp()) : 0;
+        additionFloatingButtonOffset = hasMainTabs ? dp(app.exteraless.appearance.MainTabsUiHelper.getTabsFabOffsetDp()) : 0;
 
         return true;
     }
@@ -2500,10 +2468,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
     @Override
     public boolean isActionBarCrossfadeEnabled() {
-        // TsundereGram: у профиля вместо обычной шапки — большая шапка с аватаром/баннером.
-        // Кроссфейд шапок рисовал ActionBar соседнего экрана (например, «Выдать значок»)
-        // неподвижно поверх профиля, пока контент уезжал. Теперь шапка едет вместе с экраном.
-        return false;
+        return !isPulledDown;
     }
 
     protected void setParentLayout(ActionBarLayout layout) {
@@ -2517,7 +2482,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
-        app.tsunderegram.banners.ProfileBannerController.getInstance().detachVideo();
+        app.exteraless.banners.ProfileBannerController.getInstance().detachVideo();
         if (sharedMediaLayout != null) {
             sharedMediaLayout.onDestroy();
         }
@@ -2639,8 +2604,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         actionBar.setCastShadows(false);
         actionBar.setAddToContainer(false);
         actionBar.setClipContent(true);
-        // a sheet's window is over the status bar (on tablets too)
-        actionBar.setOccupyStatusBar(hasMainTabs || parentLayout != null && parentLayout.isSheet() || !AndroidUtilities.isTablet() && !inBubbleMode);
+        actionBar.setOccupyStatusBar(hasMainTabs || !AndroidUtilities.isTablet() && !inBubbleMode);
 
         if (hasMainTabs) {
             actionBar.setBackButtonDrawable(new BackDrawable(false));
@@ -2652,7 +2616,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 Bundle args = new Bundle();
                 args.putLong("chat_id", chatId);
                 args.putLong("user_id", userId);
-                presentFragment(new QrShareActivity(args));
+                presentFragment(new QrActivity(args));
             });
         } else {
             actionBar.setBackButtonDrawable(new BackDrawable(false));
@@ -2693,8 +2657,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     public View createView(Context context) {
         Theme.createProfileResources(context);
         Theme.createChatResources(context, false);
-        additionNavigationBarHeight = hasMainTabs ? dp(app.tsunderegram.appearance.MainTabsUiHelper.getTabsViewHeightDp()) : 0;
-        additionFloatingButtonOffset = hasMainTabs ? dp(app.tsunderegram.appearance.MainTabsUiHelper.getTabsFabOffsetDp()) : 0;
+        additionNavigationBarHeight = hasMainTabs ? dp(app.exteraless.appearance.MainTabsUiHelper.getTabsViewHeightDp()) : 0;
+        additionFloatingButtonOffset = hasMainTabs ? dp(app.exteraless.appearance.MainTabsUiHelper.getTabsFabOffsetDp()) : 0;
 
         BaseFragment lastFragment = parentLayout.getLastFragment();
         if (lastFragment instanceof ChatActivity && ((ChatActivity) lastFragment).themeDelegate != null && ((ChatActivity) lastFragment).themeDelegate.getCurrentTheme() != null && !((ChatActivity) lastFragment).themeDelegate.isGiftTheme()) {
@@ -2817,6 +2781,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 } else if (id == report) {
                     ReportBottomSheet.openChat(ProfileActivity.this, getDialogId());
                 } else if (id == edit_channel) {
+                    if (userId != 0 && chatId == 0 && !isBot && getContactsController().contactsDict.get(userId) == null) {
+                        setUserAlias();
+                        return;
+                    }
                     if (isTopic) {
                         presentFragment(TopicCreateFragment.create(chatId, topicId));
                     } else {
@@ -3160,11 +3128,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     presentFragment(fragment);
                 } else if (id == add_to_folder) {
                     showAddCurrentChatToFolderSheet();
-                } else if (id == tsundere_channel_banner) {
-                    presentFragment(new app.tsunderegram.banners.ChannelBannerActivity(chatId));
                 } else if (id == tsundere_badge_manage) {
                     TLRPC.User targetUser = getMessagesController().getUser(userId != 0 ? userId : UserConfig.getInstance(currentAccount).getClientUserId());
-                    presentFragment(new com.tsunderegram.messenger.badges.BadgeManageActivity(targetUser != null ? targetUser.id : userId, targetUser));
+                    presentFragment(new com.exteragram.messenger.badges.BadgeManageActivity(targetUser != null ? targetUser.id : userId, targetUser));
                 }
             }
         });
@@ -3488,17 +3454,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 long targetProfUid = getProfileTargetUserId();
                 int customPageBg = 0;
                 if (targetProfUid != 0) {
-                    app.tsunderegram.profilecolors.ProfileColorController.ProfileColorMeta profMeta =
-                            app.tsunderegram.profilecolors.ProfileColorController.getInstance().getColorFor(targetProfUid);
+                    app.exteraless.profilecolors.ProfileColorController.ProfileColorMeta profMeta =
+                            app.exteraless.profilecolors.ProfileColorController.getInstance().getColorFor(targetProfUid);
                     if (profMeta != null && profMeta.hasCustomColors()) {
                         customPageBg = profMeta.getPageBgColor();
-                        if (transitionAnimationInProress && playProfileAnimation != 0) {
-                            // фон профиля гаснет вместе со списком, под ним виден чат
-                            canvas.drawColor(androidx.core.graphics.ColorUtils.setAlphaComponent(customPageBg,
-                                    (int) (android.graphics.Color.alpha(customPageBg) * Math.max(0f, Math.min(1f, listView.getAlpha())))));
-                        } else {
-                            canvas.drawColor(customPageBg);
-                        }
+                        canvas.drawColor(customPageBg);
                     }
                 }
                 if (Build.VERSION.SDK_INT >= 31 && scrollableViewNoiseSuppressor != null) {
@@ -3715,7 +3675,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
         if (myProfile) {
             bottomButtonsContainer = new FrameLayout(context);
-            bottomButtonsContainer.setVisibility(View.INVISIBLE);
 
             bottomButtonContainer = new FrameLayout[2];
             bottomButton = new ButtonWithCounterView[2];
@@ -4066,22 +4025,14 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         sharedMediaLayout.initBlurCapture((ViewGroup) fragmentView);
         long targetProfUid = getProfileTargetUserId();
         if (targetProfUid != 0) {
-            app.tsunderegram.profilecolors.ProfileColorController.ProfileColorMeta profMeta =
-                    app.tsunderegram.profilecolors.ProfileColorController.getInstance().getColorFor(targetProfUid);
+            app.exteraless.profilecolors.ProfileColorController.ProfileColorMeta profMeta =
+                    app.exteraless.profilecolors.ProfileColorController.getInstance().getColorFor(targetProfUid);
             if (profMeta != null && profMeta.hasCustomColors()) {
-                sharedMediaLayout.setCustomProfileColors(profMeta.getPageBgColor(), profMeta.cardBgColor, profMeta.accentColor, profMeta.isLight());
+                sharedMediaLayout.setCustomProfileBackgroundColor(profMeta.getPageBgColor(), profMeta.isLight());
             }
         }
         if (userId == 0 || imageUpdater == null || myProfile) {
             musicView = new ProfileMusicView(context, resourcesProvider);
-            balanceView = new ProfileBalanceView(context, resourcesProvider);
-            musicView.setTrailingView(balanceView);
-            balanceView.setOnClickListener(v -> {
-                if (userInfo != null && userInfo.wallet_card != null && getParentActivity() != null) {
-                    showDialog(new ProfileWalletCardDialog(this, balanceView,
-                            getMessagesController().getUser(userId), userInfo.wallet_card));
-                }
-            });
             if (avatarsBlurView != null) {
                 avatarsBlurView.setMusicView(musicView);
             }
@@ -4176,7 +4127,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             Bundle args = new Bundle();
                             args.putLong("chat_id", chatId);
                             args.putLong("user_id", userId);
-                            presentFragment(new QrShareActivity(args));
+                            presentFragment(new QrActivity(args));
                         });
                         itemOptions.add(R.drawable.msg_copy, getString(R.string.ProfileCopyUsername), () -> {
                             AndroidUtilities.addToClipboard("@" + UserObject.getPublicUsername(user));
@@ -4441,8 +4392,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         long targetProfUid2 = getProfileTargetUserId();
         int customBg = getThemedColor(Theme.key_windowBackgroundGray);
         if (targetProfUid2 != 0) {
-            app.tsunderegram.profilecolors.ProfileColorController.ProfileColorMeta profMeta =
-                    app.tsunderegram.profilecolors.ProfileColorController.getInstance().getColorFor(targetProfUid2);
+            app.exteraless.profilecolors.ProfileColorController.ProfileColorMeta profMeta =
+                    app.exteraless.profilecolors.ProfileColorController.getInstance().getColorFor(targetProfUid2);
             if (profMeta != null && profMeta.hasCustomColors()) {
                 customBg = profMeta.getPageBgColor();
             }
@@ -4827,7 +4778,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         Bundle args = new Bundle();
                         args.putLong("chat_id", chatId);
                         args.putLong("user_id", userId);
-                        presentFragment(new QrShareActivity(args));
+                        presentFragment(new QrActivity(args));
                         return Unit.INSTANCE;
                     });
                 }
@@ -5666,11 +5617,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
                     float expandVal = Math.max(0f, Math.min(1f, currentExpandAnimatorValue));
                     float frameAlpha = avatarImage.getAlpha() * (1.0f - expandVal);
-                    // openExtera: при сворачивании шапки аватар «втягивается» в вырез камеры (gooey).
-                    // Рамка шире аватара и сливалась с вырезом отдельной кляксой — гасим её, как кольцо историй.
-                    if (pullUpProgress > 0f) {
-                        frameAlpha *= 1f - Utilities.clamp01(pullUpProgress / 0.35f);
-                    }
                     if (frameAlpha > 0.01f) {
                         long uid = getProfileTargetUserId();
                         if (uid != 0) {
@@ -5681,7 +5627,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             float cy = avatarImage.getY() + avatarImage.getPivotY() + (avatarImage.getMeasuredHeight() / 2f - avatarImage.getPivotY()) * scale;
                             float x = cx - w / 2f;
                             float y = cy - h / 2f;
-                            app.tsunderegram.frames.ProfileFrameController.getInstance().drawFrame(
+                            app.exteraless.frames.ProfileFrameController.getInstance().drawFrame(
                                     canvas,
                                     uid,
                                     x,
@@ -5965,7 +5911,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         if (musicView != null) {
             avatarsBlurView.setMusicView(musicView);
             avatarContainer2.addView(musicView, LayoutHelper.createFrame(-1, -1));
-            avatarContainer2.addView(balanceView, LayoutHelper.createFrame(-1, -1));
         }
         avatarImage.setAvatarsViewPager(avatarsViewPager);
 
@@ -6015,9 +5960,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 @Override
                 protected void onDraw(Canvas canvas) {
                     long profUid = getProfileTargetUserId();
-                    int[] profGrad = app.tsunderegram.appearance.TsundereChatCustomizer.getInstance().getGradientColorsForUser(profUid);
+                    int[] profGrad = app.exteraless.appearance.TsundereChatCustomizer.getInstance().getGradientColorsForUser(profUid);
                     if (profGrad != null && profGrad.length >= 2) {
-                        setGradient(profGrad[0], profGrad[1], app.tsunderegram.appearance.TsundereChatCustomizer.getInstance().isGradientAnimatedForUser(profUid));
+                        setGradient(profGrad[0], profGrad[1]);
                     } else {
                         clearGradient();
                     }
@@ -6049,9 +5994,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             nameTextView[a].setFocusable(a == 0);
             nameTextView[a].setEllipsizeByGradient(true);
             long profUid = userId != 0 ? userId : (dialogId != 0 ? dialogId : 0);
-            int[] profGrad = app.tsunderegram.appearance.TsundereChatCustomizer.getInstance().getGradientColorsForUser(profUid);
+            int[] profGrad = app.exteraless.appearance.TsundereChatCustomizer.getInstance().getGradientColorsForUser(profUid);
             if (profGrad != null) {
-                nameTextView[a].setGradient(profGrad[0], profGrad[1], app.tsunderegram.appearance.TsundereChatCustomizer.getInstance().isGradientAnimatedForUser(profUid));
+                nameTextView[a].setGradient(profGrad[0], profGrad[1]);
             }
             nameTextView[a].setRightDrawableOutside(a == 0);
             avatarContainer2.addView(nameTextView[a], LayoutHelper.createFrame(a == 0 ? initialTitleWidth : LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 109, -6, (a == 0 ? rightMargin - (hasTitleExpanded ? 10 : 0) : 0), 0));
@@ -6128,7 +6073,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         ratingView.setResourcesProvider(resourcesProvider);
         checkStarRatingVisible();
         ratingView.setDelegate(visibility -> {
-            onlineTextView[1].setTranslationX(getOnlineTextViewTranslationXWithOffsets(lastOnlineTextViewX, lastOnlineTextRatingPadding));
+            onlineTextView[1].setTranslationX(getOnlineTextViewTranslationXWithOffsets(lastOnlineTextViewX));
             onlineTextView[1].setTranslationY(getOnlineTextViewTranslationYWithOffsets(lastOnlineTextViewY));
         });
         ratingView.setOnClickListener(this::showStarRatingBottomSheet);
@@ -6510,18 +6455,15 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void updateGooey() {
-        // Перенос из TsundereGram 12.9.0, ProfileActivity.java:13215-13236.
+        // Перенос из exteraGram 12.9.0, ProfileActivity.java:13215-13236.
         // Было три расхождения: настройка gooeyAvatarAnimation не проверялась вовсе
         // (эффект работал всегда), кривая затухания была линейной за первые 25 %
         // вместо pow(progress, 1.5), и giftsView не гас при отключённом эффекте.
         final float progress = pullUpProgress;
         final float fade = (float) Math.pow(progress, 1.5d);
-        if (avatarContainer != null) {
-            avatarContainer.invalidate();
-        }
         final boolean animateStory = storyView != null && playProfileAnimation != 2;
 
-        if (isTopic || !app.tsunderegram.appearance.AppearanceConfig.gooeyAvatarAnimation()) {
+        if (isTopic || !app.exteraless.appearance.AppearanceConfig.gooeyAvatarAnimation()) {
             avatarGooey.setAlpha(1f - fade);
             if (giftsView != null) {
                 giftsView.setAlpha(1f - (float) Math.pow(Math.min(progress, 0.6f) / 0.6f, 1.5d));
@@ -6552,10 +6494,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private int getActionsExtraHeight() {
         return getActionsExtraHeight(true);
     }
-    private int getActionsExtraHeight(boolean withPills) {
+    private int getActionsExtraHeight(boolean withMusic) {
         if (userId != 0 && imageUpdater != null && !myProfile)
             return 0;
-        return dp(74 + (withPills && (hasMusic || hasBalance) ? 25 : 0));
+        return dp(74 + (withMusic && hasMusic ? 25 : 0));
     }
 
     private int getHeaderExtraHeight() {
@@ -6577,7 +6519,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         } else {
             buttonsTranslationY = dp(72);
         }
-        animatorBottomButtonVisibility.setValue(buttonsTranslationY <= 0, bottomButtonsContainer.isLaidOut());
+        animatorBottomButtonVisibility.setValue(buttonsTranslationY <= 0, true);
 
         final float factor = animatorBottomButtonVisibility.getFloatValue();
         bottomButtonsContainer.setTranslationY(lerp(dp(60), 0, factor));
@@ -6784,14 +6726,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         avatarContainer.setTranslationY(lerp((float) Math.ceil(avatarY), 0f, value));
         avatarImage.setRoundRadiusForExpand((int) AndroidUtilities.lerp(getSmallAvatarRoundRadius(), 0f, value));
         avatarImage.setBlurRadiusProgressForExpand(value, avatarScale, isPulledDown);
-        if (value <= 0f) {
-            if (actionsView != null) {
-                actionsView.drawingBlur(false);
-            }
-            if (musicView != null) {
-                musicView.drawingBlur(false);
-            }
-        }
         if (storyView != null) {
             storyView.setExpandProgress(value);
         }
@@ -6884,7 +6818,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
         nameTextView[1].setTranslationX(nameTextViewX);
         nameTextView[1].setTranslationY(Math.max(minNameY, nameTextViewY));
-        onlineTextView[1].setTranslationX(getOnlineTextViewTranslationXWithOffsets(onlineTextViewX, onlineTextRatingPadding * Math.min(1f, diff)));
+        onlineTextView[1].setTranslationX(getOnlineTextViewTranslationXWithOffsets(onlineTextViewX));
         onlineTextView[1].setTranslationY(getOnlineTextViewTranslationYWithOffsets(Math.max(minOnlineY, onlineTextViewY)));
         mediaCounterTextView.setTranslationX(onlineTextViewX);
         mediaCounterTextView.setTranslationY(Math.max(minOnlineY, onlineTextViewY));
@@ -6955,7 +6889,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         }
         boolean hasStories = needInsetForStories();
         float size;
-        int cornerType = app.tsunderegram.appearance.AppearanceConfig.CORNER_TYPE_DEFAULT;
+        int cornerType = app.exteraless.appearance.AppearanceConfig.CORNER_TYPE_DEFAULT;
         if (chatId != 0) {
             TLRPC.Chat chatLocal = getMessagesController().getChat(chatId);
             if (chatLocal != null) {
@@ -6964,10 +6898,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
                 if (ChatObject.isForum(chatLocal)) {
                     size = dp(hasStories ? 48 : 76);
-                    cornerType = app.tsunderegram.appearance.AppearanceConfig.CORNER_TYPE_FORUM;
+                    cornerType = app.exteraless.appearance.AppearanceConfig.CORNER_TYPE_FORUM;
                 } else if (ChatObject.isCommunity(chatLocal)) {
                     size = dp(100);
-                    cornerType = app.tsunderegram.appearance.AppearanceConfig.CORNER_TYPE_COMMUNITY;
+                    cornerType = app.exteraless.appearance.AppearanceConfig.CORNER_TYPE_COMMUNITY;
                 } else {
                     size = dp(100);
                 }
@@ -6977,7 +6911,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         } else {
             size = dp(100);
         }
-        return app.tsunderegram.appearance.AppearanceConfig.getAvatarCorners(size, cornerType, hasStories);
+        return app.exteraless.appearance.AppearanceConfig.getAvatarCorners(size, cornerType, hasStories);
     }
 
     private void updateTtlIcon() {
@@ -7019,6 +6953,25 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             return getUserConfig().getClientUserId();
         }
         return 0;
+    }
+
+    // Рамка аватарки выступает за аватарку — ник и статус под ней спускаем чуть ниже,
+    // чтобы рамка не налазила на ник.
+    private float getAvatarFrameNameOffset() {
+        return hasProfileAvatarFrame() ? dp(9) : 0;
+    }
+
+    private float getAvatarFrameOnlineOffset() {
+        return hasProfileAvatarFrame() ? dp(7) : 0;
+    }
+
+    private boolean hasProfileAvatarFrame() {
+        long uid = getProfileTargetUserId();
+        if (uid == 0) {
+            return false;
+        }
+        app.exteraless.frames.ProfileFrameController.FrameMeta meta = app.exteraless.frames.ProfileFrameController.getInstance().getFrameFor(uid);
+        return meta != null && meta.hasFrame();
     }
 
     public void getEmojiStatusLocation(Rect rect) {
@@ -7967,7 +7920,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 Bundle args = new Bundle();
                 args.putLong("chat_id", chatId);
                 args.putLong("user_id", userId);
-                presentFragment(new QrShareActivity(args));
+                presentFragment(new QrActivity(args));
                 return Unit.INSTANCE;
             });
 
@@ -8973,7 +8926,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             return;
         }
 
-        final int headerExtraHeight = getHeaderExtraHeight();
+        final int headerExtraHeight = getHeaderExtraHeight();// - dp(hasMusic ? 25 : 0);
 
         if (avatarContainer != null) {
             if (actionsView != null) {
@@ -9115,7 +9068,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         }
                         nameTextView[1].setTranslationX(AndroidUtilities.dpf2(18f) - nameTextView[1].getLeft());
                         nameTextView[1].setTranslationY(newTop + h - getActionsExtraHeight() - dpf2(30f) - nameTextView[1].getBottom() + additionalTranslationY);
-                        onlineTextView[1].setTranslationX(getOnlineTextViewTranslationXWithOffsets(dpf2(16) - onlineTextView[1].getLeft(), 0));
+                        onlineTextView[1].setTranslationX(getOnlineTextViewTranslationXWithOffsets(dpf2(16) - onlineTextView[1].getLeft()));
                         onlineTextView[1].setTranslationY(getOnlineTextViewTranslationYWithOffsets(newTop + h - getActionsExtraHeight() - dpf2(10) - onlineTextView[1].getBottom() + additionalTranslationY));
                         mediaCounterTextView.setTranslationX(onlineTextView[1].getTranslationX());
                         mediaCounterTextView.setTranslationY(onlineTextView[1].getTranslationY());
@@ -9322,8 +9275,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     expandAnimator.addListener(resetListener);
                 }
                 final float avatarBottom = (float) Math.floor(endNameY) + (avatarContainer.getHeight() * avatarContainer.getScaleY() + dpf2(8)) * (openAnimationInProgress ? avatarAnimationProgress : diff);
-                nameY = avatarBottom + dp(1.3f) + dp(7) * diff + titleAnimationsYDiff * (1f - avatarAnimationProgress);
-                onlineY = avatarBottom + dp(24) + (float) Math.floor(11 * AndroidUtilities.density) * diff;
+                nameY = avatarBottom + dp(1.3f) + dp(7) * diff + titleAnimationsYDiff * (1f - avatarAnimationProgress) + getAvatarFrameNameOffset() * diff;
+                onlineY = avatarBottom + dp(24) + (float) Math.floor(11 * AndroidUtilities.density) * diff + getAvatarFrameOnlineOffset() * diff;
                 final float minimizedX = openAnimationInProgress ? (prevAvatarTranslation - dp(109) + dp(48)) : -dpf2(42 + 4);
 
                 if (showStatusButton != null) {
@@ -9346,15 +9299,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     FrameLayout.LayoutParams params1 = (FrameLayout.LayoutParams) nameTextView[a].getLayoutParams();
                     float nameX = viewportWidth / 2f - (params1.leftMargin + Math.min(nameTextView[a].getExactWidth(), a == 1 ? params1.width : viewportWidth) * nameScale * 0.5f);
                     FrameLayout.LayoutParams params2 = (FrameLayout.LayoutParams) onlineTextView[a].getLayoutParams();
-                    final SimpleTextView onlineView = onlineTextView[hasFallbackPhoto ? 3 : a];
-                    final float onlineMaxWidth = a == 1 ? params2.width : viewportWidth;
-                    final float onlinePadding = !hasFallbackPhoto && onlineView.getExactWidth() <= onlineMaxWidth - onlineView.getPaddingLeft() - onlineView.getPaddingRight() ? onlineView.getPaddingLeft() : 0;
-                    float onlineX = viewportWidth / 2f - (params2.leftMargin + onlinePadding + Math.min(onlineView.getExactWidth(), onlineMaxWidth) * 0.5f);
+                    float onlineX = viewportWidth / 2f - (params2.leftMargin + Math.min(onlineTextView[hasFallbackPhoto ? 3 : a].getExactWidth(), a == 1 ? params2.width : viewportWidth) * 0.5f);
 
                     if (a == 1) {
                         this.nameX = nameX;
                         this.onlineX = onlineX;
-                        onlineTextRatingPadding = onlinePadding;
                     }
                     nameX = AndroidUtilities.lerp(minimizedX, nameX, diff); //
                     onlineX = AndroidUtilities.lerp(minimizedX, onlineX, diff);
@@ -9362,7 +9311,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     if (expandAnimator == null || !expandAnimator.isRunning()) {
                         nameTextView[a].setTranslationX(nameX);
                         nameTextView[a].setTranslationY(nameY);
-                        onlineTextView[a].setTranslationX(getOnlineTextViewTranslationXWithOffsets(onlineX, a == 1 ? onlineTextRatingPadding * diff : 0));
+                        onlineTextView[a].setTranslationX(getOnlineTextViewTranslationXWithOffsets(onlineX));
                         onlineTextView[a].setTranslationY(getOnlineTextViewTranslationYWithOffsets(onlineY));
                         if (a == 1) {
                             mediaCounterTextView.setTranslationX(onlineX);
@@ -9428,12 +9377,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) nameTextView[a].getLayoutParams();
             float nameX = listView.getMeasuredWidth() / 2f - (params.leftMargin + nameTextView[a].getExactWidth() * nameScale * 0.5f);
             params = (FrameLayout.LayoutParams) onlineTextView[a].getLayoutParams();
-            float onlineX = listView.getMeasuredWidth() / 2f - (params.leftMargin + (hasFallbackPhoto ? 0 : onlineTextView[a].getPaddingLeft()) + onlineTextView[a].getExactWidth() * 0.5f);
+            float onlineX = listView.getMeasuredWidth() / 2f - (params.leftMargin + onlineTextView[a].getExactWidth() * 0.5f);
 
             if (a == 1) {
                 this.nameX = nameX;
                 this.onlineX = onlineX;
-                onlineTextRatingPadding = hasFallbackPhoto ? 0 : onlineTextView[a].getPaddingLeft();
             }
         }
 
@@ -9496,8 +9444,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 + actionBar.getTranslationY();
 
         float avatarBottom = (float) Math.floor(endNameY) + (AndroidUtilities.dp(42) * scale + dpf2(8)) * diff;
-        nameY = avatarBottom + AndroidUtilities.dp(1.3f) + AndroidUtilities.dp(7) * diff;
-        onlineY = avatarBottom + AndroidUtilities.dp(24) + (float) Math.floor(11 * AndroidUtilities.density) * diff;
+        nameY = avatarBottom + AndroidUtilities.dp(1.3f) + AndroidUtilities.dp(7) * diff + getAvatarFrameNameOffset() * diff;
+        onlineY = avatarBottom + AndroidUtilities.dp(24) + (float) Math.floor(11 * AndroidUtilities.density) * diff + getAvatarFrameOnlineOffset() * diff;
     }
 
     public RecyclerListView getListView() {
@@ -9630,7 +9578,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void didReceivedNotification(int id, int account, final Object... args) {
         if (id == NotificationCenter.pluginMenuItemsUpdated) {
-            // tsunderegram plugins: пересобрать подменю PROFILE_ACTION_MENU.
+            // exteraless plugins: пересобрать подменю PROFILE_ACTION_MENU.
             if (pluginsMenu != null) {
                 pluginsMenu.refresh();
             }
@@ -9641,8 +9589,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         } else if (id == NotificationCenter.updateInterfaces || id == NotificationCenter.didSetNewTheme) {
             long profUidNotif = getProfileTargetUserId();
             if (profUidNotif != 0) {
-                app.tsunderegram.profilecolors.ProfileColorController.ProfileColorMeta profMeta =
-                        app.tsunderegram.profilecolors.ProfileColorController.getInstance().getColorFor(profUidNotif);
+                app.exteraless.profilecolors.ProfileColorController.ProfileColorMeta profMeta =
+                        app.exteraless.profilecolors.ProfileColorController.getInstance().getColorFor(profUidNotif);
                 int newBg = getThemedColor(Theme.key_windowBackgroundGray);
                 if (profMeta != null && profMeta.hasCustomColors()) {
                     newBg = profMeta.getPageBgColor();
@@ -9657,12 +9605,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     listView.setBackgroundColor(newBg);
                     listView.invalidateViews();
                     listView.invalidate();
-                    for (int ci = 0; ci < listView.getChildCount(); ci++) {
-                        View child = listView.getChildAt(ci);
-                        if (child instanceof ProfileMusicCard) {
-                            ((ProfileMusicCard) child).refreshColors();
-                        }
-                    }
                 }
                 if (fragmentView != null) {
                     fragmentView.setBackgroundColor(newBg);
@@ -9849,8 +9791,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         } else if (id == NotificationCenter.closeProfileActivity) {
             final long dialogId = (long) args[0];
             final boolean includingLast = (boolean) args[1];
-            // a profile embedded as a main tab is not in the stack: removing it would close the whole layout (on tablets, the app)
-            if (dialogId == getDialogId() && parentLayout != null && parentLayout.getFragmentStack().contains(this) && (!includingLast ? parentLayout.getLastFragment() != this : true)) {
+            if (dialogId == getDialogId() && (!includingLast ? parentLayout.getLastFragment() != this : true)) {
                 if (parentLayout.getLastFragment() == this) {
                     finishFragment();
                 } else {
@@ -9885,9 +9826,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (imageUpdater != null) {
                     if (listAdapter != null && !TextUtils.equals(userInfo.about, currentBio)) {
                         listAdapter.notifyItemChanged(bioRow);
-                    }
-                    if (myProfile) {
-                        updateListAnimated(false);
                     }
                 } else {
                     if (!openAnimationInProgress && !isCallAvailable) {
@@ -10277,7 +10215,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         if (sharedMediaLayout != null) {
             sharedMediaLayout.onPause();
         }
-        app.tsunderegram.banners.ProfileBannerController.getInstance().detachVideo();
+        app.exteraless.banners.ProfileBannerController.getInstance().detachVideo();
     }
 
 
@@ -10439,9 +10377,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (!fragmentOpened) {
                     fragmentOpened = true;
                     invalidateScroll = true;
-                    if (fragmentView != null) {
-                        fragmentView.requestLayout();
-                    }
+                    fragmentView.requestLayout();
                 }
             }
             getNotificationCenter().onAnimationFinish(transitionIndex);
@@ -10772,9 +10708,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             animatorSet.playTogether(animators);
         } else {
             initialAnimationExtraHeight = extraHeight;
-            // Непрозрачный фон кастомного цвета профиля закрывал чат на всё время анимации
-            // закрытия (экран «выцветал» в белый, затем чат появлялся рывком).
-            fragmentView.setBackgroundColor(0);
 
             ArrayList<Animator> animators = new ArrayList<>();
             animators.add(ObjectAnimator.ofFloat(this, "avatarAnimationProgress", 1.0f, 0.0f));
@@ -11250,8 +11183,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         balanceDividerRow = -1;
         hasMusic = false;
         hasMusicCard = false;
-        hasBalance = userId != 0 && userInfo != null && userInfo.wallet_card != null
-                && (imageUpdater == null || myProfile);
 
         unblockRow = -1;
         joinRow = -1;
@@ -11298,16 +11229,19 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         if (userId != 0) {
             TLRPC.User user = getMessagesController().getUser(userId);
             if (userInfo != null && userInfo.saved_music != null && (imageUpdater == null || myProfile)) {
-                if (app.tsunderegram.appearance.AppearanceConfig.profileMusicCard()
-                        && app.tsunderegram.nowplaying.NowPlayingController.shouldShowCard(userInfo.saved_music)) {
+                if (app.exteraless.appearance.AppearanceConfig.profileMusicCard()
+                        && app.exteraless.nowplaying.NowPlayingController.shouldShowCard(userInfo.saved_music)) {
                     hasMusicCard = true;
+                    app.exteraless.nowplaying.LastFmNowPlaying.prefetch(
+                            app.exteraless.nowplaying.ProfileMusicMark.nickFrom(
+                                    FileLoader.getDocumentFileName(userInfo.saved_music), userId));
                 } else {
                     hasMusic = true;
                 }
             }
 
             if (emptyRow < 0 && emptyRow2 < 0) {
-                if (hasMusic || hasBalance || peerColor != null || actionsView == null) {
+                if (hasMusic || peerColor != null || actionsView == null) {
                     emptyRow2 = rowCount++;
                 } else {
                     emptyRow = rowCount++;
@@ -11338,7 +11272,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
                 // Строка настроек NagramX появляется только если её включили на
                 // экране «Other» — как и в общем списке настроек.
-                if (app.tsunderegram.general.GeneralConfig.showNagramSettings()) {
+                if (app.exteraless.general.GeneralConfig.showNagramSettings()) {
                     nekoRow = rowCount++;
                     nekoSectionRow = rowCount++;
                 }
@@ -11568,7 +11502,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
         } else if (isTopic) {
             if (emptyRow < 0 && emptyRow2 < 0) {
-                if (hasMusic || hasBalance || peerColor != null || actionsView == null) {
+                if (hasMusic || peerColor != null || actionsView == null) {
                     emptyRow2 = rowCount++;
                 } else {
                     emptyRow = rowCount++;
@@ -11591,7 +11525,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         } else if (chatId != 0) {
 
             if (emptyRow < 0 && emptyRow2 < 0) {
-                if (hasMusic || hasBalance || peerColor != null || actionsView == null) {
+                if (hasMusic || peerColor != null || actionsView == null) {
                     emptyRow2 = rowCount++;
                 } else {
                     emptyRow = rowCount++;
@@ -11803,12 +11737,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 musicView.setMusicDocument(userInfo.saved_music);
             }
             musicView.setVisibility(hasMusic ? View.VISIBLE : View.GONE);
-            if (hasBalance) {
-                balanceView.setBalance(userInfo.wallet_card.balance);
-            }
-            balanceView.setVisibility(hasBalance ? View.VISIBLE : View.GONE);
-            musicView.invalidate();
-            balanceView.invalidate();
         }
     }
 
@@ -11816,12 +11744,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         if (getParentActivity() == null) {
             return;
         }
-        final boolean card = app.tsunderegram.appearance.AppearanceConfig.profileMusicCard();
+        final boolean card = app.exteraless.appearance.AppearanceConfig.profileMusicCard();
         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity(), resourcesProvider);
         builder.setTitle(getString(R.string.OEProfileMusicDesign));
         builder.setMessage(getString(card ? R.string.OEProfileMusicUseOfficialInfo : R.string.OEProfileMusicUseCardInfo));
         builder.setPositiveButton(getString(card ? R.string.OEProfileMusicUseOfficial : R.string.OEProfileMusicUseCard), (dialog, which) -> {
-            app.tsunderegram.appearance.AppearanceConfig.profileMusicCard.setConfigBool(!card);
+            app.exteraless.appearance.AppearanceConfig.profileMusicCard.setConfigBool(!card);
             updateListAnimated(false);
             needLayout(true);
         });
@@ -11857,7 +11785,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             MediaController.getInstance().getPlaylist().clear();
             MediaController.getInstance().getPlaylist().addAll(savedMusicList.list);
             if (!sameList) MediaController.getInstance().playMessage(savedMusicList.list.get(0));
-            showDialog(app.tsunderegram.player.Md3Player.create(getContext(), getResourceProvider()));
+            showDialog(app.exteraless.player.Md3Player.create(getContext(), getResourceProvider()));
         }
     }
 
@@ -12033,7 +11961,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             actionsView.updatePosition(listView.getMeasuredWidth(), dp(74));
         } else {
             actionsView.clipHeight = -1;
-            float bottom = extraHeight + newTop - dp(hasMusic || hasBalance ? 25 : 0);
+            float bottom = extraHeight + newTop - dp(hasMusic ? 25 : 0);
             float height = Math.min(dp(74), bottom - newTop);
             actionsView.updatePosition(bottom - height, height);
         }
@@ -12196,8 +12124,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         newString2 = getString(R.string.StarRatingLevelNegative).toLowerCase(Locale.ROOT);
                     } else {
                         if (!NekoConfig.sendOnlinePackets.Bool() || NekoConfig.sendOfflinePacketAfterOnline.Bool()) {
-                            final int lastSeen = app.tsunderegram.ghost.OwnLastSeen.seconds(currentAccount, user);
-                            newString2 = lastSeen > 0 ? app.tsunderegram.ghost.OwnLastSeen.format(lastSeen) : getString(R.string.VoipOfflineTitle);
+                            final int lastSeen = app.exteraless.ghost.OwnLastSeen.seconds(currentAccount, user);
+                            newString2 = lastSeen > 0 ? app.exteraless.ghost.OwnLastSeen.format(lastSeen) : getString(R.string.VoipOfflineTitle);
                         } else {
                             newString2 = LocaleController.getString(R.string.Online);
                         }
@@ -12213,7 +12141,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (user.bot_active_users != 0) {
                     newString2 = LocaleController.formatPluralStringComma("BotUsers", user.bot_active_users, ',');
                 } else {
-                    newString2 = UserObject.getBotStatus(user);
+                    newString2 = LocaleController.getString(R.string.Bot);
                 }
             } else {
                 isOnline[0] = false;
@@ -12257,9 +12185,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     nameTextView[a].setText(newString);
                 }
                 long profUid = userId != 0 ? userId : (dialogId != 0 ? dialogId : 0);
-                int[] profGrad = app.tsunderegram.appearance.TsundereChatCustomizer.getInstance().getGradientColorsForUser(profUid);
+                int[] profGrad = app.exteraless.appearance.TsundereChatCustomizer.getInstance().getGradientColorsForUser(profUid);
                 if (profGrad != null) {
-                    nameTextView[a].setGradient(profGrad[0], profGrad[1], app.tsunderegram.appearance.TsundereChatCustomizer.getInstance().isGradientAnimatedForUser(profUid));
+                    nameTextView[a].setGradient(profGrad[0], profGrad[1]);
                 } else {
                     nameTextView[a].clearGradient();
                 }
@@ -12632,9 +12560,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
                 }
                 long profUid = chatId != 0 ? -chatId : (dialogId != 0 ? dialogId : 0);
-                int[] profGrad = app.tsunderegram.appearance.TsundereChatCustomizer.getInstance().getGradientColorsForUser(profUid);
+                int[] profGrad = app.exteraless.appearance.TsundereChatCustomizer.getInstance().getGradientColorsForUser(profUid);
                 if (profGrad != null) {
-                    nameTextView[a].setGradient(profGrad[0], profGrad[1], app.tsunderegram.appearance.TsundereChatCustomizer.getInstance().isGradientAnimatedForUser(profUid));
+                    nameTextView[a].setGradient(profGrad[0], profGrad[1]);
                 } else {
                     nameTextView[a].clearGradient();
                 }
@@ -12997,18 +12925,19 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     setUsernameItem = otherItem.addSubItem(set_username, R.drawable.menu_username_change, getString(R.string.ProfileUsernameEdit));
                     linkItem = otherItem.addSubItem(copy_link_profile, R.drawable.msg_link2, getString(R.string.ProfileCopyLink));
                     otherItem.addSubItem(clear_cache, R.drawable.msg_delete, getString(R.string.ClearCache));
-                    if (com.tsunderegram.messenger.badges.BadgesController.INSTANCE.canManageBadges(UserConfig.getInstance(currentAccount).getClientUserId())) {
+                    if (com.exteragram.messenger.badges.BadgesController.INSTANCE.canManageBadges(UserConfig.getInstance(currentAccount).getClientUserId())) {
                         long myUid = UserConfig.getInstance(currentAccount).getClientUserId();
-                        boolean hasBadge = com.tsunderegram.messenger.badges.BadgesController.INSTANCE.hasBadge(myUid);
-                        otherItem.addSubItem(tsundere_badge_manage, R.drawable.msg_admins, hasBadge ? "Редактировать значок" : "Выдать значок", getResourceProvider());
+                        boolean hasBadge = com.exteragram.messenger.badges.BadgesController.INSTANCE.hasBadge(myUid);
+                        otherItem.addSubItem(tsundere_badge_manage, 0, hasBadge ? "Редактировать значок" : "Выдать значок");
                     }
                     updateItemsUsername();
                 }
                 selfUser = true;
             } else {
-                if (user.bot && user.bot_can_edit) {
+                /*if (user.bot && user.bot_can_edit) {
                     editItemVisible = true;
-                }
+                }*/
+                editItemVisible = getContactsController().contactsDict.get(userId) == null;
 
                 if (userInfo != null && userInfo.phone_calls_available) {
                     callItemVisible = true;
@@ -13045,6 +12974,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             } else {
                                 otherItem.hideSubItem(bot_privacy);
                             }
+                            if (NekoConfig.ignoreBlocked.Bool()) {
+                                boolean customFiltered = AyuFilter.getCustomFilteredUsersList().contains(userId);
+                                otherItem.addSubItem(shadow_ban, R.drawable.hide_title, getString(customFiltered ? R.string.UnshadowBan : R.string.ShadowBan));
+                            }
                             otherItem.addSubItem(report, R.drawable.msg_report, LocaleController.getString(R.string.ReportBot)).setColors(getThemedColor(Theme.key_text_RedRegular), getThemedColor(Theme.key_text_RedRegular));
                             if (!userBlocked) {
                                 otherItem.addSubItem(block_contact, R.drawable.msg_block2, LocaleController.getString(R.string.DeleteAndBlock)).setColors(getThemedColor(Theme.key_text_RedRegular), getThemedColor(Theme.key_text_RedRegular));
@@ -13052,6 +12985,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 otherItem.addSubItem(block_contact, R.drawable.msg_retry, LocaleController.getString(R.string.BotRestart));
                             }
                         } else {
+                            if (NekoConfig.ignoreBlocked.Bool()) {
+                                boolean customFiltered = AyuFilter.getCustomFilteredUsersList().contains(userId);
+                                otherItem.addSubItem(shadow_ban, R.drawable.hide_title, getString(customFiltered ? R.string.UnshadowBan : R.string.ShadowBan));
+                            }
                             otherItem.addSubItem(block_contact, !userBlocked ? R.drawable.msg_block : R.drawable.msg_block, !userBlocked ? LocaleController.getString(R.string.BlockContact) : LocaleController.getString(R.string.Unblock));
                         }
                     }
@@ -13066,6 +13003,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     if (!TextUtils.isEmpty(user.phone)) {
                         otherItem.addSubItem(share_contact, R.drawable.msg_share, LocaleController.getString(R.string.ShareContact));
                     }
+                    if (NekoConfig.ignoreBlocked.Bool()) {
+                        boolean customFiltered = AyuFilter.getCustomFilteredUsersList().contains(userId);
+                        otherItem.addSubItem(shadow_ban, R.drawable.hide_title, getString(customFiltered ? R.string.UnshadowBan : R.string.ShadowBan));
+                    }
                     otherItem.addSubItem(block_contact, !userBlocked ? R.drawable.msg_block : R.drawable.msg_block, !userBlocked ? LocaleController.getString(R.string.BlockContact) : LocaleController.getString(R.string.Unblock));
                     otherItem.addSubItem(edit_contact, R.drawable.msg_edit, LocaleController.getString(R.string.EditContact));
                     otherItem.addSubItem(delete_contact, R.drawable.msg_delete, LocaleController.getString(R.string.DeleteContact));
@@ -13075,6 +13016,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         StarsController.getInstance(currentAccount).loadStarGifts();
                         otherItem.addSubItem(gift_premium, R.drawable.msg_gift_premium, LocaleController.getString(R.string.ProfileSendAGift));
                         giftAction = true;
+                    }
+                    if (getMessagesController().config.walletAvailable.get() && !MessagesController.isSupportUser(user) && !UserObject.isService(user.id)) {
+                        otherItem.addSubItem(send_money, R.drawable.ic_gram, LocaleController.getString(R.string.WalletSendMoney));
                     }
                     otherItem.addSubItem(start_secret_chat, R.drawable.msg_secret, LocaleController.getString(R.string.StartEncryptedChat));
                     otherItem.setSubItemShown(start_secret_chat, DialogObject.isEmpty(getMessagesController().isUserContactBlocked(userId)));
@@ -13117,7 +13061,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         editItemVisible = true;
                     }
                 } else {
-                    if (ChatObject.hasAdminRights(chat) || chat.megagroup && ChatObject.canChangeChatInfo(chat)) {
+                    if (true/*ChatObject.hasAdminRights(chat) || chat.megagroup && ChatObject.canChangeChatInfo(chat)*/) { // NagramX: allow change chat name without admin rights
                         editItemVisible = true;
                     }
                 }
@@ -13168,6 +13112,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         }
                     }
                 } else {
+                    if (chat.admin_rights == null) {
+                        otherItem.addSubItem(shadow_ban, R.drawable.hide_title, !channelBlocked ? getString(R.string.ShadowBan) : getString(R.string.UnshadowBan));
+                    }
                     if (ChatObject.isPublic(chat)) {
                         otherItem.addSubItem(share, R.drawable.msg_share, LocaleController.getString(R.string.BotShare));
                         shareAction = !chat.creator;
@@ -13185,9 +13132,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
                     if (topicId == 0) {
                         otherItem.addSubItem(add_shortcut, R.drawable.msg_home, LocaleController.getString(R.string.AddShortcut));
-                    }
-                    if (ChatObject.canChangeChatInfo(chat)) {
-                        otherItem.addSubItem(tsundere_channel_banner, R.drawable.msg_addphoto, "Баннер канала");
                     }
                     if (currentChat.creator) {
                         otherItem.addColoredGap();
@@ -13289,7 +13233,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             actionsView.commitActions();
         }
 
-        // tsunderegram plugins: подменю PROFILE_ACTION_MENU в конце меню «⋮».
+        // exteraless plugins: подменю PROFILE_ACTION_MENU в конце меню «⋮».
         if (otherItem != null) {
             java.util.Map<String, Object> pluginMenuContext = new java.util.HashMap<>();
             pluginMenuContext.put("account", currentAccount);
@@ -13306,9 +13250,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 pluginMenuContext.put("chat", getMessagesController().getChat(chatId));
                 pluginMenuContext.put("chatId", chatId);
             }
-            pluginsMenu = app.tsunderegram.plugins.menus.MenuInjector.attachSwipeBackMenu(
+            pluginsMenu = app.exteraless.plugins.menus.MenuInjector.attachSwipeBackMenu(
                     otherItem,
-                    app.tsunderegram.plugins.MenuItemRecord.MenuType.PROFILE_ACTION_MENU,
+                    app.exteraless.plugins.MenuItemRecord.MenuType.PROFILE_ACTION_MENU,
                     pluginMenuContext, resourcesProvider, pluginsMenu);
         }
 
@@ -13390,10 +13334,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void createSaveExclusionItem(long chatId) {
-        if (NaConfig.INSTANCE.getEnableSaveDeletedMessages().Bool()) {
-            var deletedPopupWrapper = new SaveExclusionPopupWrapper(ProfileActivity.this, otherItem.getPopupLayout().getSwipeBack(), chatId, false, getResourceProvider());
-            otherItem.addSwipeBackItem(R.drawable.msg_delete_24_solar, null, getString(R.string.SaveDeletedExclusionMenu), deletedPopupWrapper.windowLayout);
-        }
+        if (!NaConfig.INSTANCE.getEnableSaveDeletedMessages().Bool()) return;
+        var autoTranslatePopupWrapper = new SaveExclusionPopupWrapper(ProfileActivity.this, otherItem.getPopupLayout().getSwipeBack(), chatId, getResourceProvider());
+        otherItem.addSwipeBackItem(R.drawable.msg_delete_24_solar, null, getString(R.string.SaveDeletedExclusionMenu), autoTranslatePopupWrapper.windowLayout);
     }
 
     private void createMessageFilterItem() {
@@ -13428,9 +13371,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             menu.addSubItem(add_to_folder, R.drawable.msg_folders, getString(R.string.FilterAddTo));
         }
         menu.addSubItem(clear_cache, R.drawable.msg_clear, getString(R.string.ClearCache));
-        if (userId != 0 && com.tsunderegram.messenger.badges.BadgesController.INSTANCE.canManageBadges(UserConfig.getInstance(currentAccount).getClientUserId())) {
-            boolean hasBadge = com.tsunderegram.messenger.badges.BadgesController.INSTANCE.hasBadge(userId);
-            menu.addSubItem(tsundere_badge_manage, R.drawable.msg_admins, hasBadge ? "Редактировать значок" : "Выдать значок", getResourceProvider());
+        if (userId != 0 && com.exteragram.messenger.badges.BadgesController.INSTANCE.canManageBadges(UserConfig.getInstance(currentAccount).getClientUserId())) {
+            boolean hasBadge = com.exteragram.messenger.badges.BadgesController.INSTANCE.hasBadge(userId);
+            menu.addSubItem(tsundere_badge_manage, 0, hasBadge ? "Редактировать значок" : "Выдать значок");
         }
         if (userId == 0 && !ChatObject.hasAdminRights(currentChat)) {
             menu.addSubItem(report, R.drawable.msg_report, getString(R.string.ReportChat)).setColors(getThemedColor(Theme.key_text_RedRegular), getThemedColor(Theme.key_text_RedRegular));
@@ -13476,8 +13419,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         public int getColor(int key) {
             long uid = getProfileTargetUserId();
             if (uid != 0) {
-                app.tsunderegram.profilecolors.ProfileColorController.ProfileColorMeta meta =
-                        app.tsunderegram.profilecolors.ProfileColorController.getInstance().getColorFor(uid);
+                app.exteraless.profilecolors.ProfileColorController.ProfileColorMeta meta =
+                        app.exteraless.profilecolors.ProfileColorController.getInstance().getColorFor(uid);
                 if (meta != null && meta.hasCustomColors()) {
                     if (key == Theme.key_windowBackgroundGray) {
                         return meta.getPageBgColor();
@@ -13490,7 +13433,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         if (key == Theme.key_windowBackgroundWhiteBlackText) {
                             return meta.getTextColor();
                         }
-                        if (key == Theme.key_windowBackgroundWhiteGrayText || key == Theme.key_windowBackgroundWhiteGrayText2 || key == Theme.key_windowBackgroundWhiteGrayText3 || key == Theme.key_windowBackgroundWhiteGrayText4) {
+                        if (key == Theme.key_windowBackgroundWhiteGrayText || key == Theme.key_windowBackgroundWhiteGrayText2 || key == Theme.key_windowBackgroundWhiteGrayText4) {
                             return meta.getSubtextColor();
                         }
                         if (key == Theme.key_windowBackgroundWhiteValueText) {
@@ -13521,7 +13464,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         if (key == Theme.key_windowBackgroundWhiteBlackText) {
                             return meta.getTextColor();
                         }
-                        if (key == Theme.key_windowBackgroundWhiteGrayText || key == Theme.key_windowBackgroundWhiteGrayText2 || key == Theme.key_windowBackgroundWhiteGrayText3 || key == Theme.key_windowBackgroundWhiteGrayText4) {
+                        if (key == Theme.key_windowBackgroundWhiteGrayText || key == Theme.key_windowBackgroundWhiteGrayText2 || key == Theme.key_windowBackgroundWhiteGrayText4) {
                             return meta.getSubtextColor();
                         }
                         if (key == Theme.key_windowBackgroundWhiteValueText) {
@@ -13590,8 +13533,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         public boolean isDark() {
             long uid = getProfileTargetUserId();
             if (uid != 0) {
-                app.tsunderegram.profilecolors.ProfileColorController.ProfileColorMeta meta =
-                        app.tsunderegram.profilecolors.ProfileColorController.getInstance().getColorFor(uid);
+                app.exteraless.profilecolors.ProfileColorController.ProfileColorMeta meta =
+                        app.exteraless.profilecolors.ProfileColorController.getInstance().getColorFor(uid);
                 if (meta != null && meta.cardBgColor != 0) {
                     return AndroidUtilities.computePerceivedBrightness(meta.cardBgColor) < 0.721f;
                 }
@@ -14140,7 +14083,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 ArrayList<File> files = new ArrayList<>();
 
                 files.addAll(Arrays.asList(dir.listFiles()));
-                files.addAll(Arrays.asList(app.tsunderegram.plugins.PluginLog.files()));
+                files.addAll(Arrays.asList(app.exteraless.plugins.PluginLog.files()));
 
                 File filesDir = ApplicationLoader.getFilesDirFixed();
                 filesDir = new File(filesDir, "malformed_database/");
@@ -14422,8 +14365,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
                     long targetProfUidMedia = getProfileTargetUserId();
                     if (targetProfUidMedia != 0) {
-                        app.tsunderegram.profilecolors.ProfileColorController.ProfileColorMeta profMeta =
-                                app.tsunderegram.profilecolors.ProfileColorController.getInstance().getColorFor(targetProfUidMedia);
+                        app.exteraless.profilecolors.ProfileColorController.ProfileColorMeta profMeta =
+                                app.exteraless.profilecolors.ProfileColorController.getInstance().getColorFor(targetProfUidMedia);
                         if (profMeta != null && profMeta.hasCustomColors()) {
                             boolean isLight = AndroidUtilities.computePerceivedBrightness(profMeta.getPageBgColor()) > 0.72f;
                             sharedMediaLayout.setCustomProfileColors(profMeta.getPageBgColor(), profMeta.cardBgColor, profMeta.accentColor, isLight);
@@ -15178,7 +15121,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 sb.append("x");
                                 sb.setSpan(new AnimatedEmojiSpan(bot_verification.icon, cell.getTextView().getPaint().getFontMetricsInt()), sb.length() - 1, sb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                                 sb.append(" ");
-                                SpannableString description = new SpannableString(MessageObject.formatTextWithEntities(bot_verification.getDescription()));
+                                SpannableString description = new SpannableString(MessageObject.formatTextWithEntities(bot_verification.description));
                                 try {
                                     AndroidUtilities.addLinksSafe(description, Linkify.WEB_URLS, false, false);
                                     URLSpan[] spans = description.getSpans(0, description.length(), URLSpan.class);
@@ -16317,7 +16260,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 ArrayList<SearchResult> results = new ArrayList<>();
                 ArrayList<MessagesController.FaqSearchResult> faqResults = new ArrayList<>();
                 ArrayList<CharSequence> names = new ArrayList<>();
-                String[] searchArgs = text.toLowerCase(Locale.ROOT).split(" ");
+                String[] searchArgs = text.split(" ");
                 String[] translitArgs = new String[searchArgs.length];
                 for (int a = 0; a < searchArgs.length; a++) {
                     translitArgs[a] = LocaleController.getInstance().getTranslitString(searchArgs[a]);
@@ -16331,7 +16274,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     if (result == null) {
                         continue;
                     }
-                    String title = " " + result.searchTitle.toLowerCase(Locale.ROOT);
+                    String title = " " + result.searchTitle.toLowerCase();
                     SpannableStringBuilder stringBuilder = null;
                     for (int i = 0; i < searchArgs.length; i++) {
                         if (searchArgs[i].length() != 0) {
@@ -16376,7 +16319,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (faqWebPage != null) {
                     for (int a = 0, N = faqSearchArray.size(); a < N; a++) {
                         MessagesController.FaqSearchResult result = faqSearchArray.get(a);
-                        String title = " " + result.title.toLowerCase(Locale.ROOT);
+                        String title = " " + result.title.toLowerCase();
                         SpannableStringBuilder stringBuilder = null;
                         for (int i = 0; i < searchArgs.length; i++) {
                             if (searchArgs[i].length() != 0) {
@@ -16583,12 +16526,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 long targetProfUid3 = getProfileTargetUserId();
                 int customBg2 = getThemedColor(Theme.key_windowBackgroundGray);
                 if (targetProfUid3 != 0) {
-                    app.tsunderegram.profilecolors.ProfileColorController.ProfileColorMeta profMeta =
-                            app.tsunderegram.profilecolors.ProfileColorController.getInstance().getColorFor(targetProfUid3);
+                    app.exteraless.profilecolors.ProfileColorController.ProfileColorMeta profMeta =
+                            app.exteraless.profilecolors.ProfileColorController.getInstance().getColorFor(targetProfUid3);
                     if (profMeta != null && profMeta.hasCustomColors()) {
                         customBg2 = profMeta.getPageBgColor();
                         if (sharedMediaLayout != null) {
-                            sharedMediaLayout.setCustomProfileColors(profMeta.getPageBgColor(), profMeta.cardBgColor, profMeta.accentColor, profMeta.isLight());
+                            sharedMediaLayout.setCustomProfileBackgroundColor(profMeta.getPageBgColor(), profMeta.isLight());
                         }
                     }
                 }
@@ -16619,8 +16562,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
                 if (actionBar != null) {
                     long uidAction = getProfileTargetUserId();
-                app.tsunderegram.profilecolors.ProfileColorController.ProfileColorMeta pMeta =
-                        app.tsunderegram.profilecolors.ProfileColorController.getInstance().getColorFor(uidAction);
+                app.exteraless.profilecolors.ProfileColorController.ProfileColorMeta pMeta =
+                        app.exteraless.profilecolors.ProfileColorController.getInstance().getColorFor(uidAction);
                 if (pMeta != null && pMeta.hasCustomColors() && pMeta.isLight()) {
                     actionBar.setItemsColor(pMeta.getTextColor(), false);
                     actionBar.setItemsBackgroundColor(ColorUtils.setAlphaComponent(pMeta.getTextColor(), 0x20), false);
@@ -16847,7 +16790,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             Bundle args = new Bundle();
             args.putLong("chat_id", chatId);
             args.putLong("user_id", userId);
-            presentFragment(new QrShareActivity(args));
+            presentFragment(new QrActivity(args));
         } else if (parent.getTag() != null && ((int) parent.getTag()) == birthdayRow) {
             if (userId == getUserConfig().getClientUserId()) {
                 presentFragment(new PremiumPreviewFragment("my_profile_gift"));
@@ -16953,8 +16896,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         createBirthdayEffect();
         long targetProfUidVis = getProfileTargetUserId();
         if (targetProfUidVis != 0) {
-            app.tsunderegram.profilecolors.ProfileColorController.ProfileColorMeta profMeta =
-                    app.tsunderegram.profilecolors.ProfileColorController.getInstance().getColorFor(targetProfUidVis);
+            app.exteraless.profilecolors.ProfileColorController.ProfileColorMeta profMeta =
+                    app.exteraless.profilecolors.ProfileColorController.getInstance().getColorFor(targetProfUidVis);
             if (profMeta != null && profMeta.hasCustomColors()) {
                 boolean isLight = AndroidUtilities.computePerceivedBrightness(profMeta.getPageBgColor()) > 0.72f;
                 if (sharedMediaLayout != null) {
@@ -17221,8 +17164,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         } else {
             long targetProfUid = getProfileTargetUserId();
             if (targetProfUid != 0) {
-                app.tsunderegram.profilecolors.ProfileColorController.ProfileColorMeta profMeta =
-                        app.tsunderegram.profilecolors.ProfileColorController.getInstance().getColorFor(targetProfUid);
+                app.exteraless.profilecolors.ProfileColorController.ProfileColorMeta profMeta =
+                        app.exteraless.profilecolors.ProfileColorController.getInstance().getColorFor(targetProfUid);
                 if (profMeta != null && profMeta.hasCustomColors()) {
                     return AndroidUtilities.computePerceivedBrightness(profMeta.getPageBgColor()) > 0.72f;
                 }
@@ -17268,7 +17211,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (onlineTextView[2] != null) {
                     onlineTextView[2].setAlpha(currentExpandAnimatorValue);
                     onlineTextView[3].setAlpha(1f - currentExpandAnimatorValue);
-                    onlineTextView[1].setTranslationX(getOnlineTextViewTranslationXWithOffsets(lastOnlineTextViewX, lastOnlineTextRatingPadding));
+                    onlineTextView[1].setTranslationX(getOnlineTextViewTranslationXWithOffsets(lastOnlineTextViewX));
                     avatarContainer2.invalidate();
                     if (showStatusButton != null) {
                         showStatusButton.setAlpha2(1f - currentExpandAnimatorValue);
@@ -17305,19 +17248,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
     private float lastOnlineTextViewX;
     private float getOnlineTextViewTranslationXWithOffsets(float onlineX) {
-        return getOnlineTextViewTranslationXWithOffsets(onlineX, onlineTextRatingPadding);
-    }
-
-    private float getOnlineTextViewTranslationXWithOffsets(float onlineX, float ratingPadding) {
         lastOnlineTextViewX = onlineX;
-        lastOnlineTextRatingPadding = ratingPadding;
         final float expanded = Utilities.clamp01(playProfileAnimation == 2 ? 1 : avatarAnimationProgress >= 1 || playProfileAnimation == 0 ? currentExpandAnimatorValue : 0);
-        final float ratingVisibility = ratingView != null ? ratingView.getVisibilityFactor() : 0;
-        return onlineX + ratingPadding * ratingVisibility * (1f - expanded) + Math.max(0, (customPhotoOffset + getRatingViewTranslationXOffset()) * expanded);
+        return onlineX + Math.max(0, (customPhotoOffset + getRatingViewTranslationXOffset()) * expanded);
     }
-
-    // centered subtitle with star rating keeps its position as it was before accounting for padding
-    private float onlineTextRatingPadding, lastOnlineTextRatingPadding;
 
     private float lastOnlineTextViewY;
     private float getOnlineTextViewTranslationYWithOffsets(float onlineY) {
@@ -17382,9 +17316,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         @Override
         public void drawBackgroundRect(Canvas canvas, RectF rect, float topRadius, float bottomRadius, float alpha) {
             long uid = getProfileTargetUserId();
-            app.tsunderegram.profilecolors.ProfileColorController.ProfileColorMeta colors = app.tsunderegram.profilecolors.ProfileColorController.getInstance().getColorFor(uid);
+            app.exteraless.profilecolors.ProfileColorController.ProfileColorMeta colors = app.exteraless.profilecolors.ProfileColorController.getInstance().getColorFor(uid);
             if (colors != null && colors.hasCustomColors()) {
-                app.tsunderegram.profilecolors.ProfileColorController.drawCustomSectionBackground(canvas, rect, topRadius, bottomRadius, alpha, colors, resourcesProvider);
+                app.exteraless.profilecolors.ProfileColorController.drawCustomSectionBackground(canvas, rect, topRadius, bottomRadius, alpha, colors, resourcesProvider);
                 return;
             }
             super.drawBackgroundRect(canvas, rect, topRadius, bottomRadius, alpha);
@@ -18092,7 +18026,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
     public void updateCollectibleHint() {
         if (collectibleHint == null) return;
-        collectibleHint.setJointPx(0, -collectibleHint.getPaddingLeft() + nameTextView[1].getX() + nameTextView[1].getRightDrawableX() * nameTextView[1].getScaleX());
+        collectibleHint.setJointPx(0, -collectibleHint.getPaddingLeft() + nameTextView[1].getX() + (nameTextView[1].getRightDrawableX() - nameTextView[1].getRightDrawableWidth() * lerp(0.45f, 0.25f, currentExpandAnimatorValue)) * nameTextView[1].getScaleX());
         final float expanded = AndroidUtilities.lerp(expandAnimatorValues, currentExpanAnimatorFracture);
         collectibleHint.setTranslationY(-collectibleHint.getPaddingBottom() + nameTextView[1].getY() - dp(24) + lerp(dp(6), -dp(12), expanded));
         collectibleHint.setBgColor(ColorUtils.blendARGB(collectibleHintBackgroundColor, 0x50000000, expanded));
@@ -18335,18 +18269,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private int additionNavigationBarHeight;
     private int additionFloatingButtonOffset;
     private int navigationBarHeight;
-    private int miniPlayerPadding;
-
-    @Override
-    public void setMiniPlayerInset(float inset, int padding) {
-        if (miniPlayerPadding == padding) {
-            return;
-        }
-        miniPlayerPadding = padding;
-        if (sharedMediaLayout != null) {
-            sharedMediaLayout.setPagesPaddingBottom(navigationBarHeight + additionNavigationBarHeight + miniPlayerPadding);
-        }
-    }
 
     @NonNull
     private WindowInsetsCompat onApplyWindowInsets(@NonNull View v, @NonNull WindowInsetsCompat insets) {
@@ -18365,7 +18287,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         }
 
         if (sharedMediaLayout != null) {
-            sharedMediaLayout.setPagesPaddingBottom(navigationBarHeight + additionNavigationBarHeight + miniPlayerPadding);
+            sharedMediaLayout.setPagesPaddingBottom(navigationBarHeight + additionNavigationBarHeight);
 
             if (sharedMediaLayout.giftsContainer != null) {
                 sharedMediaLayout.giftsContainer.setButtonOffset(navigationBarHeight + additionFloatingButtonOffset);
@@ -18426,7 +18348,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         final int additionalList = dp(48);
 
         iBlur3PositionActionBar.set(0, -additionalList, fragmentView.getMeasuredWidth(), actionBar.getMeasuredHeight() + additionalList);
-        app.tsunderegram.appearance.MainTabsUiHelper.setBlurBounds(iBlur3PositionMainTabs, fragmentView, navigationBarHeight);
+        app.exteraless.appearance.MainTabsUiHelper.setBlurBounds(iBlur3PositionMainTabs, fragmentView, navigationBarHeight);
         iBlur3PositionMainTabs.inset(0, LiteMode.isEnabled(LiteMode.FLAG_LIQUID_GLASS) ? 0 : -dp(48));
 
         scrollableViewNoiseSuppressor.setupRenderNodes(iBlur3Positions, 2);
@@ -18542,6 +18464,138 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             });
         }
         builder.show();
+    }
+
+    private void setUserAlias() {
+        TLRPC.User user = getMessagesController().getUser(userId);
+        if (user == null) {
+            return;
+        }
+        final boolean[] restoringServerName = {false};
+        final String[] restoredServerName = {null};
+        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+        builder.setTitle(getString(R.string.SetLocalName));
+        final EditTextBoldCursor editText = new EditTextBoldCursor(getParentActivity()) {
+            @Override
+            protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+                super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(dp(64), MeasureSpec.EXACTLY));
+            }
+        };
+        editText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
+        editText.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
+        editText.setHintText(getString(R.string.Name));
+        String existingOverride = LocalNameHelper.getUserNameOverride(userId);
+        editText.setText(Objects.requireNonNullElseGet(existingOverride, () -> UserObject.getUserName(user)));
+        editText.setHeaderHintColor(getThemedColor(Theme.key_windowBackgroundWhiteBlueHeader));
+        editText.setSingleLine(true);
+        editText.setFocusable(true);
+        editText.setTransformHintToHeader(true);
+        editText.setLineColors(getThemedColor(Theme.key_windowBackgroundWhiteInputField), getThemedColor(Theme.key_windowBackgroundWhiteInputFieldActivated), getThemedColor(Theme.key_windowBackgroundWhiteRedText3));
+        editText.setImeOptions(EditorInfo.IME_ACTION_DONE);
+        editText.setBackground(null);
+        editText.requestFocus();
+        editText.setPadding(0, 0, 0, 0);
+        builder.setView(editText);
+        builder.setPositiveButton(getString(R.string.OK),
+                (dialogInterface, i) -> {
+                    String newName = editText.getText().toString().trim();
+                    if (restoredServerName[0] != null && newName.equals(restoredServerName[0])) {
+                        LocalNameHelper.clearUserNameOverride(userId);
+                        getMessagesController().loadFullUser(user, 0, true);
+                    } else if (existingOverride != null) {
+                        if (newName.equals(existingOverride)) {
+                            return;
+                        }
+                        if (newName.isEmpty()) {
+                            LocalNameHelper.clearUserNameOverride(userId);
+                            getMessagesController().loadFullUser(user, 0, true);
+                        } else {
+                            LocalNameHelper.setUserNameOverride(userId, newName);
+                            user.first_name = newName;
+                            user.last_name = "";
+                        }
+                    } else {
+                        if (newName.isEmpty() || newName.equals(UserObject.getUserName(user))) {
+                            return;
+                        }
+                        LocalNameHelper.setUserNameOverride(userId, newName);
+                        user.first_name = newName;
+                        user.last_name = "";
+                    }
+                    updateProfileData(true);
+                    getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_NAME);
+                    AndroidUtil.performHapticFeedback();
+                });
+        builder.setNeutralButton(getString(R.string.Restore), null);
+        builder.setNegativeButton(getString(R.string.Cancel), null);
+        AlertDialog alertDialog = builder.create();
+        alertDialog.setOnShowListener(dialog -> {
+            editText.requestFocus();
+            AndroidUtilities.showKeyboard(editText);
+
+            View restoreButton = alertDialog.getButton(Dialog.BUTTON_NEUTRAL);
+            if (restoreButton instanceof TextView restoreButtonTextView) {
+                Drawable[] originalButtonDrawables = restoreButtonTextView.getCompoundDrawables();
+                Drawable originalDrawableLeft = originalButtonDrawables[0];
+                Drawable originalDrawableTop = originalButtonDrawables[1];
+                Drawable originalDrawableRight = originalButtonDrawables[2];
+                Drawable originalDrawableBottom = originalButtonDrawables[3];
+                int originalCompoundDrawablePadding = restoreButtonTextView.getCompoundDrawablePadding();
+
+                restoreButtonTextView.setOnClickListener(v -> {
+                    if (restoringServerName[0]) {
+                        return;
+                    }
+                    restoringServerName[0] = true;
+
+                    CircularProgressDrawable spinner = new CircularProgressDrawable(restoreButtonTextView.getCurrentTextColor());
+                    restoreButtonTextView.setCompoundDrawablePadding(dp(6));
+                    if (LocaleController.isRTL) {
+                        restoreButtonTextView.setCompoundDrawablesWithIntrinsicBounds(
+                                originalDrawableLeft, originalDrawableTop, spinner, originalDrawableBottom
+                        );
+                    } else {
+                        restoreButtonTextView.setCompoundDrawablesWithIntrinsicBounds(
+                                spinner, originalDrawableTop, originalDrawableRight, originalDrawableBottom
+                        );
+                    }
+
+                    ChatsHelper.getInstance(currentAccount).loadServerUserName(userId, classGuid, (name, error) -> {
+                        restoringServerName[0] = false;
+                        restoreButtonTextView.setCompoundDrawablesWithIntrinsicBounds(
+                                originalDrawableLeft, originalDrawableTop, originalDrawableRight, originalDrawableBottom
+                        );
+                        restoreButtonTextView.setCompoundDrawablePadding(originalCompoundDrawablePadding);
+                        if (!alertDialog.isShowing()) {
+                            return;
+                        }
+                        if (error != null) {
+                            AlertUtil.showToast(error);
+                            return;
+                        }
+                        if (TextUtils.isEmpty(name)) {
+                            AlertUtil.showToast(getString(R.string.UnknownError));
+                            return;
+                        }
+                        restoredServerName[0] = name;
+                        editText.setText(name);
+                        editText.setSelection(0, editText.getText().length());
+                        editText.requestFocus();
+                    });
+                });
+            }
+        });
+        alertDialog.show();
+        ViewGroup.MarginLayoutParams layoutParams = (ViewGroup.MarginLayoutParams) editText.getLayoutParams();
+        if (layoutParams != null) {
+            if (layoutParams instanceof FrameLayout.LayoutParams lp) {
+                lp.gravity = Gravity.CENTER_HORIZONTAL;
+            }
+            layoutParams.rightMargin = layoutParams.leftMargin = dp(24);
+            layoutParams.height = dp(36);
+            editText.setLayoutParams(layoutParams);
+        }
+        editText.setSelection(0, editText.getText().length());
     }
 
     private void onShadowBanClicked() {
@@ -18663,8 +18717,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     public void refreshCustomProfileColors() {
         long profUid = getProfileTargetUserId();
         if (profUid != 0) {
-            app.tsunderegram.profilecolors.ProfileColorController.ProfileColorMeta profMeta =
-                    app.tsunderegram.profilecolors.ProfileColorController.getInstance().getColorFor(profUid);
+            app.exteraless.profilecolors.ProfileColorController.ProfileColorMeta profMeta =
+                    app.exteraless.profilecolors.ProfileColorController.getInstance().getColorFor(profUid);
             int newBg = getThemedColor(Theme.key_windowBackgroundGray);
             if (profMeta != null && profMeta.hasCustomColors()) {
                 newBg = profMeta.getPageBgColor();

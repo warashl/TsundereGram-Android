@@ -1,4 +1,4 @@
-"""HTML/Markdown → Telegram message entities parser — tsunderegram plugin SDK.
+"""HTML/Markdown → Telegram message entities parser — exteraless plugin SDK.
 
 The parsing core is pure Python and host-testable: it produces RawEntity
 objects. Only the final materialization into org.telegram.tgnet.TLRPC

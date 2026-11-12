@@ -5,14 +5,14 @@ import android.text.TextUtils;
 
 import org.unifiedpush.android.connector.UnifiedPush;
 
+import java.util.List;
 
 public class UnifiedPushListenerServiceProvider implements PushListenerController.IPushListenerServiceProvider {
     public UnifiedPushListenerServiceProvider(){}
 
     @Override
     public boolean hasServices() {
-        // TsundereGram: встроенный «Google FCM» считается только при наличии сервисов Google
-        return TsundereFcmDistributor.hasAnyDistributor(ApplicationLoader.applicationContext);
+        return !UnifiedPush.getDistributors(ApplicationLoader.applicationContext).isEmpty();
     }
 
     @Override
@@ -33,13 +33,12 @@ public class UnifiedPushListenerServiceProvider implements PushListenerControlle
                 SharedConfig.pushStringGetTimeStart = SystemClock.elapsedRealtime();
                 SharedConfig.saveConfig();
                 if (UnifiedPush.getAckDistributor(ApplicationLoader.applicationContext) == null) {
-                    String distributor = TsundereFcmDistributor.defaultDistributor(ApplicationLoader.applicationContext);
-                    if (distributor != null) {
+                    List<String> distributors = UnifiedPush.getDistributors(ApplicationLoader.applicationContext);
+                    if (distributors.size() > 0) {
+                        String distributor =  distributors.get(0);
                         UnifiedPush.saveDistributor(ApplicationLoader.applicationContext, distributor);
                     }
                 }
-                TsundereFcmDistributor.syncComponents(ApplicationLoader.applicationContext,
-                        TsundereFcmDistributor.currentDistributor(ApplicationLoader.applicationContext));
                 UnifiedPush.register(
                         ApplicationLoader.applicationContext,
                         "default",

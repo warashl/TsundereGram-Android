@@ -34,6 +34,7 @@
     <string name="ProxyDisableNever">أبدًا</string>
     <string name="ProxyDisableAlways">دائمًا</string>
     <string name="ProxyDisableOnMobileData">بيانات الجوال</string>
+    <string name="OENowPlayingScrobbling">يتم التسجيل الآن</string>
     <string name="MainTabsHideCallsSettings">إخفاء تبويب المكالمات</string>
     <string name="MainTabsHideProfile">إخفاء تبويب الملف الشخصي</string>
     <string name="OEBotWebViewUpdate">تحديث WebView</string>
@@ -49,8 +50,4 @@
     <string name="OEProfileJoinDateUnknown">تاريخ الانضمام غير متاح</string>
     <string name="AppIconsSelect">اختيار</string>
     <string name="AppIconsKeep">الإبقاء على هذه</string>
-    <!-- TsundereGram: restored after 13.1.1 merge -->
-    <string name="OENowPlayingScrobbling">يتم التسجيل الآن</string>
-    <!-- TsundereGram: upstream 13.1.1 strings lost in merge -->
-    <string name="QrLoginConfirm">هذا الرمز يسجّل دخول جهاز جديد إلى حسابك. اسمح بذلك فقط إذا كنت تسجّل الدخول بنفسك على جهازك.</string>
 </resources>

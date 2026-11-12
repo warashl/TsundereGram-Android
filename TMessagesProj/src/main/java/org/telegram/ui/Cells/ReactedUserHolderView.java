@@ -23,7 +23,7 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
-import app.tsunderegram.appearance.AppearanceConfig;
+import app.exteraless.appearance.AppearanceConfig;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.DocumentObject;

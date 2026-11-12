@@ -264,7 +264,7 @@ public class AndroidUtilities {
     public static final String TYPEFACE_ROBOTO_REGULAR = "fonts/rregular.ttf";
     public static final String TYPEFACE_ROBOTO_ITALIC = TYPEFACE_RITALIC;
     public static final String TYPEFACE_ROBOTO_CONDENSED_BOLD = TYPEFACE_RCONDENSED_BOLD;
-    // Инициалы на аватарках. Перенос из TsundereGram 12.9.0, AndroidUtilities.java:247.
+    // Инициалы на аватарках. Перенос из exteraGram 12.9.0, AndroidUtilities.java:247.
     public static final String TYPEFACE_NUNITO_EXTRABOLD = "fonts/nunito_extrabold.ttf";
 
     public static Typeface mediumTypeface;
@@ -272,13 +272,6 @@ public class AndroidUtilities {
     public static ThreadLocal<byte[]> bufferLocal = new ThreadLocal<>();
 
     public static Typeface regular() {
-        try {
-            final Typeface ogRegular = org.telegram.tsunderestyle.theme.TsundereStyleFonts.regular(); // TsundereGram: шрифт интерфейса
-            if (ogRegular != null) {
-                return ogRegular;
-            }
-        } catch (Throwable ignore) {
-        }
         return getTypeface(TYPEFACE_ROBOTO_REGULAR);
     }
 
@@ -311,10 +304,7 @@ public class AndroidUtilities {
 
     public static Typeface bold() {
         if (mediumTypeface == null) {
-            final Typeface ogHeadings = org.telegram.tsunderestyle.theme.TsundereStyleFonts.headings(); // TsundereStyle: chosen headings font
-            if (ogHeadings != null) {
-                mediumTypeface = ogHeadings;
-            } else if (SharedConfig.useSystemBoldFont && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            if (SharedConfig.useSystemBoldFont && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 mediumTypeface = TypefaceHelper.createTypeface(500, false);
             } else {
                 mediumTypeface = getTypeface(TYPEFACE_ROBOTO_MEDIUM);
@@ -2464,15 +2454,6 @@ public class AndroidUtilities {
     }
 
     public static Typeface getTypeface(String assetPath) {
-        // TsundereGram: прямые запросы Roboto (обычный/medium/курсив) тоже получают выбранный шрифт,
-        // иначе в части интерфейса оставался системный Roboto.
-        try {
-            final Typeface substitute = org.telegram.tsunderestyle.theme.TsundereStyleFonts.substituteAsset(assetPath);
-            if (substitute != null) {
-                return substitute;
-            }
-        } catch (Throwable ignore) {
-        }
         return typefaceCache.computeIfAbsent(assetPath, path -> {
             try {
                 if (NekoConfig.typeface.Bool()) {
@@ -4349,8 +4330,8 @@ public class AndroidUtilities {
             f = FileLoader.getInstance(UserConfig.selectedAccount).getPathToMessage(message.messageOwner);
         }
         if (f != null && f.exists()) {
-            // tsunderegram plugins: плагин может перехватить открытие файла по расширению.
-            if (app.tsunderegram.plugins.files.FilesControllerJava.dispatchOpenFile(f, fileName, document.mime_type, message, activity, parentFragment, UserConfig.selectedAccount)) {
+            // exteraless plugins: плагин может перехватить открытие файла по расширению.
+            if (app.exteraless.plugins.files.FilesControllerJava.dispatchOpenFile(f, fileName, document.mime_type, message, activity, parentFragment, UserConfig.selectedAccount)) {
                 return;
             }
             if (parentFragment != null && f.getName().toLowerCase().endsWith("attheme")) {
@@ -4428,8 +4409,8 @@ public class AndroidUtilities {
 
     public static boolean openForView(File f, String fileName, String mimeType, final Activity activity, Theme.ResourcesProvider resourcesProvider, boolean restrict) {
         if (f != null && f.exists()) {
-            // tsunderegram plugins: плагин может перехватить открытие файла по расширению.
-            if (app.tsunderegram.plugins.files.FilesControllerJava.dispatchOpenFile(f, fileName, mimeType, null, activity, null, UserConfig.selectedAccount)) {
+            // exteraless plugins: плагин может перехватить открытие файла по расширению.
+            if (app.exteraless.plugins.files.FilesControllerJava.dispatchOpenFile(f, fileName, mimeType, null, activity, null, UserConfig.selectedAccount)) {
                 return true;
             }
             String realMimeType = null;
