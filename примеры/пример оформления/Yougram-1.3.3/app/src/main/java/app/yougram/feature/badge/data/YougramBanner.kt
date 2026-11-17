@@ -1,0 +1,62 @@
+package app.yougram.feature.badge.data
+
+/**
+ * Баннер профиля, который рисуют только клиенты Yougram.
+ *
+ * Хранится в bio сразу после [YougramBadge.MARKER] как [PAYLOAD_LENGTH] невидимых символов
+ * (по 2 бита на символ): палитра, узор и форма градиента. Обычные клиенты Telegram видят в bio
+ * только свой текст, поэтому баннер для них не существует.
+ */
+data class YougramBanner(
+    val palette: Int = 0,
+    val pattern: Int = 0,
+    val shape: Int = 0,
+) {
+    /**
+     * [badgeStyle] (0..3) — вид значка рядом с именем: пишется в два старших бита поля формы,
+     * которые старые клиенты игнорируют (форма у них берётся по модулю [SHAPES]).
+     */
+    fun encode(badgeStyle: Int = 0): String {
+        val bits = (palette and 15) or ((pattern and 15) shl 4) or ((shape and 3) shl 8) or ((badgeStyle and 3) shl 10)
+        return buildString {
+            for (i in 0 until PAYLOAD_LENGTH) append(ALPHABET[(bits shr (2 * i)) and 3])
+        }
+    }
+
+    companion object {
+        const val PAYLOAD_LENGTH = 6
+        const val PALETTES = 16
+        const val PATTERNS = 6
+        const val SHAPES = 4
+
+        /** Невидимые символы из того же блока, что и метка Yougram. */
+        internal const val ALPHABET = "\u2061\u2062\u2063\u2064"
+
+        fun hasPayloadAt(text: String, start: Int): Boolean {
+            if (start < 0 || start + PAYLOAD_LENGTH > text.length) return false
+            for (i in start until start + PAYLOAD_LENGTH) if (ALPHABET.indexOf(text[i]) < 0) return false
+            return true
+        }
+
+        /** Вид значка (0..3), записанный в хвосте; 0 — классический. */
+        fun styleAt(text: String, start: Int): Int {
+            if (!hasPayloadAt(text, start)) return 0
+            var bits = 0
+            for (i in 0 until PAYLOAD_LENGTH) bits = bits or (ALPHABET.indexOf(text[start + i]) shl (2 * i))
+            return (bits shr 10) and 3
+        }
+
+        fun decode(text: String, start: Int): YougramBanner? {
+            if (!hasPayloadAt(text, start)) return null
+            var bits = 0
+            for (i in 0 until PAYLOAD_LENGTH) bits = bits or (ALPHABET.indexOf(text[start + i]) shl (2 * i))
+            // Поле узора = 15 означает «баннера нет» (в хвосте только версия клиента).
+            if (((bits shr 4) and 15) == 15) return null
+            return YougramBanner(
+                palette = (bits and 15) % PALETTES,
+                pattern = ((bits shr 4) and 15) % PATTERNS,
+                shape = ((bits shr 8) and 15) % SHAPES,
+            )
+        }
+    }
+}

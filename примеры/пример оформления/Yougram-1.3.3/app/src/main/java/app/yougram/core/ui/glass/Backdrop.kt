@@ -1,0 +1,135 @@
+package app.yougram.core.ui.glass
+
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.layer.GraphicsLayer
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.rememberGraphicsLayer
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import app.yougram.core.settings.GlassSettings
+import app.yougram.core.ui.DeviceTier
+import app.yougram.core.ui.rememberDeviceTier
+import kotlin.math.ceil
+
+/**
+ * Состояние «фона для размытия».
+ *
+ * Идея: содержимое экрана (список чатов, сообщения...) рисуется как обычно, но параллельно
+ * записывается в [layer]. Панели рисуют в своём фоне размытую копию этого слоя, сдвинутую
+ * так, чтобы она совпадала с тем, что реально находится под панелью, и поверх — полупрозрачную подкраску.
+ * Работает на Android 12+ (RenderEffect), то есть на всём, что поддерживает приложение.
+ */
+@Stable
+class BackdropState(val layer: GraphicsLayer, val small: GraphicsLayer) {
+    /** Позиция источника в координатах окна. */
+    var sourceOffset by mutableStateOf(Offset.Zero)
+
+    /** Параметры размытия (тип, радиус, размер экрана), уже применённые к слою: не пересоздаём RenderEffect без причины. */
+    internal var appliedKey: Any? = null
+}
+
+@Composable
+fun rememberBackdropState(): BackdropState {
+    val layer = rememberGraphicsLayer()
+    // Уменьшенная копия [layer]: размытие считается по ней, это в BLUR_DOWNSCALE² раз дешевле, чем по полному экрану.
+    val small = rememberGraphicsLayer()
+    return remember(layer, small) { BackdropState(layer, small) }
+}
+
+/** Помечает содержимое, которое должно просвечивать (размытым) под панелями. Сами панели в него класть нельзя. */
+fun Modifier.backdropSource(state: BackdropState): Modifier = composed {
+    if (rememberDeviceTier() == DeviceTier.Low) {
+        Modifier // на слабом железе копию экрана не записываем: размытия всё равно не будет
+    } else {
+        Modifier
+            .onGloballyPositioned { state.sourceOffset = it.positionInRoot() }
+            .drawWithContent {
+                state.layer.record {
+                    this@drawWithContent.drawContent()
+                }
+                val w = ceil(size.width / BLUR_DOWNSCALE).toInt().coerceAtLeast(1)
+                val h = ceil(size.height / BLUR_DOWNSCALE).toInt().coerceAtLeast(1)
+                state.small.record(this, layoutDirection, IntSize(w, h)) {
+                    scale(1f / BLUR_DOWNSCALE, Offset.Zero) { drawLayer(state.layer) }
+                }
+                drawContent()
+            }
+    }
+}
+
+/** Фон панели: размытая копия того, что под ней, и поверх — подкраска с заданной плотностью. */
+@Composable
+fun Modifier.glass(
+    state: BackdropState,
+    settings: GlassSettings,
+    shape: Shape,
+    tint: Color = MaterialTheme.colorScheme.surface,
+): Modifier {
+    val density = LocalDensity.current
+    // На слабом железе размытие не рисуем вовсе: только подкраска (чуть плотнее, чтобы текст читался).
+    val lowTier = rememberDeviceTier() == DeviceTier.Low
+    var myOffset by remember { mutableStateOf(Offset.Zero) }
+
+    val metrics = LocalContext.current.resources.displayMetrics
+    SideEffect {
+        val radiusPx = with(density) { settings.blurRadius.dp.toPx() }
+        val enabled = !lowTier && radiusPx > 0.5f
+        val smallW = ceil(metrics.widthPixels / BLUR_DOWNSCALE).toInt()
+        val smallH = ceil(metrics.heightPixels / BLUR_DOWNSCALE).toInt()
+        val key = if (enabled) BlurKey(settings.blurType, radiusPx, smallW, smallH) else null
+        if (key != state.appliedKey) {
+            state.appliedKey = key
+            state.small.renderEffect =
+                if (key != null) blurRenderEffect(key.type, radiusPx / BLUR_DOWNSCALE, smallW.toFloat(), smallH.toFloat()) else null
+        }
+    }
+
+    return this
+        .onGloballyPositioned { myOffset = it.positionInRoot() }
+        .clip(shape)
+        .drawBehind {
+            // При почти сплошной подкраске размытая копия всё равно не видна — не тратим на неё GPU.
+            if (!lowTier && settings.opacity < OPAQUE_THRESHOLD) {
+                val layer = state.small
+                // Слой могли ещё не записать (первый кадр после входа на экран) или уже освободить:
+                // рисование такого слоя может уронить приложение, поэтому пропускаем.
+                if (!layer.isReleased && layer.size != IntSize.Zero) {
+                    val delta = state.sourceOffset - myOffset
+                    runCatching {
+                        translate(delta.x, delta.y) {
+                            scale(BLUR_DOWNSCALE, Offset.Zero) { drawLayer(layer) }
+                        }
+                    }
+                }
+            }
+            drawRect(tint.copy(alpha = if (lowTier) maxOf(settings.opacity, LOW_TIER_MIN_ALPHA) else settings.opacity))
+        }
+}
+
+private data class BlurKey(val type: app.yougram.core.settings.BlurType, val radiusPx: Float, val w: Int, val h: Int)
+
+/** Во сколько раз уменьшаем копию экрана перед размытием. */
+private const val BLUR_DOWNSCALE = 4f
+private const val OPAQUE_THRESHOLD = 0.98f
+private const val LOW_TIER_MIN_ALPHA = 0.85f

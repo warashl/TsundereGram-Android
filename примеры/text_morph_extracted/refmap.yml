@@ -1,0 +1,5 @@
+metainfo: TextMorph/meta.yml
+main: TextMorph/src/main.py
+assets: TextMorph/res
+strings: TextMorph/locales
+elyxbuilder: TextMorph/.elyxbuilder
